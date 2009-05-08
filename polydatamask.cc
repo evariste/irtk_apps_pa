@@ -206,7 +206,6 @@ int main(int argc, char **argv)
   noOfPoints= surface->GetNumberOfPoints();
 
   oldPoints = surface->GetPoints();
-  newPoints->SetNumberOfPoints(noOfPoints);
 
   newPtIds = new int[noOfPoints];
   deletedPt = new int[noOfPoints];
@@ -224,7 +223,28 @@ int main(int argc, char **argv)
     z = p[2];
 
     dmap->WorldToImage(x, y, z);
-    val = (int) round(interp->Evaluate(x, y, z));
+    val = interp->Evaluate(x, y, z);
+
+    if (val < threshold){
+      continue;
+    }
+
+    ++newPtCount;
+
+  }
+
+  newPoints->SetNumberOfPoints(newPtCount);
+
+  newPtCount = 0;
+  for (i = 0; i < noOfPoints; ++i){
+
+    oldPoints->GetPoint(i, p);
+    x = p[0];
+    y = p[1];
+    z = p[2];
+
+    dmap->WorldToImage(x, y, z);
+    val = interp->Evaluate(x, y, z);
 
     if (val < threshold){
       deletedPt[i] = 1;
@@ -235,7 +255,6 @@ int main(int argc, char **argv)
       ++newPtCount;
     }
   }
-  newPoints->Squeeze();
 
   cerr << "Points in original surface: " << noOfPoints << endl;
   cerr << "Points copied over        : " << newPtCount << endl;
