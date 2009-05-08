@@ -11,30 +11,7 @@
 #include <vtkPolyDataConnectivityFilter.h>
 
 
-
-typedef struct {
-    int id0, id1;
-} edge;
-
-struct edgeCmp {
-   bool operator()( const edge ea, const edge eb ) const {
-     return ( ea.id0 < eb.id0 ) || (( ea.id0 == eb.id0 ) && ( ea.id1 < eb.id1));
-   }
- };
-
-
-//typedef map<edge, int, edgeCmp> midpointMap;
-//
-//map<edge, short>::iterator iter;
-
-
 char *input_name = NULL;
-
-//VTK_SOLID_TETRAHEDRON  0
-//VTK_SOLID_CUBE         1
-//VTK_SOLID_OCTAHEDRON   2
-//VTK_SOLID_ICOSAHEDRON  3
-//VTK_SOLID_DODECAHEDRON 4
 
 void midpoint(double *x, double *y, double *m){
   m[0] = 0.5 * (x[0] + y[0]);
@@ -53,7 +30,6 @@ void copyPoints(vtkPoints *src, vtkPoints*dest){
     src->GetPoint(i, p);
     dest->InsertPoint(i, p);
   }
-  cerr << "Copied " << noOfPts << " points" << endl;
 }
 
 void copyFaces(vtkCellArray *src, vtkCellArray *dest){
@@ -67,30 +43,21 @@ void copyFaces(vtkCellArray *src, vtkCellArray *dest){
   maxPts = src->GetMaxCellSize();
 
   dest->Initialize();
-//  cerr << "dest cells " << dest->GetNumberOfCells() << endl;
   estSize = dest->EstimateSize(noOfCells, maxPts);
   dest->Allocate(estSize, 0);
   dest->Reset();
-//  cerr << "dest cells " << dest->GetNumberOfCells() << endl;
 
   dest->InitTraversal();
   src->InitTraversal();
   for (i = 0; i < noOfCells; ++i){
     src->GetNextCell(npts, ptIds);
-//    cerr << "npts " << npts << endl;
     dest->InsertNextCell(npts);
     for (j = 0; j < npts; ++j){
       dest->InsertCellPoint(ptIds[j]);
-//      cerr << " " << ptIds[j];
     }
-//    cerr << endl;
     dest->UpdateCellCount(npts);
   }
-//  cerr << "dest cells " << dest->GetNumberOfCells() << endl;
   dest->Squeeze();
-  cerr << "dest cells " << dest->GetNumberOfCells() << endl;
-
-  cerr << "Copied " << noOfCells << " cells" << endl;
 }
 
 void createIdListArray(vtkIdList** &list, int size){
@@ -228,12 +195,10 @@ int main(int argc, char **argv)
 
   while (argc > 1){
     ok = False;
-//    if ((ok == False) && (strcmp(argv[1], "-levels") == 0)){
+//    if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
 //      argc--;
 //      argv++;
-//      levels = atoi(argv[1]);
-//      argc--;
-//      argv++;
+//do stuff
 //      ok = True;
 //    }
     if (ok == False){
@@ -241,8 +206,6 @@ int main(int argc, char **argv)
       usage();
     }
   }
-
-
 
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
   reader->SetFileName(input_name);
@@ -256,22 +219,17 @@ int main(int argc, char **argv)
   noOfVerts = input->GetNumberOfPoints();
 
   vtkCellArray *faces = vtkCellArray::New();
-
   copyFaces(input->GetPolys(), faces);
 
   noOfFaces = faces->GetNumberOfCells();
 
   vtkIdList** adj = NULL;
-
   createIdListArray(adj, noOfVerts);
 
   getAdjacency(faces, adj);
-
   noOfEdges = getEdgeCount(adj, noOfVerts);
 
-
   vtkPolyDataConnectivityFilter *connFilter = vtkPolyDataConnectivityFilter::New();
-
   connFilter->SetExtractionModeToAllRegions();
   connFilter->SetInput(input);
   connFilter->Update();
@@ -282,7 +240,6 @@ int main(int argc, char **argv)
 
   genus = 0.5 * (2 * noOfComponents - eulerChar);
 
-
   cout << "V " << noOfVerts << endl;
   cout << "E " << noOfEdges << endl;
   cout << "F " << noOfFaces << endl;
@@ -292,8 +249,6 @@ int main(int argc, char **argv)
   cout << eulerChar << endl;
 
   cout << "Genus : " << genus << endl;
-
-
 
   deleteIdListArray(adj, noOfVerts);
 
