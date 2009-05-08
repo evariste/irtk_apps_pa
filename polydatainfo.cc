@@ -11,17 +11,6 @@
 #include <vtkPolyDataConnectivityFilter.h>
 
 
-//#include <map>
-//
-//#include <vtkMath.h>
-//#include <vtkTriangle.h>
-//#include <vtkCellArray.h>
-//#include <vtkPlatonicSolidSource.h>
-//#include <vtkCleanPolyData.h>
-//#include <vtkTriangleFilter.h>
-//#include <vtkPolyDataWriter.h>
-
-
 
 typedef struct {
     int id0, id1;
