@@ -75,8 +75,8 @@ double hSquareRobustMean(vtkPolyData* surface){
   // Get a robust mean.
 
   double minVal, maxVal;
-  double lo = 2.0;
-  double hi = 98.0;
+  double lo = 5.0;
+  double hi = 95.0;
   float *data = new float[1 + noOfPoints];
   int count;
 
@@ -309,7 +309,7 @@ int main(int argc, char **argv)
   vtkPoints* pts_original = input->GetPoints();
 
   // Iteration loop.
-  cerr << "Iterating";
+
   for (i = 0; i <= noOfIterations; ++i){
 
     cout << "iteration  " << i << " ";
@@ -322,7 +322,6 @@ int main(int argc, char **argv)
     h2norm = sqrt(E_H2 * area / 4.0 / M_PI);
 
     if (h2norm < smoothnessThreshold){
-      cout << "L_2 norm of H^2 below threshold : " << h2norm << " < " << smoothnessThreshold << endl;
       break;
     }
 
@@ -427,6 +426,10 @@ int main(int argc, char **argv)
 //    cout << cogNew[0] << " " << cogNew[1] << " " << cogNew[2] << endl;
 
   }
+
+  cout << "Final iterations : " << i << endl;
+  cout << "Final L_2 norm of H^2 (threshold) : " << h2norm << " (" << smoothnessThreshold << ")" << endl;
+
 
   if (trackingOn == True){
     dists->SetName("smoothingDists");
