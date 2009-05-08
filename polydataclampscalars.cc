@@ -1,0 +1,140 @@
+#if (defined HAS_VTK)
+
+#include <irtkImage.h>
+#include <nr.h>
+
+#include <vtkPolyData.h>
+#include <vtkPolyDataReader.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkFloatArray.h>
+#include <vtkPointData.h>
+
+char *input_name = NULL, *output_name = NULL;
+
+
+void usage()
+{
+  cerr << "Usage: polydataclampscalars [in] [out] [lo] [hi] <options>" << endl;
+  cerr << "" << endl;
+  cerr << "Options: " << endl;
+  cerr << "-q : Quiet output, only print min and max values." << endl;
+  
+  exit(1);
+}
+
+int main(int argc, char **argv)
+{
+  int ok;
+  double val;
+  int i, count;
+  int noOfPoints;
+  int quiet = False;
+
+  // Percentiles by default
+  double lo, hi;
+  // values
+  double minVal, maxVal;
+
+  if (argc < 5){
+    usage();
+  }
+
+  // Parse image
+  input_name  = argv[1];
+  argc--;
+  argv++;
+  output_name  = argv[1];
+  argc--;
+  argv++;
+  lo = atof(argv[1]);
+  argc--;
+  argv++;
+  hi = atof(argv[1]);
+  argc--;
+  argv++;
+  
+  // Parse remaining arguments
+  while (argc > 1){
+    ok = False;
+    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+      argc--;
+      argv++;
+      quiet = True;
+      ok = True;
+    }
+    if (!ok){
+      cerr << "Cannot parse argument " << argv[1] << endl;
+      usage();
+    }
+  }
+
+  vtkPolyData *polys = vtkPolyData::New();
+
+  // Read surface
+  vtkPolyDataReader *surface_reader = vtkPolyDataReader::New();
+  surface_reader->SetFileName(input_name);
+  surface_reader->Modified();
+  surface_reader->Update();
+  polys = surface_reader->GetOutput();
+  
+  noOfPoints= polys->GetNumberOfPoints();
+
+  vtkFloatArray *scalars = vtkFloatArray::New();
+
+  scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
+  
+  float *data = new float[1 + noOfPoints];
+
+  count = 0;
+
+  for (i = 0; i < noOfPoints; ++i){
+    val = scalars->GetTuple1(i);
+    data[1 + i] = val;
+  }
+  sort(noOfPoints, data);
+
+  i = 1 + (int) round( (double) lo * (noOfPoints - 1) / 100.0);
+  minVal = data[i];
+  i = 1 + (int) round( (double) hi * (noOfPoints - 1) / 100.0);
+  maxVal = data[i];
+
+  if (quiet){
+    cout << minVal << "," << maxVal << endl;
+  } else {
+    cout << "No of points " << noOfPoints << endl;
+    cout << "Clamping to min and max : " << minVal << ", " << maxVal << endl;
+  }
+
+  for (i = 0; i < noOfPoints; ++i){
+    val = scalars->GetTuple1(i);
+    if (val < minVal)
+      val = minVal;
+    if (val > maxVal)
+      val = maxVal;
+    scalars->SetTuple1(i, val);
+  }
+
+  scalars->Modified();
+
+  polys->GetPointData()->SetScalars(scalars);
+  polys->Modified();
+
+  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+  writer->SetInput(polys);
+  writer->SetFileName(output_name);
+  writer->SetFileTypeToBinary();
+  writer->Write();
+
+  return 0;
+}
+
+
+#else
+
+#include <irtkImage.h>
+
+int main( int argc, char *argv[] ){
+  cerr << argv[0] << " needs to be compiled with the VTK library " << endl;
+}
+#endif
+
