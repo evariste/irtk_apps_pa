@@ -96,6 +96,7 @@ ELSE(BUILD_CONDOR_EXE)
     ADD_EXECUTABLE(polydatacurvature polydatacurvature.cc)
     ADD_EXECUTABLE(polydatadecimate polydatadecimate.cc)
     ADD_EXECUTABLE(polydatadeletescalars polydatadeletescalars.cc)
+    ADD_EXECUTABLE(polydatadisplacements polydatadisplacements.cc)
     ADD_EXECUTABLE(polydataeuclidean polydataeuclidean.cc)
 # polydatageodesic needs VTK 5.2 ...
     ADD_EXECUTABLE(polydatageodesic polydatageodesic.cc)
