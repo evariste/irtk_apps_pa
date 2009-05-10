@@ -10,15 +10,17 @@
 #include <vtkPointData.h>
 
 char *input_name = NULL, *output_name = NULL;
-
+char *scalar_name = NULL;
 
 void usage()
 {
   cerr << "Usage: polydataclampscalars [in] [out] [lo] [hi] <options>" << endl;
   cerr << "" << endl;
   cerr << "Options: " << endl;
-  cerr << "-q : Quiet output, only print min and max values." << endl;
-  
+  cerr << "-q    : Quiet output, only print min and max values." << endl;
+  cerr << "-name : Name of scalars to use." << endl;
+  cerr << "" << endl;
+
   exit(1);
 }
 
@@ -52,7 +54,7 @@ int main(int argc, char **argv)
   hi = atof(argv[1]);
   argc--;
   argv++;
-  
+
   // Parse remaining arguments
   while (argc > 1){
     ok = False;
@@ -60,6 +62,14 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       quiet = True;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)) {
+      argc--;
+      argv++;
+      scalar_name = argv[1];
+      argc--;
+      argv++;
       ok = True;
     }
     if (!ok){
@@ -76,13 +86,24 @@ int main(int argc, char **argv)
   surface_reader->Modified();
   surface_reader->Update();
   polys = surface_reader->GetOutput();
-  
+
   noOfPoints= polys->GetNumberOfPoints();
 
-  vtkFloatArray *scalars = vtkFloatArray::New();
+//  vtkFloatArray *scalars = vtkFloatArray::New();
+//  scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
+  vtkFloatArray *scalars;
 
-  scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
-  
+  if (scalar_name != NULL){
+    scalars = (vtkFloatArray*) polys->GetPointData()->GetArray(scalar_name);
+    if (scalars == NULL){
+      cerr << "Cannot retrieve scalars : " << scalar_name << endl;
+      exit(1);
+    }
+  } else {
+    scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
+    cerr << "Using scalars :  " << scalars->GetName() << endl;
+  }
+
   float *data = new float[1 + noOfPoints];
 
   count = 0;
