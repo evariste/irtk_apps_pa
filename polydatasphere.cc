@@ -184,14 +184,20 @@ int main(int argc, char **argv)
 	  z = pt[2];
 
 	  // Add pi to ensure range is in 0->2 pi
-	  val = atan2f(y, x) + M_PI;
+	  val = atan2f(y, x);
+
+	  if (val < 0)
+	    val += 2 * M_PI;
 
 	  phi->SetTuple1(i, val);
 
 	  r = sqrt(x*x + y*y);
 	  // Adding pi/2 ensures range is from 0 to pi, angle measured from north
 	  // pole.
-	  val = atan2f(z, r) + M_PI_2;
+	  val = atan2f(r, z);
+
+	  if (val < 0)
+	    val += M_PI_2;
 
     theta->SetTuple1(i, val);
   }
