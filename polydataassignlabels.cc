@@ -48,7 +48,7 @@ irtkRealImage *getBinaryLabelImage(irtkGreyImage *labelImage, short label){
 
 void usage()
 {
-  cerr << "Usage:  polydataassignscalars [labelImage] [surfaceIn] [surfaceOut] <options>" << endl;
+  cerr << "Usage:  polydataassignlabels [labelImage] [surfaceIn] [surfaceOut] <options>" << endl;
   cerr << "" << endl;
   cerr << "Assign scalars to the vertices of surfaceIn.  The scalar assigned" << endl;
   cerr << "is the label of the nearest voxel in labelImage to the vertex." << endl;
