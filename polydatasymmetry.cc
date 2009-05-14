@@ -45,10 +45,13 @@ void usage()
   cerr << " [inputImage] provides the lattice to be used for the output." << endl;
   cerr << " " << endl;
   cerr << " Options:" << endl;
-  cerr << " -polydata [name.vtk]  : Write a visualisation of the plane as a " << endl;
-  cerr << "                    vtkPolyData object to the named file." << endl;
-
-
+  cerr << " -polydata [name.vtk] : Write a visualisation of the plane as a " << endl;
+  cerr << "                        vtkPolyData object to the named file." << endl;
+  cerr << " -point x y z         : Coordinates of a point that is required to be on" << endl;
+  cerr << "                        on the 'positive' side of the plane, i.e. in the" << endl;
+  cerr << "                        same direction as the normal.  The calculated normal" << endl;
+  cerr << "                        will be flipped to meet this requirement if necessary." << endl;
+  cerr << "" << endl;
   exit(0);
 }
 
@@ -68,9 +71,7 @@ int main(int argc, char **argv){
   float posiPoint[3];
 
   if (argc < 2){
-    cerr << argv[0] << " [surface] " << endl;
-    cerr << "" << endl;
-    exit(1);
+    usage();
   }
 
   surface_name = argv[1];
@@ -141,7 +142,8 @@ int main(int argc, char **argv){
   cy /= noOfPoints;
   cz /= noOfPoints;
 
-  cout << "Centre of gravity : (" << cx << ", " << cy << ", " << cz << ")" <<  endl;
+  cout << "Centre of gravity (initial estimate for plane centre): " << endl;
+  cout << "           (" << cx << ", " << cy << ", " << cz << ")" <<  endl;
 
   xx = xy = xz = yy = yz = zz = 0.0;
 
@@ -165,7 +167,7 @@ int main(int argc, char **argv){
   yz /= noOfPoints;
   zz /= noOfPoints;
 
-  cout << "Finding covariance" << endl;
+//  cout << "Finding covariance" << endl;
 
   cov(0, 0) = xx;
   cov(1, 1) = yy;
@@ -180,7 +182,7 @@ int main(int argc, char **argv){
   cov(1, 2) = yz;
   cov(2, 1) = yz;
 
-  cout << "Finding eigenstuff " << endl;
+//  cout << "Finding eigenstuff " << endl;
 
   irtkMatrix evecs;
   irtkVector evals;
@@ -188,15 +190,15 @@ int main(int argc, char **argv){
 
   cov.Eigenvalues(evecs, evals);
 
-  cout << "Covariance:" << endl;
+  cout << "Covariance matrix for all points:" << endl;
   cov.Print();
   cout << " " << endl;
 
-  cout << "Evecs: " << endl;
+  cout << "Eigenvectors: " << endl;
   evecs.Print();
   cout << " " << endl;
 
-  cout << "Evals: " << endl;
+  cout << "Eigenvalues: " << endl;
   evals.Print();
   cout << " " << endl;
 
@@ -216,11 +218,12 @@ int main(int argc, char **argv){
 
   minMeasure = FLT_MAX;
 
+  cout << "Symmetry measure for eigenvectors: " << endl;
   for (j = 0; j < 3; ++j){
     for (i = 0; i < 3; ++i){
       normal[i] = evecs(i, j);
     }
-    cout << "Symmetry measure for e-vec " << j + 1 << ": ";
+    cout << "     " << j + 1 << ": ";
     measure = symmetryMeasure(normal, centre);
     cout << measure << endl;
     if (measure < minMeasure){
@@ -235,7 +238,7 @@ int main(int argc, char **argv){
   }
 
   cout << "Eigenvector " << minCol + 1 << " gives minimum symmetry measure." << endl;
-  cout << "Normal      : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+  cout << "Initial normal estimate : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
 
   // Express normal in degrees:
   normal2phiTheta(normal, phi, theta);
@@ -270,10 +273,10 @@ int main(int argc, char **argv){
   // Final value of objective function.
   float fReturned;
 
-  cout << "Powell minimisation ...";
+  cout << "Powell minimisation ..";
   cout.flush();
   powell(params, initDirs, 5, ftol, &iters, &fReturned, objectiveFuncForNR);
-  cout << "... done." << endl;
+  cout << ". done." << endl;
 
   phi = params[1];
   theta = params[2];
@@ -282,15 +285,11 @@ int main(int argc, char **argv){
   centre[2] = params[5];
   phiTheta2normal(phi, theta, normal);
 
-  cout << "After optimisation: " << endl;
-  cout << "Normal       : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
-  cout << "Plane centre : " << centre[0] << " " << centre[1] << " " << centre[2] << endl;
+  cout << "Estimates after optimisation: " << endl;
+  cout << "  Normal       : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+  cout << "  Plane centre : " << centre[0] << " " << centre[1] << " " << centre[2] << endl;
+  cout << "  Measure      : " << fReturned << endl << endl;
 
-  cout << "Measure      : " << objectiveFuncForNR(params) << endl;
-
-  if (output_surface_name != NULL){
-    writePlaneAsPolydata(normal, centre);
-  }
 
   // Ensure unit normal.
   val = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
@@ -331,6 +330,9 @@ int main(int argc, char **argv){
 
   image->Write(output_image_name);
 
+  if (output_surface_name != NULL){
+    writePlaneAsPolydata(normal, centre);
+  }
 
 
   for (i = 0; i < 6; ++i){
@@ -357,6 +359,9 @@ void writePlaneAsPolydata(float *normal, float *centre)
   double surfaceBounds[6];
   double xmin, ymin, zmin, xmax, ymax, zmax;
   double nDotC, val;
+  int maxInd;
+  int i;
+  double maxComp;
 
   _surface->GetBounds(surfaceBounds);
   xmin = surfaceBounds[0];
@@ -371,17 +376,29 @@ void writePlaneAsPolydata(float *normal, float *centre)
   plane->SetResolution(10, 10);
   // Find a couple of points in the plane.
 
+  // Which normal component is largest?
+  maxInd = 0;
+  maxComp = fabs(normal[0]);
+  for (i = 1; i < 3; ++i){
+    if (fabs(normal[i]) > maxComp){
+      maxInd = i;
+      maxComp = fabs(normal[i]);
+    }
+  }
+
   nDotC = vtkMath::Dot(normal, centre);
 
   // Try and get points for the plane that cover the object
-  if (fabs(normal[2]) > 0.05){
+  if (maxInd == 2){
+    // Normal is mostly in the z direction.
     val = (nDotC - normal[0]*xmin - normal[1]*ymax) / normal[2];
     plane->SetOrigin(xmin, ymax, val);
     val = (nDotC - normal[0]*xmin - normal[1]*ymin) / normal[2];
     plane->SetPoint1(xmin, ymin, val);
     val = (nDotC - normal[0]*xmax - normal[1]*ymax) / normal[2];
     plane->SetPoint2(xmax, ymax, val);
-  } else if (fabs(normal[1]) > 0.05){
+  } else if (maxInd == 1){
+    // Normal is mostly in the y direction.
     val = (nDotC - normal[0]*xmin - normal[2]*zmax) / normal[1];
     plane->SetOrigin(xmin, val, zmax);
     val = (nDotC - normal[0]*xmin - normal[2]*zmin) / normal[1];
@@ -389,6 +406,7 @@ void writePlaneAsPolydata(float *normal, float *centre)
     val = (nDotC - normal[0]*xmax - normal[2]*zmax) / normal[1];
     plane->SetPoint2(xmax, val, zmax);
   } else {
+    // Normal is mostly in the x direction.
     val = (nDotC - normal[1]*ymin - normal[2]*zmax) / normal[0];
     plane->SetOrigin(val, ymin, zmax);
     val = (nDotC - normal[1]*ymin - normal[2]*zmin) / normal[0];
