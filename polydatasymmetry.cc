@@ -25,11 +25,32 @@ void normal2phiTheta(float *normal, float &phi, float &theta);
 void phiTheta2normal(float phi, float theta, float* normal);
 float symmetryMeasure(float phi, float theta, float *centre);
 float objectiveFuncForNR(float params[]);
+void writePlaneAsPolydata(float *normal, float *centre);
+float distanceToPlane(double x, double y, double z, float *normal, float *centre);
 
 char *surface_name = NULL;
+char *template_image_name = NULL;
+char *output_image_name = NULL;
+char *output_surface_name = NULL;
 
 vtkPolyData* _surface;
 irtkLocator *_locator;
+
+void usage()
+{
+  cerr << " polydatasymmetry [inputSurface] [inputImage] [outputImage] <options>" << endl;
+  cerr << " " << endl;
+  cerr << " Estimate the plane of symmetry of [inputSurface]." << endl;
+  cerr << " Write result as a signed distance map to [outputImage]." << endl;
+  cerr << " [inputImage] provides the lattice to be used for the output." << endl;
+  cerr << " " << endl;
+  cerr << " Options:" << endl;
+  cerr << " -polydata [name.vtk]  : Write a visualisation of the plane as a " << endl;
+  cerr << "                    vtkPolyData object to the named file." << endl;
+
+
+  exit(0);
+}
 
 int main(int argc, char **argv){
 
@@ -39,10 +60,12 @@ int main(int argc, char **argv){
   double pt[3];
   float normal[3], centre[3];
   double xx, xy, xz, yy, yz, zz;
-  int i, j;
-  float phi, theta;
-
+  int i, j, k;
+  double x, y, z;
   double val;
+  float phi, theta;
+  int hasPositivePoint = False;
+  float posiPoint[3];
 
   if (argc < 2){
     cerr << argv[0] << " [surface] " << endl;
@@ -53,15 +76,38 @@ int main(int argc, char **argv){
   surface_name = argv[1];
   argv++;
   argc--;
-
+  template_image_name = argv[1];
+  argv++;
+  argc--;
+  output_image_name = argv[1];
+  argv++;
+  argc--;
 
   while (argc > 1){
     ok = False;
-//     if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
-//       argc--;
-//       argv++;
-//       ok = True;
-//     }
+    if ((ok == False) && (strcmp(argv[1], "-polydata") == 0)){
+       argc--;
+       argv++;
+       output_surface_name = argv[1];
+       argc--;
+       argv++;
+       ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-point") == 0)){
+        argc--;
+        argv++;
+        hasPositivePoint = True;
+        posiPoint[0] = atof(argv[1]);
+        argc--;
+        argv++;
+        posiPoint[1] = atof(argv[1]);
+        argc--;
+        argv++;
+        posiPoint[2] = atof(argv[1]);
+        argc--;
+        argv++;
+        ok = True;
+    }
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
@@ -101,7 +147,6 @@ int main(int argc, char **argv){
 
   irtkMatrix cov;
   cov.Initialize(3, 3);
-
 
   for (int i = 0; i < noOfPoints; i++){
     _surface->GetPoint (i, pt);
@@ -164,9 +209,9 @@ int main(int argc, char **argv){
   centre[1] = cy;
   centre[2] = cz;
 
+  // Which eigenvector is the best as a plane normal for a symmetry plane?
   float measure, minMeasure;
   int minCol = 0;
-
   float params[6];
 
   minMeasure = FLT_MAX;
@@ -202,20 +247,20 @@ int main(int argc, char **argv){
   params[4] = centre[1];
   params[5] = centre[2];
 
+  // Bits and pieces needed for call to Powell method.
+
   // Initial set of directions (unit vectors);
   float **initDirs;
   initDirs = new float* [6];
-
   for (i = 0; i < 6; ++i){
     initDirs[i] = new float[6];
-
     for (j = 0; j < 6; ++j){
       initDirs[i][j] = 0.0;
     }
     initDirs[i][i] = 1.0;
   }
 
-  // Tolerance for stopping condition.
+  // Tolerance for stopping condition.  Not really sure what this means.
   float ftol;
   ftol = 0.5;
 
@@ -230,10 +275,6 @@ int main(int argc, char **argv){
   powell(params, initDirs, 5, ftol, &iters, &fReturned, objectiveFuncForNR);
   cout << "... done." << endl;
 
-  for (i = 1; i < 6; ++i){
-    cout << params[i] << endl;
-  }
-
   phi = params[1];
   theta = params[2];
   centre[0] = params[3];
@@ -247,9 +288,75 @@ int main(int argc, char **argv){
 
   cout << "Measure      : " << objectiveFuncForNR(params) << endl;
 
+  if (output_surface_name != NULL){
+    writePlaneAsPolydata(normal, centre);
+  }
+
+  // Ensure unit normal.
+  val = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+
+  for (i = 0; i < 3; ++i){
+    normal[i] = normal[i] / val;
+  }
+
+  // Check if we need to flip the normal.
+  if (hasPositivePoint == True){
+    for (i = 0; i < 3; ++i){
+      posiPoint[i] -= centre[i];
+    }
+    if (vtkMath::Dot(normal, posiPoint) < 0){
+      for (i = 0; i < 3; ++i){
+        normal[i] *= -1.0;
+      }
+      cout << "Normal flipped: " << endl;
+      cout << "Normal       : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+    }
+  }
+
+  // Write distance map.
+  irtkRealImage *image = new irtkRealImage(template_image_name);
+
+  for (k = 0; k < image->GetZ(); ++k){
+    for (j = 0; j < image->GetY(); ++j){
+      for (i = 0; i < image->GetX(); ++i){
+        x = i;
+        y = j;
+        z = k;
+        image->ImageToWorld(x, y, z);
+        val = distanceToPlane(x, y, z, normal, centre);
+        image->Put(i, j, k, val);
+      }
+    }
+  }
+
+  image->Write(output_image_name);
+
+
+
+  for (i = 0; i < 6; ++i){
+      delete [] initDirs[i];
+  }
+  delete [] initDirs;
+
+}
+
+float distanceToPlane(double x, double y, double z, float *normal, float *centre)
+{
+  x -= centre[0];
+  y -= centre[1];
+  z -= centre[2];
+
+  return x*normal[0] + y*normal[1] + z*normal[2];
+}
+
+// Function assumes that global variable 'output_surface_name'
+// is non-null.
+void writePlaneAsPolydata(float *normal, float *centre)
+{
   // Now make a plane.
   double surfaceBounds[6];
   double xmin, ymin, zmin, xmax, ymax, zmax;
+  double nDotC, val;
 
   _surface->GetBounds(surfaceBounds);
   xmin = surfaceBounds[0];
@@ -264,8 +371,8 @@ int main(int argc, char **argv){
   plane->SetResolution(10, 10);
   // Find a couple of points in the plane.
 
-  double nDotC;
   nDotC = vtkMath::Dot(normal, centre);
+
   // Try and get points for the plane that cover the object
   if (fabs(normal[2]) > 0.05){
     val = (nDotC - normal[0]*xmin - normal[1]*ymax) / normal[2];
@@ -296,18 +403,12 @@ int main(int argc, char **argv){
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetInput(output);
-  writer->SetFileName("plane.vtk");
+  writer->SetFileName(output_surface_name);
   writer->Update();
   writer->Write();
 
-
-
-  for (i = 0; i < 6; ++i){
-      delete [] initDirs[i];
-  }
-  delete [] initDirs;
-
 }
+
 
 float objectiveFuncForNR(float params[])
 {
