@@ -15,6 +15,10 @@ void usage(){
   cerr << "polydatalcc [input] [output] <-options>"<<endl;
   cerr << "Keep only largest connected component of the input polydata." << endl;
   cerr << "Options:" << endl;
+  cerr << "-number [n] : number of pieces to return, starting with the largest." << endl;
+  cerr << "-info       : Only give information without writing output.  A name for " << endl;
+  cerr << "              The output is still required." << endl;
+  cerr << "  " << endl;
   exit(1);
 }
 
@@ -24,8 +28,14 @@ int main(int argc, char **argv ){
     usage();
   }
 
-  int i, j, noOfPoints, regionCount, ok;
- 
+  int i, noOfPoints, ok, regionPointCount;
+  int number = -1;
+  int noOfExtractedRegions;
+  int writeOutput = True;
+  char buffer[256];
+  int dotPos;
+
+
   input_name = argv[1];
   argv++;
   argc--;
@@ -35,11 +45,19 @@ int main(int argc, char **argv ){
 
   while (argc > 1){
     ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-XX") == 0)){
+    if ((ok == False) && (strcmp(argv[1], "-number") == 0)){
       argc--;
       argv++;
-      // do stuff and maybe increment argv
-      ok  = True;
+      number = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-info") == 0)){
+      argc--;
+      argv++;
+      writeOutput = False;
+      ok = True;
     }
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
@@ -47,40 +65,92 @@ int main(int argc, char **argv ){
     }
   }
 
-  vtkPolyData* inputPoly;
+  vtkPolyData* input;
   vtkPolyDataReader* reader;
   vtkPolyDataConnectivityFilter* connFilter;
   vtkCleanPolyData* cleaner;
-  
+
   cout << "Reading file " << input_name << endl;
 
-  inputPoly = vtkPolyData::New();
+  input = vtkPolyData::New();
   reader    = vtkPolyDataReader::New();
   connFilter = vtkPolyDataConnectivityFilter::New();
   cleaner   = vtkCleanPolyData::New();
- 
-  connFilter->SetExtractionModeToLargestRegion();
+
 
   reader->SetFileName(input_name);
   reader->Update();
 
-  inputPoly = reader->GetOutput();
-  inputPoly->Update();
+  input = reader->GetOutput();
+  input->Update();
 
-  connFilter->SetInput(inputPoly);
+  noOfPoints = input->GetNumberOfPoints();
+  cout << "Total points : " << noOfPoints << endl;
+
+  connFilter->SetInput(input);
+  connFilter->SetExtractionModeToAllRegions();
+  connFilter->Update();
+  connFilter->SetExtractionModeToSpecifiedRegions();
+
+  noOfExtractedRegions = connFilter->GetNumberOfExtractedRegions();
+  cout << "Extracted " << noOfExtractedRegions << " regions." << endl;
+
+  if (number > 0){
+    if (number > noOfExtractedRegions){
+      number = noOfExtractedRegions;
+      cout << "Reset number of regions requested to " << number << endl;
+    }
+  } else {
+    // Default.
+    number = 1;
+  }
+
+  vtkPolyData *surface;
+
+  for (i = 0; i < noOfExtractedRegions; ++i){
+    connFilter->DeleteSpecifiedRegion(i);
+  }
   connFilter->Update();
 
+  // Assuming '.vtk' suffix
+  dotPos = strlen(output_name) - 4;
+  output_name[dotPos] = 0;
 
-  cleaner->SetInput(connFilter->GetOutput());
-  cleaner->Update();
+  for (i = 0; i < number; ++i){
+    connFilter->AddSpecifiedRegion(i);
+    connFilter->Update();
 
-  cout << "Output file " << output_name << endl;
 
-  vtkPolyDataWriter *pd_writer = vtkPolyDataWriter::New();
-  pd_writer->SetFileName(output_name);
-  pd_writer->SetInput(cleaner->GetOutput());
-  pd_writer->Write();
+    vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
+    cleaner->SetInput(connFilter->GetOutput());
+    cleaner->Update();
 
+    regionPointCount = cleaner->GetOutput()->GetNumberOfPoints();
+    cout << "Region : " << i + 1 << " : " << regionPointCount << " = ";
+    cout << 100.0 * regionPointCount  / ((double) noOfPoints) << "%" << endl;
+
+
+    vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+    if (writeOutput == True){
+
+      if (number > 1){
+        sprintf(buffer, "%s_%d.vtk", output_name, i+1);
+      } else {
+        sprintf(buffer, "%s.vtk", output_name);
+      }
+
+      writer->SetFileName(buffer);
+      writer->SetInput(cleaner->GetOutput());
+      writer->Update();
+      writer->Write();
+    }
+
+    connFilter->DeleteSpecifiedRegion(i);
+    connFilter->Update();
+
+  }
+
+  return 0;
 }
 
 #else
