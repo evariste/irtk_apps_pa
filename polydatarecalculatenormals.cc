@@ -12,8 +12,15 @@ char *in_name  = NULL, *out_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydatarecalculatenormals [input] [output] <-splittingOn>\n" << endl;
-  cerr << "Default splitting is off." << endl;
+  cerr << "Usage: polydatarecalculatenormals [input] [output] <options>\n" << endl;
+  cerr << " " << endl;
+  cerr << "Options: " << endl;
+  cerr << " " << endl;
+  cerr << "-split : Allow sharp edges to be split. Not set by default." << endl;
+  cerr << "-auto  : Try and guess the correct direction for all normals so " << endl;
+  cerr << "         that they all point `outward'.  Only works if the surface" << endl;
+  cerr << "         is completely closed (no boundary) and is Hausdorf." << endl;
+  cerr << " " << endl;
   exit(1);
 }
 
@@ -21,6 +28,7 @@ int main(int argc, char **argv)
 {
   int ok;
   int splitting = False;
+  int autoOrient = False;
 
   if (argc < 3){
     usage();
@@ -36,10 +44,16 @@ int main(int argc, char **argv)
 
   while (argc > 1){
     ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-splittingOn") == 0)){
+    if ((ok == False) && (strcmp(argv[1], "-split") == 0)){
       argc--;
       argv++;
       splitting = True;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-auto") == 0)){
+      argc--;
+      argv++;
+      autoOrient = True;
       ok = True;
     }
     if (ok == False){
@@ -64,9 +78,16 @@ int main(int argc, char **argv)
     cerr << "Setting splitting to on" << endl;
     normalsFilter->SplittingOn();
   } else {
-    cerr << "Setting splitting to off" << endl;
     normalsFilter->SplittingOff();
   }
+
+  if (autoOrient == True){
+    cout << "Setting auto orientation estimation to on." << endl;
+    normalsFilter->AutoOrientNormalsOn();
+  } else {
+    normalsFilter->AutoOrientNormalsOff();
+  }
+
   normalsFilter->Modified();
   normalsFilter->Update();
 
