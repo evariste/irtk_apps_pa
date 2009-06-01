@@ -825,8 +825,9 @@ void copyPoints(vtkPoints *src, vtkPoints*dest){
 }
 
 void copyFaces(vtkCellArray *src, vtkCellArray *dest){
-  int i, j, noOfCells, npts = 0;
-  int *ptIds = NULL;
+  int i, j, noOfCells;
+  vtkIdType npts = 0;
+  vtkIdType *ptIds = NULL;
   noOfCells = src->GetNumberOfCells();
   dest->SetNumberOfCells(noOfCells);
 
@@ -897,7 +898,7 @@ void getAdjacency(vtkCellArray *faces, vtkIdList** adj){
   int i, j, noOfFaces;
   vtkIdType ida, idb;
 
-  int npts = 0;
+  vtkIdType npts = 0;
   vtkIdType *pts = NULL;
 
   noOfFaces = faces->GetNumberOfCells();

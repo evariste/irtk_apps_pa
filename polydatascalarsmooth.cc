@@ -40,7 +40,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  long i, j, k, n, ok;
+  vtkIdType i;
+  long j, k, n, ok;
   int noOfIterations;
   double kernel;
 	int noOfPoints, noOfCells;
@@ -48,7 +49,7 @@ int main(int argc, char **argv)
 	double v1[3], v2[3];
   vtkIdType cellType;
   vtkIdType *ptsInCell = NULL;
-  int noOfPointsInCell;
+  vtkIdType noOfPointsInCell;
   int u, v;
 
   int noOfEdgesAtPt;

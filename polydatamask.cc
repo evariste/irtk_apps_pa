@@ -60,7 +60,7 @@ int main(int argc, char **argv)
   int newId;
   int j;
   int noOfFaces, newFaceCount;
-  int npts = 0;
+  vtkIdType npts = 0;
   vtkIdType *oldPtId;
   int deleteFace;
   double surfaceBounds[6];
