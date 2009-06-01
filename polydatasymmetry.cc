@@ -213,12 +213,14 @@ int main(int argc, char **argv){
   centre[2] = cz;
 
   // Which eigenvector is the best as a plane normal for a symmetry plane?
-  float measure, minMeasure;
+  int rankMeasure, minRankMeasure;
+  float minSymmMeasure;
   int minCol = 0;
   float params[6];
 
-  minMeasure = FLT_MAX;
-
+  minRankMeasure = INT_MAX;
+  minSymmMeasure = FLT_MAX; 
+  
   float symmRank[3] = {0, 1, 2};
   float boundsRank[3] = {0, 1, 2};
   float symmMeasures[3];
@@ -232,38 +234,63 @@ int main(int argc, char **argv){
     
     symmMeasures[j] = symmetryMeasure(normal, centre);
     boundsMeasures[j] = directionalBounds(normal, centre);
-    
-//    measure = symmetryMeasure(normal, centre);
-//
-//    cout << "     " << j + 1 << ": ";
-//    cout << measure << " " ;
-//
-//    val = directionalBounds(normal, centre);
-//    measure = measure * val;
-//
-//    cout << val << " " << measure << endl;
-//
-//    if (measure < minMeasure){
-//      minMeasure = measure;
-//      minCol = j;
-//    }
   }
 
-  sort2(3, symmMeasures - 1  , symmRank - 1);
-  sort2(3, boundsMeasures - 1, boundsRank - 1);
+  float a[4], b[4];
   
+  for (i = 1; i <= 3; ++i){
+    a[i] = symmMeasures[i-1];
+    b[i] = i - 1;
+  }
+  sort2(3, a, b);
+  for (i = 1; i <= 3; ++i){
+//    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
+    symmRank[(int)(round(b[i]))] = i;
+  }
+  cout << endl;
   
+  for (i = 1; i <= 3; ++i){
+    a[i] = boundsMeasures[i-1];
+    b[i] = i - 1;
+  }
+  sort2(3, a, b);
+  for (i = 1; i <= 3; ++i){
+//    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
+    boundsRank[(int)(round(b[i]))] = i;
+  }
+
+  cout << endl;
+  cout << "----------------" << endl;
+  cout << endl;
+
+  
+  cout << "Symmetry:" << endl;
+  printf("n\t meas. \t rank\n");
   for (j = 0; j < 3; ++j){
-    cout << " " << j+1 << " " << symmMeasures[j] << " " << symmRank[j];
-    cout << "   " << boundsMeasures[j] << " " << boundsRank[j] << endl;
-    measure = symmRank[j] + boundsRank[j];
-    if (measure < minMeasure){
-      minMeasure = measure;
+    printf("%d\t %2.2f \t %d \n", j+1, symmMeasures[j], (int)symmRank[j]);
+  }
+  cout << "Bounds:" << endl;
+  printf("n\t meas. \t rank\n");
+  for (j = 0; j < 3; ++j){
+    printf("%d\t %2.2f \t %d \n", j+1, boundsMeasures[j], (int)boundsRank[j]);
+  }
+  cout << endl;
+
+  for (j = 0; j < 3; ++j){
+    rankMeasure = (int)(symmRank[j] + boundsRank[j]);
+    if (rankMeasure == minRankMeasure && symmMeasures[j] < minSymmMeasure){
+      minRankMeasure = rankMeasure;
+      minSymmMeasure = symmMeasures[j];
+      minCol = j;
+      
+    }
+    if (rankMeasure < minRankMeasure){
+      minRankMeasure = rankMeasure;
+      minSymmMeasure = symmMeasures[j];
       minCol = j;
     }
   }
   
-  // exit(0);
   
   // Assign minimising e-vec to the normal.
   for (i = 0; i < 3; ++i){
