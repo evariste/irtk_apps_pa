@@ -1,28 +1,35 @@
+#include <irtkImage.h>
+#include <nr.h>
+
 #include <sys/types.h>
 
+
+#ifdef WIN32
+#include <time.h>
+#else
 #include <sys/time.h>
+#endif
 
-#include <map.h>
 
-#include <irtkImage.h>
+#include <map>
+
+
 
 char *output_name = NULL, **input_names = NULL;
+char **weight_names = NULL;
 char *mask_name = NULL;
 
 long ran2Seed;
 long ran2initialSeed;
 
-double *weights;
-int    *iWeights;
-
-// first short is the label, second short is the number of images voting
+// first short is the label, second float is the combined weight from images votes
 // for that label.
-typedef map<short, short> countMap;
+typedef map<short, float> countMap;
 
-map<short, short>::iterator iter;
+map<short, float>::iterator iter;
 
 short getMostPopular(countMap cMap){
-  short maxCount = 0, mostPopLabel = -1;
+  double maxWeight = 0, mostPopLabel = -1;
 
   if (cMap.size() == 0){
     // No votes to count, treat as background.
@@ -30,9 +37,8 @@ short getMostPopular(countMap cMap){
   }
 
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-
-    if (iter->second > maxCount){
-      maxCount     = iter->second;
+    if (iter->second > maxWeight){
+      maxWeight     = iter->second;
       mostPopLabel = iter->first;
     }
   }
@@ -41,7 +47,7 @@ short getMostPopular(countMap cMap){
 }
 
 bool isEquivocal(countMap cMap){
-  short maxCount = 0;
+  double maxWeight = 0;
   short numberWithMax = 0;
 
   if (cMap.size() == 0){
@@ -50,13 +56,13 @@ bool isEquivocal(countMap cMap){
   }
 
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-    if (iter->second > maxCount){
-      maxCount     = iter->second;
+    if (iter->second > maxWeight){
+      maxWeight     = iter->second;
     }
   }
 
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-    if (iter->second ==  maxCount){
+    if (fabs(iter->second - maxWeight) < 1E-09){
       ++numberWithMax;
     }
   }
@@ -70,7 +76,7 @@ bool isEquivocal(countMap cMap){
 }
 
 short decideOnTie(countMap cMap){
-  short maxCount = 0;
+  double maxWeight = 0;
   short numberWithMax = 0;
   int index, count;
   short temp;
@@ -82,13 +88,13 @@ short decideOnTie(countMap cMap){
   }
 
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-    if (iter->second > maxCount){
-      maxCount     = iter->second;
+    if (iter->second > maxWeight){
+      maxWeight     = iter->second;
     }
   }
 
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-    if (iter->second ==  maxCount){
+    if (fabs(iter->second -  maxWeight) < 1E-09){
       ++numberWithMax;
     }
   }
@@ -97,34 +103,29 @@ short decideOnTie(countMap cMap){
 
   count = 0;
   for (iter = cMap.begin(); iter != cMap.end(); ++iter){
-    if (iter->second ==  maxCount){
+    if (fabs(iter->second -  maxWeight) < 1E-09){
       tiedLabels[count] = iter->first;
       ++count;
     }
   }
 
   val =  ran2(&ran2Seed);
-
   index = (int) round(val * (count - 1));
 
   temp = tiedLabels[index];
 
-//   cout << "tiedVals: " << count << " index : " <<index << endl;
-
   delete tiedLabels;
 
   return temp;
-
 }
 
 
 void usage()
 {
-  cerr << "Usage: combineLabels [output] [N] [input1] .. [inputN] <-options>" << endl;
+  cerr << "Usage: combineLabels2 [output] [N] [input1] .. [inputN] [weight1] ... [weightN] <-options>" << endl;
   cerr << "The images [input1] .. [inputN] are assumed to contain labellings that" << endl;
   cerr << "are in register.  For each voxel, the modal label from the images is used " << endl;
   cerr << "to generate a label in the output image." << endl;
-  cerr << "-u [filename] : Write out an image showing the unanimous voxels." << endl;
   cerr << "-pad [value]  : Padding value, default = -1." << endl;
   exit(1);
 }
@@ -140,7 +141,8 @@ int main(int argc, char **argv)
   irtkBytePixel *pMask;
   int writeMask = False;
   int pad = -1;
-  double weightSum;
+  irtkRealImage weightImg;
+  irtkRealPixel *ptr2weight;
 
   // Check command line
   if (argc < 4){
@@ -155,8 +157,6 @@ int main(int argc, char **argv)
   argc--;
   argv++;
 
-  cout << "Number of classifiers : " << numberOfClassifiers << endl;
-
   input_names = new char *[numberOfClassifiers];
   for (i = 0; i < numberOfClassifiers; i++){
     input_names[i] = argv[1];
@@ -164,43 +164,19 @@ int main(int argc, char **argv)
     argv++;
   }
 
-  weights = new double[numberOfClassifiers];
-  iWeights = new int[numberOfClassifiers];
-  weightSum = 0.0;
+  weight_names = new char *[numberOfClassifiers];
   for (i = 0; i < numberOfClassifiers; i++){
-    weights[i] = numberOfClassifiers - i;
-    weightSum += weights[i];
+      weight_names[i] = argv[1];
+      argc--;
+      argv++;
   }
 
   while (argc > 1){
     ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-u") == 0)){
-      argc--;      argv++;
-      mask_name = argv[1];
-      writeMask = True;
-      argc--;      argv++;
-      ok = True;
-    }
     if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
       argc--;      argv++;
       pad = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
-    }
-    if ((ok == False) && (strcmp(argv[1], "-weights") == 0)){
-      argc--;      argv++;
-      // Reset weight sum if we're being given weights.
-      weightSum = 0;
-      for (i = 0; i < numberOfClassifiers; i++){
-        if (argc < 2){
-          cerr << "Incorrect number of weights given." << endl;
-          exit(1);
-        }
-        weights[i] = atof(argv[1]);
-        argc--;
-        argv++;
-        weightSum += weights[i];
-      }
       ok = True;
     }
 
@@ -209,15 +185,6 @@ int main(int argc, char **argv)
       usage();
     }
   }
-
-  // Make integral weights that sum to 1000.
-  cout << "Total weight     : " << weightSum << endl;
-  cout << "Assigned weights : " << endl;
-  for (i = 0; i < numberOfClassifiers; i++){
-    iWeights[i] = (int) round(1000 * weights[i] / weightSum);
-    cout << iWeights[i] << " ";
-  }
-  cout << endl;
 
   // Mask has a value of 1 for all uncontended voxels.
   mask.Read(input_names[0]);
@@ -252,12 +219,6 @@ int main(int argc, char **argv)
       }
   }
 
-  // Do we need to write out the `unanimask'?
-  if (writeMask == True && mask_name != NULL){
-    mask.Write(mask_name);
-  }
-
-
   // free some memory.
   delete input_0;
 
@@ -273,15 +234,17 @@ int main(int argc, char **argv)
 
   cout << "Number of contended Voxels = " << contendedVoxelCount << " = ";
   cout << 100.0 * contendedVoxelCount / ((double) voxels) << "%" << endl;
-  
+
   countMap *counts = new countMap[contendedVoxelCount];
 
   for (i = 0; i < numberOfClassifiers; ++i){
 
     input.Read(input_names[i]);
+    weightImg.Read(weight_names[i]);
 
     pIn = input.GetPointerToVoxels();
     pMask = mask.GetPointerToVoxels();
+    ptr2weight = weightImg.GetPointerToVoxels();
 
     contendedVoxelIndex = 0;
     for (v = 0; v < voxels; ++v){
@@ -289,12 +252,13 @@ int main(int argc, char **argv)
       //Is the current voxel contentded?
       if (*pMask == 0){
         if (*pIn > pad){
-          counts[contendedVoxelIndex][*pIn] += iWeights[i];
+          counts[contendedVoxelIndex][*pIn] += *ptr2weight;
         }
         ++contendedVoxelIndex;
       }
       ++pIn;
       ++pMask;
+      ++ptr2weight;
     }
   }
 
@@ -318,9 +282,10 @@ int main(int argc, char **argv)
   }
 
   // Get ready for random stuff.
-  timeval tv;
-  gettimeofday(&tv, NULL); 
-  ran2Seed = tv.tv_usec;
+  time_t tv;
+  tv = time(NULL);
+
+  ran2Seed = tv; // .tv_usec;
   ran2initialSeed = -1 * ran2Seed;
   (void) ran2(&ran2initialSeed);
 
