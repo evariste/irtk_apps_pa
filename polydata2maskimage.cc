@@ -8,6 +8,7 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
+#include <vtkPolyDataNormals.h>
 #include <vtkTriangleFilter.h>
 #include <vtkStripper.h>
 #include <vtkPolyDataToImageStencil.h>
@@ -98,6 +99,14 @@ int main(int argc, char **argv)
   polys = triFilter->GetOutput();
   polys->Update();
 
+  //////////////////////////////////////////////////////
+//vtkPolyDataWriter *tempWriter = vtkPolyDataWriter::New();
+//tempWriter->SetInput(polys);
+//tempWriter->SetFileName("temp.vtk");
+//tempWriter->Write();
+  //////////////////////////////////////////////////////
+
+
   // Read image
   irtkGreyImage image, imageSubregion;
   image.Read(template_image_name);
@@ -169,6 +178,7 @@ int main(int argc, char **argv)
   imageCanonical.ImageToVTK(vtkimageIn);
 
   vtkPolyDataToImageStencil *dataToStencil = vtkPolyDataToImageStencil::New();
+  dataToStencil->SetTolerance(0.0);
   dataToStencil->SetInput(polys);
 
   dataToStencil->SetInformationInput(vtkimageIn);
@@ -325,3 +335,10 @@ int main( int argc, char *argv[] ){
 //   }
 
 /// END GRAVEYARD
+
+
+
+
+
+
+
