@@ -24,6 +24,7 @@ float symmetryMeasure(float *normal, float *centre);
 void normal2phiTheta(float *normal, float &phi, float &theta);
 void phiTheta2normal(float phi, float theta, float* normal);
 float symmetryMeasure(float phi, float theta, float *centre);
+float directionalBounds(float *normal, float *centre);
 float objectiveFuncForNR(float params[]);
 void writePlaneAsPolydata(float *normal, float *centre);
 float distanceToPlane(double x, double y, double z, float *normal, float *centre);
@@ -218,26 +219,58 @@ int main(int argc, char **argv){
 
   minMeasure = FLT_MAX;
 
-  cout << "Symmetry measure for eigenvectors: " << endl;
+  float symmRank[3] = {0, 1, 2};
+  float boundsRank[3] = {0, 1, 2};
+  float symmMeasures[3];
+  float boundsMeasures[3];
+
+  cout << "Symmetry and bounds measures and ranks for eigenvectors: " << endl;
   for (j = 0; j < 3; ++j){
     for (i = 0; i < 3; ++i){
       normal[i] = evecs(i, j);
     }
-    cout << "     " << j + 1 << ": ";
-    measure = symmetryMeasure(normal, centre);
-    cout << measure << endl;
+    
+    symmMeasures[j] = symmetryMeasure(normal, centre);
+    boundsMeasures[j] = directionalBounds(normal, centre);
+    
+//    measure = symmetryMeasure(normal, centre);
+//
+//    cout << "     " << j + 1 << ": ";
+//    cout << measure << " " ;
+//
+//    val = directionalBounds(normal, centre);
+//    measure = measure * val;
+//
+//    cout << val << " " << measure << endl;
+//
+//    if (measure < minMeasure){
+//      minMeasure = measure;
+//      minCol = j;
+//    }
+  }
+
+  sort2(3, symmMeasures - 1  , symmRank - 1);
+  sort2(3, boundsMeasures - 1, boundsRank - 1);
+  
+  
+  for (j = 0; j < 3; ++j){
+    cout << " " << j+1 << " " << symmMeasures[j] << " " << symmRank[j];
+    cout << "   " << boundsMeasures[j] << " " << boundsRank[j] << endl;
+    measure = symmRank[j] + boundsRank[j];
     if (measure < minMeasure){
       minMeasure = measure;
       minCol = j;
     }
   }
-
+  
+  // exit(0);
+  
   // Assign minimising e-vec to the normal.
   for (i = 0; i < 3; ++i){
     normal[i] = evecs(i, minCol);
   }
 
-  cout << "Eigenvector " << minCol + 1 << " gives minimum symmetry measure." << endl;
+  cout << "Eigenvector " << minCol + 1 << " gives minimum combined measure." << endl;
   cout << "Initial normal estimate : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
 
   // Express normal in degrees:
@@ -456,6 +489,49 @@ float symmetryMeasure(float phi, float theta, float *centre)
   return symmetryMeasure(normal, centre);
 }
 
+// For a given direction and centre, find the largest extent of the surface along the direction
+float directionalBounds(float *normal, float *centre)
+{
+  int i, j, noOfPoints;
+  double pt[3];
+  float diff[3];
+  double temp, compNorm;
+  float minComp, maxComp;
+
+  // Ensure unit normal.
+  temp = vtkMath::Norm(normal);
+  for (j = 0; j < 3; ++j)
+    normal[j] /= temp;
+
+  noOfPoints = _surface->GetNumberOfPoints();
+
+  minComp = FLT_MAX;
+  maxComp = -1.0 * FLT_MAX;
+
+  for (i = 0; i < noOfPoints; ++i){
+    _surface->GetPoint (i, pt);
+    for (j = 0; j < 3; ++j){
+      diff[j] = pt[j] - centre[j];
+    }
+
+    // What is the component along the normal?
+    compNorm = vtkMath::Dot(diff, normal);
+
+    if (maxComp < compNorm)
+      maxComp = compNorm;
+
+    if (minComp > compNorm)
+      minComp = compNorm;
+
+  }
+
+//   cout << " Min / max comp: " << minComp << " " << maxComp << endl;
+//  cout << " Difference    : " << maxComp - minComp << endl;
+
+  return maxComp - minComp;
+}
+
+
 // For each point in _surface, reflect in the plane defined by the arguments and find the distance
 // to the surface.  The mean distance over all points is returned.
 float symmetryMeasure(float *normal, float *centre)
@@ -479,6 +555,7 @@ float symmetryMeasure(float *normal, float *centre)
     for (j = 0; j < 3; ++j){
       diff[j] = pt[j] - centre[j];
     }
+
     // What is the component along the normal?
     compNorm = vtkMath::Dot(diff, normal);
 
