@@ -1,4 +1,5 @@
 #include <irtkImage.h>
+#include <irtkFileToImage.h>
 
 char *input_name = NULL, *output_name = NULL;
 
@@ -13,8 +14,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  irtkGreyImage image;
-
+  irtkBaseImage *image;
+  
   if (argc < 4){
     usage();
   }
@@ -36,39 +37,40 @@ int main(int argc, char **argv)
   }
 
   // Read input
-  image.Read(input_name);
+  irtkFileToImage *reader = irtkFileToImage::New(input_name);
+  image = reader->GetOutput();
   
   for (i = 0; i < no; ++i){
     if (strcmp("-x", reflect_list[i]) == 0){
-      image.ReflectX();
+      image->ReflectX();
     }
 
     if (strcmp("-y", reflect_list[i]) == 0){
-     image.ReflectY();
+     image->ReflectY();
     }
 
     if (strcmp("-z", reflect_list[i]) == 0){
-        image.ReflectZ();
+        image->ReflectZ();
     }
 
     if (strcmp("-xy", reflect_list[i]) == 0 || 
         strcmp("-yx", reflect_list[i]) == 0){
-      image.FlipXY();
+      image->FlipXY();
     }
 
     if (strcmp("-xz", reflect_list[i]) == 0 ||
         strcmp("-zx", reflect_list[i]) == 0){
-      image.FlipXZ();
+      image->FlipXZ();
     }
 
     if (strcmp("-yz", reflect_list[i]) == 0 ||
         strcmp("-zy", reflect_list[i]) == 0){
-      image.FlipYZ();
+      image->FlipYZ();
     }
   }
  
   // Write region
-  image.Write(output_name);
+  image->Write(output_name);
 
   delete [] reflect_list;
 
