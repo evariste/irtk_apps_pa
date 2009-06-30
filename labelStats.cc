@@ -44,6 +44,7 @@ int main(int argc, char **argv)
   int printFalseValues = False;
   int ok, temp;
   int siRow = False;
+  int orRow = False;
 
   // Read arguments
   if (argc < 3){
@@ -75,6 +76,12 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       siRow = True;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-orRow") == 0)){
+      argc--;
+      argv++;
+      orRow = True;
       ok = True;
     }
     if ((ok == False) && (strcmp(argv[1], "-file") == 0)){
@@ -218,6 +225,8 @@ int main(int argc, char **argv)
 
         if (siRow == True){
           cout << si << ",";
+        } else if (orRow == True){
+          cout << overlap << ",";
         } else {
           cout << i << "," << marginalA[i] << "," << marginalB[i] << "," << jointLabels[i][i];
           if (printFalseValues == True){
@@ -229,7 +238,7 @@ int main(int argc, char **argv)
       }
     }
 
-    if (siRow == True){
+    if (siRow == True || orRow == True){
       cout << endl;
     }
   }
