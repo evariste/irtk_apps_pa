@@ -784,6 +784,7 @@ int main(int argc, char **argv)
     writer->Write();
   }
 
+  exit(0);
 
   ///////////////////// TESTING
 
