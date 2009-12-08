@@ -5,6 +5,7 @@
 #define MAXVALS 100
 
 char *input_name = NULL;
+char *mask_name = NULL;
 
 void usage()
 {
@@ -59,13 +60,22 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       pad = atof(argv[1]);
-      argc--;      argv++;
+      argc--;
+      argv++;
       ok = True;
     }
     if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
       quiet = True;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+      argc--;
+      argv++;
+      mask_name = argv[1];
+      argc--;
+      argv++;
       ok = True;
     }
     if (ok == False){
@@ -75,29 +85,63 @@ int main(int argc, char **argv)
   }
 
   input.Read(input_name);
-  irtkRealPixel *pPix = input.GetPointerToVoxels();
+  irtkRealPixel *pPix;
+  irtkGreyPixel *pMask;
+
   voxels = input.GetNumberOfVoxels();
 
+  irtkGreyImage mask;
+  if (mask_name == NULL){
+    mask.Read(input_name);
+
+    pPix = input.GetPointerToVoxels();
+    pMask = mask.GetPointerToVoxels();
+
+    for (i = 0; i < voxels; ++i){
+      if (*pPix > pad){
+        *pMask = 1;
+      } else {
+        *pMask = 0;
+      }
+      ++pPix;
+      ++pMask;
+    }
+  } else {
+    mask.Read(mask_name);
+    if ((mask.GetX() != input.GetX()) ||
+        (mask.GetY() != input.GetY()) ||
+        (mask.GetZ() != input.GetZ())){
+      cerr << "imagepercentile: Input and mask dimensions mismatch. Exiting." << endl;
+      exit(1);
+    }
+  }
+  
+  pMask = mask.GetPointerToVoxels();
+  
   // Find number of unpadded values.
   count = 0;
   for (i = 0; i < voxels; ++i){
-    if (*pPix > pad){
+    if (*pMask > 0){
       ++count;
     }
-    ++pPix;
+    ++pMask;
   }
 
   // NR subroutines use 1-indexing.
   float *data = new float[1 + count];
-
+  
+  pMask = mask.GetPointerToVoxels();
   pPix = input.GetPointerToVoxels();
+  
   count = 0;
+  
   for (i = 0; i < voxels; ++i){
-    if (*pPix > pad){
+    if (*pMask > 0){
       data[1 + count] = *pPix;
       ++count;
     }
     ++pPix;
+    ++pMask;
   }
 
   sort(count, data);
