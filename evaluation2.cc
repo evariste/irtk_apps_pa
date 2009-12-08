@@ -231,7 +231,7 @@ int main(int argc, char **argv)
     if ((mask.GetX() != target.GetX()) ||
         (mask.GetY() != target.GetY()) ||
         (mask.GetZ() != target.GetZ())){
-      cerr << "Target and mask : dimensions mismatch. Exiting." << endl;
+      cerr << "evaluation2: Target and mask dimensions mismatch. Exiting." << endl;
       exit(1);
     }
   }
