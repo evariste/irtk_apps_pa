@@ -7,7 +7,7 @@
 #include <irtkTransformation.h>
 
 // Default filenames
-char *source_name = NULL, *target_name = NULL;
+char *source_name = NULL, *target_name = NULL, *mask_name = NULL;
 char **dof_name  = NULL;
 
 #define MAX_DOFS 10
@@ -20,8 +20,8 @@ void usage()
   cerr << "Usage: evaluation2 [target] [source] <options>\n" << endl;
   cerr << "where <options> is one or more of the following: \n" << endl;
   cerr << "<-dofin file>      Transformation (Multiple dofs possible, processed in order given)." << endl;
-  cerr << "<-nbins_x no>      Number of bins for target (Default 255)" << endl;
-  cerr << "<-nbins_y no>      Number of bins for source (Default 255)" << endl;
+  cerr << "<-nbins_x no>      Number of bins for target (Default smaller of dynamic range or 255)" << endl;
+  cerr << "<-nbins_y no>      Number of bins for source (Default as above)" << endl;
   cerr << "<-Rx1 pixel>       Region of interest" << endl;
   cerr << "<-Ry1 pixel>       Region of interest" << endl;
   cerr << "<-Rz1 pixel>       Region of interest" << endl;
@@ -29,6 +29,7 @@ void usage()
   cerr << "<-Ry2 pixel>       Region of interest" << endl;
   cerr << "<-Rz2 pixel>       Region of interest" << endl;
   cerr << "<-Tp  value>       Padding value in target" << endl;
+  cerr << "<-mask file>       Binary mask to define ROI" << endl;
   cerr << "<-linear>          Linear interpolation" << endl;
   cerr << "<-bspline>         B-spline interpolation" << endl;
   cerr << "<-cspline>         Cubic spline interpolation" << endl;
@@ -67,8 +68,9 @@ int main(int argc, char **argv)
   irtkRealImage source(source_name);
   cout << "done" << endl;
 
-  // Fix ROI
   Tp = -1.0 * FLT_MAX;
+
+  // Fix ROI
   i1 = 0;
   j1 = 0;
   k1 = 0;
@@ -192,11 +194,50 @@ int main(int argc, char **argv)
       interpolator = new irtkSincInterpolateImageFunction;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+      argc--;
+      argv++;
+      mask_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
-  } 
+  }
+  
+  irtkGreyImage mask;
+  
+  // Set up a mask, 
+  if (mask_name == NULL){
+    mask.Read(target_name);
+
+    irtkGreyPixel *ptr2mask = mask.GetPointerToVoxels();
+    irtkRealPixel *ptr2tgt  = target.GetPointerToVoxels();
+
+    for (i = 0; i < target.GetNumberOfVoxels(); i++){
+      if (*ptr2tgt > Tp)
+        *ptr2mask = 1;
+      else
+        *ptr2mask = 0;
+      
+      ++ptr2tgt;
+      ++ptr2mask;
+    }
+  } else {
+    mask.Read(mask_name);
+    if ((mask.GetX() != target.GetX()) ||
+        (mask.GetY() != target.GetY()) ||
+        (mask.GetZ() != target.GetZ())){
+      cerr << "Target and mask : dimensions mismatch. Exiting." << endl;
+      exit(1);
+    }
+  }
+  
+    
+  // if there is a ROI apply to mask also.
 
   // If there is an region of interest, use it
   if ((i1 != 0) || (i2 != target.GetX()) ||
@@ -204,6 +245,7 @@ int main(int argc, char **argv)
       (k1 != 0) || (k2 != target.GetZ())){
     target = target.GetRegion(i1, j1, k1, i2, j2, k2);
     source = source.GetRegion(i1, j1, k1, i2, j2, k2);
+    mask   = mask.GetRegion(i1, j1, k1, i2, j2, k2);
   }
 
   // Set min and max of histogram
@@ -217,12 +259,14 @@ int main(int argc, char **argv)
   // Calculate number of bins to use
   if (nbins_x == 0){
     nbins_x = (int) round(target_max - target_min) + 1;
-    nbins_x = 255;
+    if (nbins_x > 255) 
+      nbins_x = 255;
   }
 
   if (nbins_y == 0){
     nbins_y = (int) round(source_max - source_min) + 1;
-    nbins_y = 255;
+    if (nbins_y > 255)
+      nbins_y = 255;
   }
 
   // Create default interpolator if necessary
@@ -265,9 +309,9 @@ int main(int argc, char **argv)
     for (y = 0; y < target.GetY(); y++){
       for (x = 0; x < target.GetX(); x++){
 
-        val = target(x, y, z);
-
-        if (val > Tp){
+        if (mask(x, y, z) > 0){
+          val = target(x, y, z);
+          
           if (val > target_max)
             target_max = val;
           if (val < target_min)
@@ -294,20 +338,11 @@ int main(int argc, char **argv)
             if (val < source_min)
               source_min = val;
 
-            /////////////////////////////////
-            target.Put(x, y, z, val);
-            /////////////////////////////////
-
           }
         }
       }
     }
   }
-
-  /////////////////////////////////
-  target.Write("temp.nii.gz");
-  /////////////////////////////////
-
 
   cout << "ROI Min and max of X is " << target_min 
       << " and " << target_max << endl;
