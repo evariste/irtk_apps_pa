@@ -11,6 +11,7 @@ char *source_name = NULL, *target_name = NULL, *mask_name = NULL;
 char **dof_name  = NULL;
 
 #define MAX_DOFS 10
+#define DEFAULT_BINS 255
 
 // Default number of bins
 int nbins_x = 0, nbins_y = 0;
@@ -259,14 +260,14 @@ int main(int argc, char **argv)
   // Calculate number of bins to use
   if (nbins_x == 0){
     nbins_x = (int) round(target_max - target_min) + 1;
-    if (nbins_x > 255) 
-      nbins_x = 255;
+    if (nbins_x > DEFAULT_BINS)
+      nbins_x = DEFAULT_BINS;
   }
 
   if (nbins_y == 0){
     nbins_y = (int) round(source_max - source_min) + 1;
-    if (nbins_y > 255)
-      nbins_y = 255;
+    if (nbins_y > DEFAULT_BINS)
+      nbins_y = DEFAULT_BINS;
   }
 
   // Create default interpolator if necessary
