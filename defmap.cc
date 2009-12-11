@@ -13,14 +13,15 @@ char **dof_name  = NULL;
 
 void usage()
 {
-  cerr << " Usage: defmap [target] [output] <options>\n" << endl;
+  cerr << " Usage: defmap [target] [output] <options>" << endl;
   cerr << " " << endl;
-  cerr << " Map of distances that voxels in the target move under deformations" << endl;
-  cerr << " induced by one or more transformations." << endl;
+  cerr << " Map of distances that voxels in the target move under the effect" << endl;
+  cerr << " of one or more transformations." << endl;
   cerr << " " << endl;
   cerr << " where <options> is one or more of the following: \n" << endl;
-  cerr << " -dofin file      Transformation, multiple dofs possible and processed " << endl;
-  cerr << "                    in order given (Max 10)." << endl;
+  cerr << " -dofin file      Transformation. Can be repeated to give multiple dofs" << endl;
+  cerr << "                  (i.e. \"-dofin file1 -dofin file2 ...\") which are applied" << endl;
+  cerr << "                  in order given (Max 10)." << endl;
   cerr << " -Tp  value       Padding value in target." << endl;
   cerr << " -mask file       Image mask to define a region of interest." << endl;
   cerr << " -removeGlobal    Estimate a global affine transformation based on a sampled" << endl;
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
   } 
 
   if (noOfDofs == 0){
-    cout << "No dof specified: Using a single identity transformation!" << endl;
+    cout << "No transformations specified: Using a single identity transformation!" << endl;
     noOfDofs = 1;
     transformation = new irtkTransformation*[noOfDofs];
     transformation[0] = new irtkRigidTransformation;
