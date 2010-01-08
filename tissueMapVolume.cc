@@ -5,26 +5,28 @@
 char *image_name = NULL;
 
 void usage(char *exeName){
-  cerr << "usage : " << exeName << " [TissueMap] [maxValue] <-options>" << endl;
+  cerr << "usage : " << exeName << " [TissueMap] <-options>" << endl;
   cerr << "TissueMap is a tissue probability map." << endl;
-  cerr << "maxValue is the value given when a voxel is 100% filled with the tissue." << endl;
+  cerr << "The maximum value in the image is assumed to correspond to a voxel "<< endl;
+  cerr << "100% filled with the tissue. This can be overriden with an option." << endl;
   cerr << "Voxels without any tissue present should have a zero value." << endl;
   cerr << "Returns the volume including partially filled voxels." << endl;
   cerr << "Options:" << endl;
-  cerr << "-t [value] : Threshold value between 0 and 1. Ignore any voxels" << endl;
-  cerr << "             with a fraction of tissue less than [value]." << endl;
+  cerr << "-max [value] : Maximum value for full tissue occupancy." << endl;
+  cerr << "-t [value]   : Threshold value between 0 (default) and 1. Ignore any " << endl;
+  cerr << "               voxels with a fraction of tissue less than [value]." << endl;
   exit(1);
 }
 
 int main(int argc, char **argv){
 
-  if (argc < 3){
+  if (argc < 2){
     usage(argv[0]);
   }
 
-  irtkRealPixel max;
+  irtkRealPixel min, max;
   double xsize, ysize, zsize, voxelVolume, totalVol;
-  double threshold = -1.0 * FLT_MAX;
+  double threshold = 0.0;
   int voxels, i, ok;
   irtkRealPixel *pPix;
 
@@ -32,9 +34,10 @@ int main(int argc, char **argv){
   image_name = argv[1];
   argv++;
   argc--;
-  max = atof(argv[1]);
-  argv++;
-  argc--;
+  
+  irtkRealImage *image = new irtkRealImage(image_name);
+  image->GetMinMax(&min, &max);
+
 
   while (argc > 1){
     ok = False;
@@ -46,15 +49,19 @@ int main(int argc, char **argv){
       argv++;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-max") == 0)){
+      argc--;
+      argv++;
+      max = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = True;
+    }
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
   }
-
-  /////////////////////////////////////////
-
-  irtkRealImage *image = new irtkRealImage(image_name);
 
   image->GetPixelSize(&xsize, &ysize, &zsize);
   voxelVolume = xsize * ysize * zsize;
