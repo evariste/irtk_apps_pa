@@ -4,34 +4,30 @@
 #include <irtkTransformation.h>
 
 // Default filenames
-char *input_name = NULL, *output_name, *dof_name  = NULL;
+char *target_name = NULL, *dof_name  = NULL, *mask_name = NULL;
 
 
 void usage()
 {
-  cerr << "Usage: ffdbending [imageIn] [imageOut] [ffd]\n" << endl;
-  cerr << "<-padding value>         Padding value" << endl;
+  cerr << "Usage: ffdbending [target] [ffd]\n" << endl;
+  cerr << "-padding [value]  Padding value" << endl;
+  cerr << "-mask [image]     Mask image" << endl;
   cerr << "" << endl;
   exit(1);
 }
 
 int main(int argc, char **argv)
 {
-  int i, j, k, n, m, ok;
-  
+  int i, j, k, ok, count;
   double x, y, z, val, padding;
-  int noOfLevels;
 
   // Check command line
-  if (argc < 4) {
+  if (argc < 3) {
     usage();
   }
 
   // Parse image
-  input_name  = argv[1];
-  argc--;
-  argv++;
-  output_name = argv[1];
+  target_name  = argv[1];
   argc--;
   argv++;
   dof_name = argv[1];
@@ -51,6 +47,14 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       ok = True;
+    }    
+    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+      argc--;
+      argv++;
+      mask_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
     }
     if (ok == False) {
       cerr << "Can not parse argument " << argv[1] << endl;
@@ -59,40 +63,64 @@ int main(int argc, char **argv)
   }
 
   // Read image
-  cout << "Reading image ... "; cout.flush();
-  irtkRealImage *image = new irtkRealImage(input_name);
-  cout << "done" << endl;
+  irtkRealImage target;
+  target.Read(target_name);
+  
+  irtkGreyImage mask;
+  
+  // Set up a mask, 
+  if (mask_name == NULL){
+    mask.Read(target_name);
 
+    irtkGreyPixel *ptr2mask = mask.GetPointerToVoxels();
+    irtkRealPixel *ptr2tgt  = target.GetPointerToVoxels();
+
+    for (i = 0; i < target.GetNumberOfVoxels(); i++){
+      if (*ptr2tgt > padding)
+        *ptr2mask = 1;
+      else
+        *ptr2mask = 0;
+      
+      ++ptr2tgt;
+      ++ptr2mask;
+    }
+  } else {
+    mask.Read(mask_name);
+    if ((mask.GetX() != target.GetX()) ||
+        (mask.GetY() != target.GetY()) ||
+        (mask.GetZ() != target.GetZ()) ||
+        (mask.GetT() != target.GetT())){
+      cerr << "ffdbending: Target and mask dimensions mismatch. Exiting." << endl;
+      exit(1);
+    }
+  }
+  
   // Read transformation
   irtkMultiLevelFreeFormTransformation *mffd;
   mffd = new irtkMultiLevelFreeFormTransformation;
   
   mffd->irtkTransformation::Read(dof_name);
   
-  noOfLevels = mffd->NumberOfLevels();
+  val = 0.0;
+  count = 0;
+  
+  for (k = 0; k < target.GetZ(); k++) {
+    for (j = 0; j < target.GetY(); j++) {
+      for (i = 0; i < target.GetX(); i++) {
 
-  m = 0;
-  n = 0;
-  val = 1;
- 
-  for (k = 0; k < image->GetZ(); k++) {
-    for (j = 0; j < image->GetY(); j++) {
-      for (i = 0; i < image->GetX(); i++) {
-
-        if (image->Get(i, j, k) > padding) {
+        if (mask.Get(i, j, k) > 0) {
           x = i;
           y = j;
           z = k;
-        
-          image->ImageToWorld(x, y, z);
-          val = mffd->Bending(x, y, z);
-          
+
+          target.ImageToWorld(x, y, z);
+          val += mffd->Bending(x, y, z);
+          ++count;
         }
-        image->Put(i, j, k, val);
       }
     }
   }
- 
-  // Write the final transformation estimate
-  image->Write(output_name);
+
+  cout << val << " " << count << " " << val / (double(count)) << endl;
+  
 }
