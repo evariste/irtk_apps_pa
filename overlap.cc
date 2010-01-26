@@ -14,13 +14,14 @@ int main(int argc, char* argv[])
   int fuzzy = False;
   double sigmaMin = 0.0;
   double sigmaMax = 0.0;
-  
-  int noOfVoxels;
+  double sigmaMinForVol, sigmaMaxForVol;
+  double *labelVols;
+  int i, t, noOfVoxels, voxelsPerVolume;
 
   if (argc < 3){
     cerr << "Usage: overlap [image1] [image2] <-threshold> <-si>" << endl;
     cerr << "Provide overlap of a label in two images (Tanimoto)" << endl;
-    
+
     cerr << "-threshold   Value above which a voxel is considered as labeled in either image." << endl;
     cerr << "             Default threshold = half maximum value across both images." << endl;
     cerr << "-si          Give similarity index (Dice coefficient) instead of Tanimoto overlap." << endl;
@@ -33,8 +34,8 @@ int main(int argc, char* argv[])
   irtkRealImage image1(argv[1]);
   argc--;
   argv++;
-  
-  // Read second image  
+
+  // Read second image
   irtkRealImage image2(argv[1]);
   argc--;
   argv++;
@@ -43,7 +44,7 @@ int main(int argc, char* argv[])
   image2.GetMinMax(&min2, &max2);
   max1 = (max1 > max2) ? max1 : max2;
   threshold = 0.5 * max1;
-  
+
   while (argc > 1){
     ok = False;
     if ((ok == False) && (strcmp(argv[1], "-threshold") == 0)){
@@ -72,7 +73,10 @@ int main(int argc, char* argv[])
     }
   }
 
-  if (image1.GetX() != image2.GetX() || image1.GetY() != image2.GetY() || image1.GetZ() != image2.GetZ()){
+  if (image1.GetX() != image2.GetX() ||
+      image1.GetY() != image2.GetY() ||
+      image1.GetZ() != image2.GetZ() ||
+      image1.GetT() != image2.GetT()){
     cerr << "Images must have the same dimensions." << endl;
     exit(1);
   }
@@ -90,30 +94,61 @@ int main(int argc, char* argv[])
     cerr << "overlap : Warning : differences between voxel sizes detected." << endl;
   }
 
-  
+
 
   irtkRealPixel *ptrPix1, *ptrPix2;
 
   noOfVoxels = image1.GetNumberOfVoxels();
 
-  
+
   if (fuzzy == True){
 
-    ptrPix1 = image1.GetPointerToVoxels();
-    ptrPix2 = image2.GetPointerToVoxels();
+    double *labelVols = new double[image1.GetT()];
+    voxelsPerVolume = noOfVoxels / image1.GetT();
 
-    for (int i=0; i< noOfVoxels; ++i){
+    for (t = 0; t < image1.GetT(); t++){
+      ptrPix1 = image1.GetPointerToVoxels(0, 0, 0, t);
+      ptrPix2 = image2.GetPointerToVoxels(0, 0, 0, t);
 
-      sigmaMin += (*ptrPix1 < *ptrPix2) ? *ptrPix1 : *ptrPix2;
-      sigmaMax += (*ptrPix1 > *ptrPix2) ? *ptrPix1 : *ptrPix2;
-
-      ++ptrPix1;
-      ++ptrPix2;
+      for (i = 0; i < voxelsPerVolume; ++i){
+        labelVols[t] += *ptrPix1;
+        labelVols[t] += *ptrPix2;
+        ++ptrPix1;
+        ++ptrPix2;
+      }
     }
+
+    for (t = 0; t < image1.GetT(); t++){
+      if (labelVols[t] <= 0){
+        cerr << "Zero volume for label (index t = " << t << ")" << endl;
+        exit(1);
+      }
+    }
+
+    for (t = 0; t < image1.GetT(); t++){
+      ptrPix1 = image1.GetPointerToVoxels(0, 0, 0, t);
+      ptrPix2 = image2.GetPointerToVoxels(0, 0, 0, t);
+
+      sigmaMinForVol = 0.0;
+      sigmaMaxForVol = 0.0;
+      for (i = 0; i < voxelsPerVolume; ++i){
+        sigmaMinForVol += (*ptrPix1 < *ptrPix2) ? *ptrPix1 : *ptrPix2;
+        sigmaMaxForVol += (*ptrPix1 > *ptrPix2) ? *ptrPix1 : *ptrPix2;
+        ++ptrPix1;
+        ++ptrPix2;
+      }
+
+      // Weight inversely by volume (Crum TMI 2006)
+      sigmaMin += sigmaMinForVol / labelVols[t];
+      sigmaMax += sigmaMaxForVol / labelVols[t];
+    }
+
 
     cout << sigmaMin / sigmaMax << endl;
 
   }else{
+
+    // Plain hard labels.
 
     ptrPix1 = image1.GetPointerToVoxels();
     ptrPix2 = image2.GetPointerToVoxels();
@@ -122,7 +157,7 @@ int main(int argc, char* argv[])
     count2 = 0;
     intersectionCount = 0;
 
-    for (int i=0; i< noOfVoxels; ++i){
+    for (i=0; i< noOfVoxels; ++i){
       if ((*ptrPix1 < threshold) && (*ptrPix2 < threshold)){
         ++ptrPix1;
         ++ptrPix2;
@@ -155,7 +190,7 @@ int main(int argc, char* argv[])
       cout << si << endl;
     }
 
-  }  
-  
-  
+  }
+
+
 }
