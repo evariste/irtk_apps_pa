@@ -1,7 +1,8 @@
-
 #include <irtkImage.h>
 
 #include <irtkTransformation.h>
+#include <nr.h>
+
 
 // Default filenames
 char *target_name = NULL, *dof_name  = NULL, *mask_name = NULL;
@@ -19,7 +20,9 @@ void usage()
 int main(int argc, char **argv)
 {
   int i, j, k, ok, count;
-  double x, y, z, val, padding;
+  double x, y, z, bend, sumBend, padding;
+  double jac, sumJac, absLogJac, sumAbsLogJac, topPen, sumTopPen;
+  float *jacs, *bends, *absLogJacs, *topPens;
 
   // Check command line
   if (argc < 3) {
@@ -100,8 +103,29 @@ int main(int argc, char **argv)
   mffd = new irtkMultiLevelFreeFormTransformation;
   
   mffd->irtkTransformation::Read(dof_name);
+
+  count = 0;
+  for (k = 0; k < target.GetZ(); k++) {
+    for (j = 0; j < target.GetY(); j++) {
+      for (i = 0; i < target.GetX(); i++) {
+        if (mask.Get(i, j, k) > 0) {
+          ++count;
+        }
+      }
+    }
+  }
+
+  jacs = new float[1 + count];
+  bends = new float[1 + count];
+  absLogJacs = new float[1 + count];
+  topPens = new float[1 + count];
   
-  val = 0.0;
+  
+  sumBend = 0.0;
+  sumJac = 0.0;
+  sumAbsLogJac = 0.0;
+  sumTopPen = 0.0;
+  
   count = 0;
   
   for (k = 0; k < target.GetZ(); k++) {
@@ -114,13 +138,46 @@ int main(int argc, char **argv)
           z = k;
 
           target.ImageToWorld(x, y, z);
-          val += mffd->Bending(x, y, z);
+          
+          bend = mffd->Bending(x, y, z);
+          jac = mffd->irtkTransformation::Jacobian(x, y, z);
+          absLogJac = fabs(log(jac));
+          topPen = log (0.5 * (jac*jac + 1.0 / (jac*jac)));
+          
+          sumBend += bend;
+          sumJac += jac;
+          sumAbsLogJac += absLogJac;
+          sumTopPen += topPen;
+
+          bends[1 + count] = bend;
+          jacs[1 + count] = jac;
+          absLogJacs[1 + count] = absLogJac;
+          topPens[1 + count] = topPen;
+          
+          
           ++count;
         }
       }
     }
   }
 
-  cout << val << " " << count << " " << val / (double(count)) << endl;
-  
+  sort(count, bends);
+  sort(count, jacs);
+  sort(count, absLogJacs);
+  sort(count, topPens);
+
+  i = 1 + (int) round(0.5 * (count - 1));
+
+  cout << sumBend / (double(count)) << " ";
+  cout << sumJac / (double(count)) << " ";
+  cout << sumAbsLogJac / (double(count)) << " ";
+  cout << sumTopPen / (double(count)) << " ";
+
+  cout << bends[i] << " ";
+  cout << jacs[i] << " ";
+  cout << absLogJacs[i] << " ";
+  cout << topPens[i] << " ";
+
+  cout << count << endl;
+
 }
