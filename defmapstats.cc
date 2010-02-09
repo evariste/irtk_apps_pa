@@ -1,14 +1,3 @@
-/*=========================================================================
-
-  Library   : Image Registration Toolkit (IRTK)
-  Module    : $Id: defmap.cc 117 2009-12-11 14:40:13Z pa100 $
-  Copyright : Imperial College, Department of Computing
-              Visual Information Processing (VIP), 2008 onwards
-  Date      : $Date: 2009-12-11 14:40:13 +0000 (Fri, 11 Dec 2009) $
-  Version   : $Revision: 117 $
-  Changes   : $Author: pa100 $
-
-=========================================================================*/
 
 #ifdef HAS_VTK
 
