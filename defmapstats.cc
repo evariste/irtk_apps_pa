@@ -295,15 +295,11 @@ int main(int argc, char **argv)
 
   i = 1 + (int) round(0.5 * (noOfPoints - 1));
 
-  cout << endl;
-  cout << sumD << " " << sumD2 << " " ;
-  cout << noOfPoints << " " << sumD / (double (noOfPoints));
+  // Means.
+  cout << sumD / (double (noOfPoints));
   cout << " " << sumD2 / (double (noOfPoints)) << " ";
-  cout << vals[i] << " " << vals2[i] << endl;
-  
-//      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
-    
-    
+  // Medians and point count.
+  cout << vals[i] << " " << vals2[i] << " " << noOfPoints << endl;
   
 }
 
