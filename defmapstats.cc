@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   
 
   // Check command line
-  if (argc < 3){
+  if (argc < 2){
     usage();
   }
 
@@ -52,10 +52,7 @@ int main(int argc, char **argv)
   target_name = argv[1];
   argc--;
   argv++;
-  output_name = argv[1];
-  argc--;
-  argv++;
-  
+
   // Read target image
   irtkRealImage target(target_name);
 
