@@ -70,6 +70,17 @@ int main(int argc, char **argv){
   float phi, theta;
   int hasPositivePoint = False;
   float posiPoint[3];
+  int rankMeasure, minRankMeasure;
+  float minSymmMeasure;
+  int minCol = 0;
+  float params[6];
+  float symmRank[3] = {0, 1, 2};
+  float boundsRank[3] = {0, 1, 2};
+  float symmMeasures[3];
+  float boundsMeasures[3];
+  int normalInit = False;
+
+
 
   if (argc < 2){
     usage();
@@ -110,6 +121,22 @@ int main(int argc, char **argv){
         argv++;
         ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-normal") == 0)){
+      argc--;
+      argv++;
+      normalInit = True;
+      normal[0] = atof(argv[1]);
+      argc--;
+      argv++;
+      normal[1] = atof(argv[1]);
+      argc--;
+      argv++;
+      normal[2] = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = True;
+    }
+
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
@@ -146,159 +173,171 @@ int main(int argc, char **argv){
   cout << "Centre of gravity (initial estimate for plane centre): " << endl;
   cout << "           (" << cx << ", " << cy << ", " << cz << ")" <<  endl;
 
-  xx = xy = xz = yy = yz = zz = 0.0;
+  centre[0] = cx;
+  centre[1] = cy;
+  centre[2] = cz;
 
-  irtkMatrix cov;
-  cov.Initialize(3, 3);
-
-  for (int i = 0; i < noOfPoints; i++){
-    _surface->GetPoint (i, pt);
-    xx += (pt[0] - cx) * (pt[0] - cx);
-    xy += (pt[0] - cx) * (pt[1] - cy);
-    xz += (pt[0] - cx) * (pt[2] - cz);
-    yy += (pt[1] - cy) * (pt[1] - cy);
-    yz += (pt[1] - cy) * (pt[2] - cz);
-    zz += (pt[2] - cz) * (pt[2] - cz);
-  }
-
-  xx /= noOfPoints;
-  xy /= noOfPoints;
-  xz /= noOfPoints;
-  yy /= noOfPoints;
-  yz /= noOfPoints;
-  zz /= noOfPoints;
-
-//  cout << "Finding covariance" << endl;
-
-  cov(0, 0) = xx;
-  cov(1, 1) = yy;
-  cov(2, 2) = zz;
-
-  cov(0, 1) = xy;
-  cov(1, 0) = xy;
-
-  cov(0, 2) = xz;
-  cov(2, 0) = xz;
-
-  cov(1, 2) = yz;
-  cov(2, 1) = yz;
-
-//  cout << "Finding eigenstuff " << endl;
-
-  irtkMatrix evecs;
-  irtkVector evals;
-
-
-  cov.Eigenvalues(evecs, evals);
-
-  cout << "Covariance matrix for all points:" << endl;
-  cov.Print();
-  cout << " " << endl;
-
-  cout << "Eigenvectors: " << endl;
-  evecs.Print();
-  cout << " " << endl;
-
-  cout << "Eigenvalues: " << endl;
-  evals.Print();
-  cout << " " << endl;
 
   // Set up locator.
   _locator = new irtkLocator;
   _locator->SelectLocatorType(1);
   _locator->SetDataSet(_surface);
 
-  centre[0] = cx;
-  centre[1] = cy;
-  centre[2] = cz;
-
-  // Which eigenvector is the best as a plane normal for a symmetry plane?
-  int rankMeasure, minRankMeasure;
-  float minSymmMeasure;
-  int minCol = 0;
-  float params[6];
-
-  minRankMeasure = INT_MAX;
-  minSymmMeasure = FLT_MAX; 
-  
-  float symmRank[3] = {0, 1, 2};
-  float boundsRank[3] = {0, 1, 2};
-  float symmMeasures[3];
-  float boundsMeasures[3];
-
-  cout << "Symmetry and bounds measures and ranks for eigenvectors: " << endl;
-  for (j = 0; j < 3; ++j){
+  if (normalInit == True){
+    cout << "Using initial normal estimate supplied :" << endl;
+    cout << "    " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+    val = sqrt(vtkMath::Dot(normal, normal));
     for (i = 0; i < 3; ++i){
-      normal[i] = evecs(i, j);
+      normal[i] = normal[i] / val;
     }
-    
-    symmMeasures[j] = symmetryMeasure(normal, centre);
-    boundsMeasures[j] = directionalBounds(normal, centre);
-  }
+    cout << "Normalised : " << endl;
+    cout << "    " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
 
-  float a[4], b[4];
-  
-  for (i = 1; i <= 3; ++i){
-    a[i] = symmMeasures[i-1];
-    b[i] = i - 1;
-  }
-  sort2(3, a, b);
-  for (i = 1; i <= 3; ++i){
-//    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
-    symmRank[(int)(round(b[i]))] = i;
-  }
-  cout << endl;
-  
-  for (i = 1; i <= 3; ++i){
-    a[i] = boundsMeasures[i-1];
-    b[i] = i - 1;
-  }
-  sort2(3, a, b);
-  for (i = 1; i <= 3; ++i){
-//    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
-    boundsRank[(int)(round(b[i]))] = i;
-  }
+  } else {
 
-  cout << endl;
-  cout << "----------------" << endl;
-  cout << endl;
 
-  
-  cout << "Symmetry:" << endl;
-  printf("n\t meas. \t rank\n");
-  for (j = 0; j < 3; ++j){
-    printf("%d\t %2.2f \t %d \n", j+1, symmMeasures[j], (int)symmRank[j]);
-  }
-  cout << "Bounds:" << endl;
-  printf("n\t meas. \t rank\n");
-  for (j = 0; j < 3; ++j){
-    printf("%d\t %2.2f \t %d \n", j+1, boundsMeasures[j], (int)boundsRank[j]);
-  }
-  cout << endl;
+    xx = xy = xz = yy = yz = zz = 0.0;
 
-  for (j = 0; j < 3; ++j){
-    rankMeasure = (int)(symmRank[j] + boundsRank[j]);
-    if (rankMeasure == minRankMeasure && symmMeasures[j] < minSymmMeasure){
-      minRankMeasure = rankMeasure;
-      minSymmMeasure = symmMeasures[j];
-      minCol = j;
-      
+    irtkMatrix cov;
+    cov.Initialize(3, 3);
+
+    for (int i = 0; i < noOfPoints; i++){
+      _surface->GetPoint (i, pt);
+      xx += (pt[0] - cx) * (pt[0] - cx);
+      xy += (pt[0] - cx) * (pt[1] - cy);
+      xz += (pt[0] - cx) * (pt[2] - cz);
+      yy += (pt[1] - cy) * (pt[1] - cy);
+      yz += (pt[1] - cy) * (pt[2] - cz);
+      zz += (pt[2] - cz) * (pt[2] - cz);
     }
-    if (rankMeasure < minRankMeasure){
-      minRankMeasure = rankMeasure;
-      minSymmMeasure = symmMeasures[j];
-      minCol = j;
-    }
-  }
-  
-  
-  // Assign minimising e-vec to the normal.
-  for (i = 0; i < 3; ++i){
-    normal[i] = evecs(i, minCol);
-  }
 
-  cout << "Eigenvector " << minCol + 1 << " gives minimum combined measure." << endl;
-  cout << "Initial normal estimate : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+    xx /= noOfPoints;
+    xy /= noOfPoints;
+    xz /= noOfPoints;
+    yy /= noOfPoints;
+    yz /= noOfPoints;
+    zz /= noOfPoints;
+
+    //  cout << "Finding covariance" << endl;
+
+    cov(0, 0) = xx;
+    cov(1, 1) = yy;
+    cov(2, 2) = zz;
+
+    cov(0, 1) = xy;
+    cov(1, 0) = xy;
+
+    cov(0, 2) = xz;
+    cov(2, 0) = xz;
+
+    cov(1, 2) = yz;
+    cov(2, 1) = yz;
+
+    //  cout << "Finding eigenstuff " << endl;
+
+    irtkMatrix evecs;
+    irtkVector evals;
+
+
+    cov.Eigenvalues(evecs, evals);
+
+    cout << "Covariance matrix for all points:" << endl;
+    cov.Print();
+    cout << " " << endl;
+
+    cout << "Eigenvectors: " << endl;
+    evecs.Print();
+    cout << " " << endl;
+
+    cout << "Eigenvalues: " << endl;
+    evals.Print();
+    cout << " " << endl;
+
+    // Which eigenvector is the best as a plane normal for a symmetry plane?
+    minRankMeasure = INT_MAX;
+    minSymmMeasure = FLT_MAX;
+
+    cout << "Symmetry and bounds measures and ranks for eigenvectors: " << endl;
+    for (j = 0; j < 3; ++j){
+      for (i = 0; i < 3; ++i){
+        normal[i] = evecs(i, j);
+      }
+
+      symmMeasures[j] = symmetryMeasure(normal, centre);
+      boundsMeasures[j] = directionalBounds(normal, centre);
+    }
+
+    float a[4], b[4];
+
+    for (i = 1; i <= 3; ++i){
+      a[i] = symmMeasures[i-1];
+      b[i] = i - 1;
+    }
+
+    sort2(3, a, b);
+    for (i = 1; i <= 3; ++i){
+      //    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
+      symmRank[(int)(round(b[i]))] = i;
+    }
+    cout << endl;
+
+    for (i = 1; i <= 3; ++i){
+      a[i] = boundsMeasures[i-1];
+      b[i] = i - 1;
+    }
+    sort2(3, a, b);
+    for (i = 1; i <= 3; ++i){
+      //    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
+      boundsRank[(int)(round(b[i]))] = i;
+    }
+
+    cout << endl;
+    cout << "----------------" << endl;
+    cout << endl;
+
+
+    cout << "Symmetry:" << endl;
+    printf("n\t meas. \t rank\n");
+    for (j = 0; j < 3; ++j){
+      printf("%d\t %2.2f \t %d \n", j+1, symmMeasures[j], (int)symmRank[j]);
+    }
+    cout << "Bounds:" << endl;
+    printf("n\t meas. \t rank\n");
+    for (j = 0; j < 3; ++j){
+      printf("%d\t %2.2f \t %d \n", j+1, boundsMeasures[j], (int)boundsRank[j]);
+    }
+    cout << endl;
+
+    for (j = 0; j < 3; ++j){
+      rankMeasure = (int)(symmRank[j] + boundsRank[j]);
+      if (rankMeasure == minRankMeasure && symmMeasures[j] < minSymmMeasure){
+        minRankMeasure = rankMeasure;
+        minSymmMeasure = symmMeasures[j];
+        minCol = j;
+
+      }
+      if (rankMeasure < minRankMeasure){
+        minRankMeasure = rankMeasure;
+        minSymmMeasure = symmMeasures[j];
+        minCol = j;
+      }
+    }
+
+
+    // Assign minimising e-vec to the normal.
+    for (i = 0; i < 3; ++i){
+      normal[i] = evecs(i, minCol);
+    }
+
+    cout << "Eigenvector " << minCol + 1 << " gives minimum combined measure." << endl;
+    cout << "Initial normal estimate : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
+
+
+  } // else if normalInit == True
+
+
+
+
 
   // Express normal in degrees:
   normal2phiTheta(normal, phi, theta);
@@ -352,8 +391,8 @@ int main(int argc, char **argv){
 
 
   // Ensure unit normal.
-  val = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
-
+//  val = sqrt(normal[0]*normal[0] + normal[1]*normal[1] + normal[2]*normal[2]);
+  val = sqrt(vtkMath::Dot(normal, normal));
   for (i = 0; i < 3; ++i){
     normal[i] = normal[i] / val;
   }
@@ -502,9 +541,10 @@ float objectiveFuncForNR(float params[])
   centre[1] = params[4];
   centre[2] = params[5];
 
+//  cout << "  " << phi << " " << theta << " " << centre[0] << " " << centre[1] << " " << centre [2] << " " << measure << endl;
+
   measure = symmetryMeasure(phi, theta, centre);
 
-//  cout << "  " << phi << " " << theta << " " << centre[0] << " " << centre[1] << " " << centre [2] << " " << measure << endl;
 
   return measure;
 }
