@@ -29,6 +29,8 @@ void usage()
 int main(int argc, char **argv)
 {
   int i, ok;
+  int matching = False;
+
   irtkTransformation *transformation = NULL;
 
   // Check command line
@@ -74,6 +76,14 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       scalar_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-matching") == 0)) {
+      argc--;
+      argv++;
+      matching = True;
       argc--;
       argv++;
       ok = True;
@@ -126,12 +136,24 @@ int main(int argc, char **argv)
   scalarsOut->SetNumberOfComponents(1);
   scalarsOut->SetNumberOfTuples(noOfPoints);
 
-  for (i = 0; i < noOfPoints; i++) {
-    tgtPoints->GetPoint(i, coord);
-    transformation->Transform(coord[0], coord[1], coord[2]);
-    ptID = source_locator->FindClosestPoint(coord);
-    val = scalarsIn->GetTuple1(ptID);
-    scalarsOut->SetTuple1(i, val);
+  if (matching == True){
+    if (noOfPoints != sourceSurf->GetNumberOfPoints()){
+      cerr << "Matching flag chosen but numbers of points unequal." << endl;
+      exit(1);
+    }
+    for (i = 0; i < noOfPoints; i++) {
+      val = scalarsIn->GetTuple1(i);
+      scalarsOut->SetTuple1(i, val);
+    }
+
+  } else {
+    for (i = 0; i < noOfPoints; i++) {
+      tgtPoints->GetPoint(i, coord);
+      transformation->Transform(coord[0], coord[1], coord[2]);
+      ptID = source_locator->FindClosestPoint(coord);
+      val = scalarsIn->GetTuple1(ptID);
+      scalarsOut->SetTuple1(i, val);
+    }
   }
 
   scalarsOut->SetName(scalar_name);
