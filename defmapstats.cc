@@ -36,11 +36,16 @@ void usage()
 int main(int argc, char **argv)
 {
   irtkTransformation **transformation = NULL;
-  int ok, x, y, z, regressAffine, squaredDistance;
+  int ok, i, j, k, regressAffine, squaredDistance;
   double Tp, val;
-  int i, noOfDofs;
+  int m, noOfDofs;
   int noOfPoints, ptID;
   double sumD, sumD2;
+  double x, y, z, dx, dy, dz;
+  
+  int xdim, ydim, zdim;
+  float *vals, *vals2, *L, *L2, sumL, sumL2;
+  double alpha = 1;
   
 
   // Check command line
@@ -105,6 +110,14 @@ int main(int argc, char **argv)
       argv++;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-alpha") == 0)){
+      argc--;
+      argv++;
+      alpha = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = True;
+    }
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
@@ -119,8 +132,8 @@ int main(int argc, char **argv)
   } else {
     // Read dof(s)
     transformation = new irtkTransformation*[noOfDofs];
-    for (i = 0; i < noOfDofs; i++){
-      transformation[i] = irtkTransformation::New(dof_name[i]);
+    for (m = 0; m < noOfDofs; m++){
+      transformation[m] = irtkTransformation::New(dof_name[m]);
     }
   }
   
@@ -135,7 +148,7 @@ int main(int argc, char **argv)
     irtkRealPixel *ptr2tgt  = target.GetPointerToVoxels();
     noOfPoints = target.GetNumberOfVoxels();
     
-    for (i = 0; i < noOfPoints; i++){
+    for (m = 0; m < noOfPoints; m++){
       if (*ptr2tgt > Tp)
         *ptr2mask = 1;
       else
@@ -152,6 +165,9 @@ int main(int argc, char **argv)
   // Make an identity global transformation.
   irtkAffineTransformation *trAffine = new irtkAffineTransformation;
   
+  xdim = target.GetX();
+  ydim = target.GetY();
+  zdim = target.GetZ();
   
   if (regressAffine == True){
     // Estimate the global affine transformation.
@@ -174,9 +190,9 @@ int main(int argc, char **argv)
     ptID = -1;
 
     // Loop over all voxels.
-    for (z = 0; z < target.GetZ(); z++){
-      for (y = 0; y < target.GetY(); y++){
-        for (x = 0; x < target.GetX(); x++){
+    for (k = 0; k < zdim; k++){
+      for (j = 0; j < ydim; j++){
+        for (i = 0; i < xdim; i++){
 
           ptID++;
           // Should we sample it or not?
@@ -184,8 +200,8 @@ int main(int argc, char **argv)
             continue;
 
           // Get two copies of current image coordinates.
-          irtkPoint p(x, y, z);
-          irtkPoint q(x, y, z);
+          irtkPoint p(i, j, k);
+          irtkPoint q(i, j, k);
 
           // Transform points into target world coordinates.
           target.ImageToWorld(p);
@@ -194,8 +210,8 @@ int main(int argc, char **argv)
           targetPts.Add(p);
 
           // Transform one point to source coordinates.
-          for (i = 0; i < noOfDofs; i++){
-            transformation[i]->Transform(q);
+          for (m = 0; m < noOfDofs; m++){
+            transformation[m]->Transform(q);
           }
 
           sourcePts.Add(q);
@@ -223,30 +239,29 @@ int main(int argc, char **argv)
   
   // Finally can calculate distances.
   noOfPoints = 0;
-  for (z = 0; z < target.GetZ(); z++){
-    for (y = 0; y < target.GetY(); y++){
-      for (x = 0; x < target.GetX(); x++){
+  for (k = 0; k < zdim; k++){
+    for (j = 0; j < ydim; j++){
+      for (i = 0; i < xdim; i++){
 
-        if (mask(x,y,z) > 0){
+        if (mask(i,j,k) > 0){
           noOfPoints++;
         }
       }
     }
   }
 
-  float *vals, *vals2;
-  vals  = new float[1 + noOfPoints];
-  vals2 = new float[1 + noOfPoints];
-  
-  noOfPoints = 0;
-  for (z = 0; z < target.GetZ(); z++){
-    for (y = 0; y < target.GetY(); y++){
-      for (x = 0; x < target.GetX(); x++){
+  irtkRealImage xdisp(target_name);
+  irtkRealImage ydisp(target_name);
+  irtkRealImage zdisp(target_name);
 
-        if (mask(x,y,z) > 0){
+  for (k = 0; k < zdim; k++){
+    for (j = 0; j < ydim; j++){
+      for (i = 0; i < xdim; i++){
 
-          irtkPoint p(x, y, z);
-          irtkPoint q(x, y, z);
+        if (mask(i,j,k) > 0){
+
+          irtkPoint p(i, j, k);
+          irtkPoint q(i, j, k);
 
           // Transform points into target world coordinates
           target.ImageToWorld(p);
@@ -257,17 +272,64 @@ int main(int argc, char **argv)
           trAffine->irtkTransformation::Transform(p);
           
           // Transform the other copy by the input dofs.
-          for (i = 0; i < noOfDofs; i++){
-            transformation[i]->Transform(q);
+          for (m = 0; m < noOfDofs; m++){
+            transformation[m]->Transform(q);
           }
-          
-          // Calculate distance.
-          val = p.Distance(q);
-          sumD += val;
-          sumD2 += val * val;
+         
+          xdisp(i, j, k) = p._x - q._x;
+          ydisp(i, j, k) = p._y - q._y;
+          zdisp(i, j, k) = p._z - q._z;
+        }
 
+      }
+    }
+  }
+  
+  
+  vals  = new float[1 + noOfPoints];
+  vals2 = new float[1 + noOfPoints];
+  L  = new float[1 + noOfPoints];
+  L2 = new float[1 + noOfPoints];
+    
+  sumD = sumD2 = sumL = sumL2 = 0.0;
+  
+  noOfPoints = 0;
+  for (k = 1; k < zdim-1; k++){
+    for (j = 1; j < ydim-1; j++){
+      for (i = 1; i < xdim-1; i++){
+
+        if (mask(i,j,k) > 0){
+
+          // Calculate distance.
+          x = xdisp(i, j, k);
+          y = ydisp(i, j, k);
+          z = zdisp(i, j, k);
+          
+          val = x*x + y*y + z*z;
+
+          sumD2 += val;
+          vals2[1 + noOfPoints] = val;
+          
+          val = sqrt(val);
+          
+          sumD += val;
           vals[1 + noOfPoints]  = val;
-          vals2[1 + noOfPoints] = val * val;
+          
+          dx = xdisp(i+1, j, k) - xdisp(i-1, j, k);
+          dy = ydisp(i, j+1, k) - ydisp(i, j-1, k);
+          dz = zdisp(i, j, k+1) - zdisp(i, j, k-1);
+          
+          val = x*x + y*y + z*z + alpha*alpha*(dx*dx + dy*dy + dz*dz);
+          
+          sumL2 += val;
+          L2[1 + noOfPoints] = val;
+          
+          val = sqrt(val);
+          
+          sumL += val;
+          L[1 + noOfPoints] = val;
+          
+          
           noOfPoints++;
         }
 
@@ -276,16 +338,24 @@ int main(int argc, char **argv)
   }
 
 
+
   sort(noOfPoints, vals);
   sort(noOfPoints, vals2);
-
-  i = 1 + (int) round(0.5 * (noOfPoints - 1));
+  sort(noOfPoints, L);
+  sort(noOfPoints, L2);
+  
+  m = 1 + (int) round(0.5 * (noOfPoints - 1));
 
   // Means.
   cout << sumD / (double (noOfPoints));
   cout << " " << sumD2 / (double (noOfPoints)) << " ";
   // Medians and point count.
-  cout << vals[i] << " " << vals2[i] << " " << noOfPoints << endl;
+  cout << vals[m] << " " << vals2[m] << " " << noOfPoints <<" ";
+
+  cout << sumL / (double (noOfPoints));
+  cout << " " << sumL2 / (double (noOfPoints)) << " ";
+  cout << L[m] << " " << L2[m];
+  cout << endl;
   
 }
 
