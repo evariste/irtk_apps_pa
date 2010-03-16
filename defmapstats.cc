@@ -69,7 +69,6 @@ int main(int argc, char **argv)
   dof_name = new char*[MAX_DOFS];
   
   regressAffine = False;
-  squaredDistance = False;
 
   while (argc > 1){
     ok = False;
@@ -94,12 +93,6 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       regressAffine = True;
-      ok = True;
-    }
-    if ((ok == False) && (strcmp(argv[1], "-square") == 0)){
-      argc--;
-      argv++;
-      squaredDistance = True;
       ok = True;
     }
     if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
