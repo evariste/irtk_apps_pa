@@ -47,13 +47,16 @@ void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
 
   _input = vtkPolyData::New();
   _input = normalsFilter->GetOutput();
+  _input->Update();
+  _input->BuildCells();
+  _input->BuildLinks();
   
   _output = vtkPolyData::New();
   _output = normalsFilter->GetOutput();
 
-  _input->Update();
-  _input->BuildCells();
-  _input->BuildLinks();
+  _output->Update();
+  _output->BuildCells();
+  _output->BuildLinks();
   
   int noOfPoints = _input->GetNumberOfPoints();
   
@@ -69,6 +72,8 @@ void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
   for (int j = 0; j < noOfPoints; ++j){
     _distances->SetTuple1(j, 0.0);
   }
+  
+//  normalsFilter->Delete();
 }
 
 void vtkPolyDataSmoothCustom::SetInput(vtkPolyData *polydata)
@@ -87,18 +92,21 @@ void vtkPolyDataSmoothCustom::Run()
   vtkTriangle* triangle = NULL;
   vtkIdList* ptIds = NULL;
 
-  noOfPoints = _input->GetNumberOfPoints();
+
   
+  noOfPoints = _input->GetNumberOfPoints();
+
   // the points array
   double *pts = new double[3*noOfPoints];
   vtkPoints* pts_original = _input->GetPoints();
   
   for (i = 0; i <= _NoOfIterations; ++i){
 
-    cout << "iteration  " << i << " ";
+    cout << "iteration  " << i << " "; cout.flush();
 
     // Estimate \int H^2 dA by multiplying E(H^2) with Area.
     E_H2 = this->HSquareRobustMean();
+    cout << "bla " << endl;
     
     area = this->SurfaceArea();
     
@@ -210,6 +218,9 @@ void vtkPolyDataSmoothCustom::Run()
     this->ShiftAndScaleMesh(shift, scaleFactor);
     
   }
+  
+  _output->SetPoints(_input->GetPoints());
+  _output->Update();
 
   cout << "Final iteration : " << i << endl;
   cout << "Final L_2 norm of H^2 (threshold) : " << h2norm << " (" << _SmoothnessThreshold << ")" << endl;
@@ -222,14 +233,15 @@ void vtkPolyDataSmoothCustom::Finalize()
 
   if (_TrackingOn == True){
     _distances->SetName("smoothingDists");
-    _input->GetPointData()->AddArray(_distances);
+    _output->GetPointData()->AddArray(_distances);
+    _output->Update();
   }
 
   // Normals need to be recalculated before saving.
   cerr << endl << "Recalculating normals";
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(_input);
+  normalsFilter->SetInput(_output);
   normalsFilter->Modified();
   normalsFilter->Update();
   
@@ -291,6 +303,11 @@ double vtkPolyDataSmoothCustom::HSquareRobustMean()
     ++count;
   }
 
+  delete [] data;
+//  scalars->Delete();
+//  curveOut->Delete();
+//  curve->Delete();
+  
   return meanValSq / count;
 
 }
@@ -315,6 +332,8 @@ double vtkPolyDataSmoothCustom::SurfaceArea()
 
     A += double(facet->TriangleArea(v0, v1, v2));
   }
+  facet->Delete();
+  
   return A;
 }
 

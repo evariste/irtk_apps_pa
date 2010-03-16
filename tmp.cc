@@ -17,29 +17,7 @@ char *output_name = NULL;
 void usage()
 {
   cerr << "" << endl;
-  cerr << " Usage: polydatasmooth [input] [output] [iterations] [relaxationFactor]  <options>" << endl;
-  cerr << "" << endl;
-  cerr << " Area weighted Laplacian relaxation of a surface." << endl;
-  cerr << "" << endl;
-  cerr << " Iteratively move mesh nodes towards the centroid of the adjacent nodes." << endl;
-  cerr << " The relaxation factor (RF) determines how far each node moves towards the " << endl;
-  cerr << " local centroid (0<= RF <= 1).  The new position of a node is a weighted " << endl;
-  cerr << " combination of its previous position and the neighbours' centroid.  " << endl;
-  cerr << " RF = 1 moves a node all the way to the centroid while RF = 0 keeps a " << endl;
-  cerr << " node at its previous position." << endl;
-  cerr << "" << endl;
-  cerr << "Options: " << endl;
-  cerr << "" << endl;
-  cerr << "-track : " << endl;
-  cerr << "         Track the signed distances traversed by points (out is positive)." << endl;
-  cerr << "         Store the results in scalar array \"smoothingDists\"" << endl;
-  cerr << "-threshold [value] " << endl;
-  cerr << "         A value indicating the smoothness as the L_2 norm of H^2 over the surface." << endl;
-  cerr << "         See Tosun, MedIA, 2004.  Iterations stop if the norm for the surface drops" << endl;
-  cerr << "         drops below the given value." << endl;
-  cerr << "" << endl;
-  cerr << "" << endl;
-
+  cerr << " Usage:" << endl;
   exit(1);
 }
 
@@ -113,8 +91,21 @@ int main(int argc, char **argv)
   smoother->SetTrackingOn(trackingOn);
   smoother->Run();
   
+  vtkPolyData *smoothedInput = smoother->GetOutput();
+  
+  vtkCurvatures *curve = vtkCurvatures::New();
+  curve->SetInput(smoothedInput);
+  curve->SetCurvatureTypeToGaussian();
+  curve->Update();
+  
+  
+  vtkPolyData *output = vtkPolyData::New();
+  output = curve->GetOutput();
+  
+  
+  
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(smoother->GetOutput());
+  writer->SetInput(output);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Update();
