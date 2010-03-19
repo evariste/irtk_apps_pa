@@ -7,59 +7,52 @@ vtkPolyDataSmoothCustom::vtkPolyDataSmoothCustom()
   _output = NULL;
   _normals = NULL;
   _distances = NULL;
-  
+
   _CofG[0] = _CofG[1] = _CofG[2] = 0;
 }
 
 vtkPolyDataSmoothCustom::~vtkPolyDataSmoothCustom()
 {
-  
+
 }
 
 void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
 {
   _TrackingOn = False;
-  
+
   _SmoothnessThreshold = -1.0f;
-  
+
   _NoOfIterations = 1;
-  
-  
+
+
   // Normals need to be recalculated before using.
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
   normalsFilter->SetInput(polydata);
   normalsFilter->Modified();
   normalsFilter->Update();
-  
+
   if (_input != NULL)
     _input->Delete();
 
   if (_output != NULL)
     _output->Delete();
-  
+
   if (_normals != NULL)
     _normals->Delete();
-  
+
   if (_distances != NULL)
     _distances->Delete();
-  
+
 
   _input = vtkPolyData::New();
   _input = normalsFilter->GetOutput();
   _input->Update();
   _input->BuildCells();
   _input->BuildLinks();
-  
-  _output = vtkPolyData::New();
-  _output = normalsFilter->GetOutput();
 
-  _output->Update();
-  _output->BuildCells();
-  _output->BuildLinks();
-  
   int noOfPoints = _input->GetNumberOfPoints();
-  
+
   _normals = vtkFloatArray::New();
   _normals->SetNumberOfComponents(3);
   _normals->SetNumberOfTuples(noOfPoints);
@@ -72,7 +65,7 @@ void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
   for (int j = 0; j < noOfPoints; ++j){
     _distances->SetTuple1(j, 0.0);
   }
-  
+
 //  normalsFilter->Delete();
 }
 
@@ -93,13 +86,13 @@ void vtkPolyDataSmoothCustom::Run()
   vtkIdList* ptIds = NULL;
 
 
-  
+
   noOfPoints = _input->GetNumberOfPoints();
 
   // the points array
   double *pts = new double[3*noOfPoints];
   vtkPoints* pts_original = _input->GetPoints();
-  
+
   for (i = 0; i <= _NoOfIterations; ++i){
 
     cout << "iteration  " << i << " "; cout.flush();
@@ -107,9 +100,9 @@ void vtkPolyDataSmoothCustom::Run()
     // Estimate \int H^2 dA by multiplying E(H^2) with Area.
     E_H2 = this->HSquareRobustMean();
     cout << "bla " << endl;
-    
+
     area = this->SurfaceArea();
-    
+
 
     // The L_2 norm using the Tosun formulation (MedIA 2004)
     h2norm = sqrt(E_H2 * area / 4.0 / M_PI);
@@ -125,7 +118,7 @@ void vtkPolyDataSmoothCustom::Run()
     cogOld[2] = this->_CofG[2];
     radiusOld = this->GetRadius();
 
-    
+
     cout << h2norm << endl;
 
     // Loop over surface.
@@ -203,24 +196,21 @@ void vtkPolyDataSmoothCustom::Run()
 
     _input->SetPoints(pts_original);
     _input->Update();
-    
-    
-    
+
+
+
     // update radius and centre of gravity
     this->UpdateCentreOfGravity();
     radiusNew = this->GetRadius();
-    
+
     shift[0] = cogOld[0] - _CofG[0];
     shift[1] = cogOld[1] - _CofG[1];
     shift[2] = cogOld[2] - _CofG[2];
 
     scaleFactor = radiusOld / radiusNew;
     this->ShiftAndScaleMesh(shift, scaleFactor);
-    
+
   }
-  
-  _output->SetPoints(_input->GetPoints());
-  _output->Update();
 
   cout << "Final iteration : " << i << endl;
   cout << "Final L_2 norm of H^2 (threshold) : " << h2norm << " (" << _SmoothnessThreshold << ")" << endl;
@@ -233,24 +223,28 @@ void vtkPolyDataSmoothCustom::Finalize()
 
   if (_TrackingOn == True){
     _distances->SetName("smoothingDists");
-    _output->GetPointData()->AddArray(_distances);
-    _output->Update();
+    _input->GetPointData()->AddArray(_distances);
+    _input->Update();
   }
 
   // Normals need to be recalculated before saving.
-  cerr << endl << "Recalculating normals";
+  cerr << endl << "Recalculating normals" << endl;
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(_output);
+  normalsFilter->SetInput(_input);
   normalsFilter->Modified();
   normalsFilter->Update();
-  
+
+  _output = vtkPolyData::New();
+  _output = normalsFilter->GetOutput();
+  _output->Update();
+
 }
 
 vtkPolyData *vtkPolyDataSmoothCustom::GetOutput()
 {
   return _output;
-  
+
 }
 
 
@@ -307,7 +301,7 @@ double vtkPolyDataSmoothCustom::HSquareRobustMean()
 //  scalars->Delete();
 //  curveOut->Delete();
 //  curve->Delete();
-  
+
   return meanValSq / count;
 
 }
@@ -322,7 +316,7 @@ double vtkPolyDataSmoothCustom::SurfaceArea()
   double v0[3], v1[3], v2[3];
 
   vtkIdType f, *vert = 0;
-  
+
   facets->InitTraversal();
   while (facets->GetNextCell(f, vert)){
 
@@ -333,7 +327,7 @@ double vtkPolyDataSmoothCustom::SurfaceArea()
     A += double(facet->TriangleArea(v0, v1, v2));
   }
   facet->Delete();
-  
+
   return A;
 }
 
@@ -398,10 +392,10 @@ double vtkPolyDataSmoothCustom::GetRadius()
     r = sqrt((point[0]-_CofG[0])*(point[0]-_CofG[0]) +
              (point[1]-_CofG[1])*(point[1]-_CofG[1]) +
              (point[2]-_CofG[2])*(point[2]-_CofG[2]));
-    
+
     rSum += r;
   }
 
   return rSum / noOfPoints;
-  
+
 }
