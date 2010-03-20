@@ -437,7 +437,7 @@ int main(int argc, char **argv)
   }
 
   // Normals need to be recalculated before saving.
-  cerr << endl << "Recalculating normals";
+  cerr << endl << "Recalculating normals" << endl;
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
   normalsFilter->SetInput(input);
