@@ -12,13 +12,20 @@
 
 // Default filenames
 char *target_name = NULL, *output_name = NULL, *dof_name  = NULL;
-char *source_name = NULL;
+char *source_name = NULL, *lookup_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydataremesh [target] [source] [output] <options>\n" << endl;
-  cerr << "where <options> is one or more of the following:\n" << endl;
-  cerr << "<-dofin file>      Transformation" << endl;
+  cerr << "Usage: polydataremesh [target] [source] [output] <options>" << endl;
+  cerr << "" << endl;
+  cerr << "Apply the mesh topology of [target] to the geometry of the surface represented" << endl;
+  cerr << "by [source].  I.e. For each point in [target] mesh, look up the nearest location" << endl;
+  cerr << "in surface [source] and apply its coordinates to the target point." << endl;
+  cerr << "" << endl;
+  cerr << "Options are one or more of the following:" << endl;
+  cerr << "<-dofin File>      Transformation mapping locations in [target] to locations in [source]." << endl;
+  cerr << "<-lookup Surface>  Surface to lookup closest points instead of [source]." << endl;
+  cerr << "                   Must have same number of points as [source]." << endl;
   exit(1);
 }
 
@@ -66,12 +73,37 @@ int main(int argc, char **argv)
       argv++;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-lookup") == 0)) {
+      argc--;
+      argv++;
+      lookup_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
     if (ok == False) {
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
   }
 
+  if (lookup_name == NULL){
+    lookup_name = source_name;
+  }
+  
+  cout << "Using " << lookup_name << " as a replacement file." << endl;
+  
+  vtkPolyDataReader *lookup_reader = vtkPolyDataReader::New();
+  lookup_reader->SetFileName(lookup_name);
+  lookup_reader->Modified();
+  lookup_reader->Update();
+  vtkPolyData *lookupSurf = lookup_reader->GetOutput();
+
+  if (lookupSurf->GetNumberOfPoints() != sourceSurf->GetNumberOfPoints()){
+    cerr << "Error : lookup surface must have same number of points as source surface. " << endl;
+    exit(1);
+  }
+  
   if (dof_name != NULL) {
     // Read transformation
     transformation = irtkTransformation::New(dof_name);
@@ -95,10 +127,13 @@ int main(int argc, char **argv)
   vtkPoints *tgtPoints = vtkPoints::New();
   tgtPoints = targetSurf->GetPoints();
 
+  int closestID;
+  
   for (i = 0; i < noOfPoints; i++) {
     tgtPoints->GetPoint(i, coord);
     transformation->Transform(coord[0], coord[1], coord[2]);
-    (void) source_locator->FindClosestPoint(coord);
+    closestID = source_locator->FindClosestPoint(coord);
+    lookupSurf->GetPoint(closestID, coord);
     tgtPoints->SetPoint(i, coord);
   }
 
