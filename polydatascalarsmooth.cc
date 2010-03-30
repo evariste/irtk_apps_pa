@@ -185,6 +185,8 @@ int main(int argc, char **argv)
   }
   cerr << "Iterating"; cerr.flush();
 
+  double denom = 2 * kernel * kernel * meanDist * meanDist;
+  
   for (n = 0; n < noOfIterations; ++n){
     cerr << "."; cerr.flush();
 
@@ -208,7 +210,7 @@ int main(int argc, char **argv)
         input->GetPoint(k, v2);
 
         distSq = vtkMath::Distance2BetweenPoints(v1, v2);
-        w = exp(-1.0 * distSq / (kernel * meanDist * meanDist));
+        w = exp(-1.0 * distSq / denom);
 
         // Add adjoining point's contribution.
         sumVals += w * scalarsIn->GetTuple1(k);
