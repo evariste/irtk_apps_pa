@@ -10,7 +10,11 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
-#include <irtkLocator.h>
+//#include <irtkLocator.h>
+#include <vtkCellLocator.h>
+#include <vtkGenericCell.h>
+#include <vtkTriangleFilter.h>
+#include <vtkMath.h>
 
 // Default filenames
 char *target_name = NULL, *output_name = NULL, *dof_name  = NULL;
@@ -28,7 +32,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, ok;
+  int i, j, ok;
   int matching = False;
 
   irtkTransformation *transformation = NULL;
@@ -60,7 +64,14 @@ int main(int argc, char **argv)
   source_reader->SetFileName(source_name);
   source_reader->Modified();
   source_reader->Update();
-  vtkPolyData *sourceSurf = source_reader->GetOutput();
+  vtkPolyData *sourceRead = source_reader->GetOutput();
+  
+  
+  vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
+  triFilter->SetInput(sourceRead);
+  triFilter->Update();
+  vtkPolyData *sourceSurf = triFilter->GetOutput();
+    
 
   while (argc > 1) {
     ok = False;
@@ -116,18 +127,17 @@ int main(int argc, char **argv)
     scalar_name = scalarsIn->GetName();
   }
 
-  double coord[3], val;
-  // vtkKDTreePointLocator
-  int locatorType = 2;
+  double tgtPt[3], val;
 
   int noOfPoints;
   int ptID;
 
   noOfPoints = targetSurf->GetNumberOfPoints();
   // Create locator
-  irtkLocator *source_locator = new irtkLocator;
-  source_locator->SelectLocatorType(locatorType);
+  vtkCellLocator *source_locator = vtkCellLocator::New();
   source_locator->SetDataSet(sourceSurf);
+  source_locator->BuildLocator();
+  
 
   vtkPoints *tgtPoints = vtkPoints::New();
   tgtPoints = targetSurf->GetPoints();
@@ -147,11 +157,65 @@ int main(int argc, char **argv)
     }
 
   } else {
+    
+    vtkGenericCell *cell = vtkGenericCell::New();
+    int cellId, subId;
+    double dist2;
+    double closestPoint[3];
+    vtkIdList *ptIDs;
+    double srcPtA[3], srcPtB[3], srcPtC[3];
+    double crossA[3], crossB[3], crossC[3];
+    double tgt2srcPtA[3], tgt2srcPtB[3], tgt2srcPtC[3];
+    int srcIdA, srcIdB, srcIdC;
+    double wA, wB, wC, wSum;
+    double valA, valB, valC;
+    
+    
     for (i = 0; i < noOfPoints; i++) {
-      tgtPoints->GetPoint(i, coord);
-      transformation->Transform(coord[0], coord[1], coord[2]);
-      ptID = source_locator->FindClosestPoint(coord);
-      val = scalarsIn->GetTuple1(ptID);
+      tgtPoints->GetPoint(i, tgtPt);
+      transformation->Transform(tgtPt[0], tgtPt[1], tgtPt[2]);
+      
+      source_locator->FindClosestPoint(tgtPt, &closestPoint[0], 
+          cell, (vtkIdType&) cellId, subId, dist2);
+      
+      if (cell->GetNumberOfPoints() != 3){
+        cerr << "Error : filtered source should only have triangles." << endl;
+        exit(1);
+      }
+      
+      // Interpolation on a triangular face.
+      
+      ptIDs = cell->GetPointIds();
+      
+      srcIdA = ptIDs->GetId(0);
+      srcIdB = ptIDs->GetId(1);
+      srcIdC = ptIDs->GetId(2);
+      
+      sourceSurf->GetPoint(srcIdA, srcPtA);
+      sourceSurf->GetPoint(srcIdB, srcPtB);
+      sourceSurf->GetPoint(srcIdC, srcPtC);
+      
+      for (j = 0; j < 3; ++j){
+        tgt2srcPtA[j] = srcPtA[j] - tgtPt[j];
+        tgt2srcPtB[j] = srcPtB[j] - tgtPt[j];
+        tgt2srcPtC[j] = srcPtC[j] - tgtPt[j];
+      }
+      
+      vtkMath::Cross(tgt2srcPtA, tgt2srcPtB, crossC);
+      vtkMath::Cross(tgt2srcPtB, tgt2srcPtC, crossA);
+      vtkMath::Cross(tgt2srcPtC, tgt2srcPtA, crossB);
+      
+      wA = vtkMath::Norm(crossA);
+      wB = vtkMath::Norm(crossB);
+      wC = vtkMath::Norm(crossC);
+      wSum = wA + wB + wC;
+      
+      valA = scalarsIn->GetTuple1(srcIdA);
+      valB = scalarsIn->GetTuple1(srcIdB);
+      valC = scalarsIn->GetTuple1(srcIdC);
+
+      val = (wA * valA + wB * valB + wC * valC) / wSum;
+      
       scalarsOut->SetTuple1(i, val);
     }
   }
