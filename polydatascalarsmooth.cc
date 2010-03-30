@@ -227,6 +227,8 @@ int main(int argc, char **argv)
     }
       input->Update();
   }
+  
+  cout << " done" << endl;
 
 	// Write the result.
 	vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
