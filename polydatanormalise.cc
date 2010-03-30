@@ -145,26 +145,32 @@ int main(int argc, char **argv) {
   cout << "min max y :" << miny << " " << maxy << endl;
   cout << "min max z :" << minz << " " << maxz << endl;
 
-  // Loop over surface to apply centre and to find radius.
+  double meanDistOrig = 0;
+
   for (i = 0; i < noOfPoints; ++i) {
     pts->GetPoint(i, pt);
     x = pt[0];
     y = pt[1];
     z = pt[2];
 
-    x -= meanx + centre[0];
-    y -= meany + centre[1];
-    z -= meanz + centre[2];
+    x -= meanx;
+    y -= meany;
+    z -= meanz;
 
-    pts->SetPoint(i, x, y, z);
-
-    dist = sqrt(x * x + y * y + z * z);
-
-    if (maxDist < dist)
-      maxDist = dist;
+    meanDistOrig += sqrt(x * x + y * y + z * z);
   }
 
-  cout << "Max dist from centre : " << maxDist << endl;
+  meanDistOrig /= noOfPoints;
+
+
+  if (meanDistOrig <= 0){
+    cerr << "Surface seems to have zero or negative radius." << endl;
+    exit(1);
+  }
+
+  cout << "Original radius : " << meanDistOrig << endl;
+  cout << "Original centre : " << meanx << ", " << meany << ", " << meanz << endl;
+
 
   // Loop over surface to scale data to new radius.
   for (i = 0; i < noOfPoints; ++i) {
@@ -173,9 +179,9 @@ int main(int argc, char **argv) {
     y = pt[1];
     z = pt[2];
 
-    x = centre[0] + (x - centre[0]) * radius / maxDist;
-    y = centre[1] + (y - centre[1]) * radius / maxDist;
-    z = centre[2] + (z - centre[2]) * radius / maxDist;
+    x = centre[0] + (x - meanx) * radius / meanDistOrig;
+    y = centre[1] + (y - meany) * radius / meanDistOrig;
+    z = centre[2] + (z - meanz) * radius / meanDistOrig;
 
     pts->SetPoint(i, x, y, z);
   }
