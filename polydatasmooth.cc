@@ -18,7 +18,6 @@
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 #include <vtkPolyDataNormals.h>
-#include <vtkTriangleFilter.h>
 #include <vtkCurvatures.h>
 
 char *input_name = NULL;
