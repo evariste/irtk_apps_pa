@@ -15,6 +15,8 @@ void usage()
   cerr << "Usage: polydatadecimate [polydataIn] [polydataOut] <-reduction val> <-smooth>" << endl;
   cerr << "-reduction val     Value between 0 and 1.  New surface should have about" << endl;
   cerr << "                   (1-val) x number of points in input surface (default = 0.5)." << endl;
+  cerr << "-target val        Target number of points (similar to -reduction)." << endl;
+  cerr << "" << endl;
   cerr << "-smooth            Smooth the surface after decimation. " << endl;
   cerr << "-ascii             Write output as ascii, default = binary." << endl;
   cerr << "-preserveTopology  Preserve topology of mesh.  May mean that desired reduction" << endl;
@@ -26,6 +28,8 @@ void usage()
 int main(int argc, char **argv)
 {
   int ok;
+  int target = 0;
+  int noOfPoints;
   double reduction = 0.5;
   vtkSmoothPolyDataFilter *smooth = NULL;  
   int preserveTopology = False;
@@ -51,6 +55,8 @@ int main(int argc, char **argv)
   reader->Modified();
   reader->Update();
   vtkPolyData *surface = reader->GetOutput();
+  surface->Update();
+  noOfPoints = surface->GetNumberOfPoints();
 
   // Parse remaining arguments
   while (argc > 1){
@@ -69,6 +75,14 @@ int main(int argc, char **argv)
       argv++;
       ok = True;
     }
+    if ((!ok) && (strcmp(argv[1], "-target") == 0)) {
+      argc--;
+      argv++;
+      target = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = True;
+    }  
     if ((!ok) && (strcmp(argv[1], "-ascii") == 0)) {
       argc--;
       argv++;
@@ -87,6 +101,10 @@ int main(int argc, char **argv)
     }
   }
 
+  if (target > 0 && target < noOfPoints){
+    reduction = (noOfPoints - target) / ((double) noOfPoints);
+  }
+  
   vtkDecimatePro *decimate = vtkDecimatePro::New();
 
   decimate->SetTargetReduction(reduction);
