@@ -14,9 +14,12 @@ void usage()
 {
   cerr << "Usage: polydatadecimate [polydataIn] [polydataOut] <-reduction val> <-smooth>" << endl;
   cerr << "-reduction val     Value between 0 and 1.  New surface should have about" << endl;
-  cerr << "                   val x number of points in input surface (default = 0.5)." << endl;
+  cerr << "                   (1-val) x number of points in input surface (default = 0.5)." << endl;
   cerr << "-smooth            Smooth the surface after decimation. " << endl;
   cerr << "-ascii             Write output as ascii, default = binary." << endl;
+  cerr << "-preserveTopology  Preserve topology of mesh.  May mean that desired reduction" << endl;
+  cerr << "                   is not possible." << endl;
+
   exit(1); 
 }
 
@@ -25,7 +28,8 @@ int main(int argc, char **argv)
   int ok;
   double reduction = 0.5;
   vtkSmoothPolyDataFilter *smooth = NULL;  
-
+  int preserveTopology = False;
+  
   int fileType = VTK_BINARY;
 
 
@@ -71,6 +75,12 @@ int main(int argc, char **argv)
       fileType = VTK_ASCII;
       ok = True;
     }
+    if ((!ok) && (strcmp(argv[1], "-preserveTopology") == 0)) {
+      argc--;
+      argv++;
+      preserveTopology = True;
+      ok = True;
+    }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
@@ -78,7 +88,14 @@ int main(int argc, char **argv)
   }
 
   vtkDecimatePro *decimate = vtkDecimatePro::New();
+
   decimate->SetTargetReduction(reduction);
+  
+  if (preserveTopology == True)
+    decimate->PreserveTopologyOn();
+  else
+    decimate->PreserveTopologyOff();
+  
   decimate->SetInput(surface);
 
   if (smooth != NULL) {
