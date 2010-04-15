@@ -1,63 +1,3 @@
-/*=========================================================================
- 
-  Library   : packages/contrib
-  Module    : $RCSfile: pcanalysis.cc,v $
-  Authors   : Daniel Rueckert
-  Copyright : Imperial College, Department of Computing
-              Visual Information Processing (VIP), 2000-2001
-  Purpose   :
-  Date      : $Date: 2005/12/22 15:20:07 $
-  Version   : $Revision: 1.5 $
-  Changes   : $Locker:  $
-              $Log: pcanalysis.cc,v $
-              Revision 1.5  2005/12/22 15:20:07  dr
-              Updated to reflect changes to transformation classes
-
-              Revision 1.4  2005/08/05 10:37:57  dr
-              Fixed small bug in printing variance for each mode
-
-              Revision 1.3  2005/02/01 10:29:55  dr
-              Updated copyright notices
-
-              Revision 1.2  2004/12/14 18:30:38  dp1
-              Change the vector from irtkMatrix to irtkVector
-
-              Revision 1.1  2003/08/18 12:59:04  dr
-              Moved from packages/contrib/applications to
-              packages/applications
-
-              Revision 1.2  2003/04/17 14:10:51  dr
-              Merged branch
-
-              Revision 1.1.2.7  2003/02/18 10:37:21  dr
-              Added a line to set the eigenvalues to 0 whenever the
-              magnitude of the eigenvectors is very small.
-
-              Revision 1.1.2.6  2002/09/15 12:07:15  dr
-              Updated to VTK 4.0
-
-              Revision 1.1.2.5  2002/08/05 17:36:47  dr
-              Eigenvectors with norm < MIN_NORM will be set to zero
-
-              Revision 1.1.2.4  2002/03/26 18:32:59  dr
-              Minor changes in layout of output.
-
-              Revision 1.1.2.3  2001/11/16 18:19:44  dr
-              Added support for different VTK objects
-
-              Revision 1.1.2.2  2001/10/31 12:19:30  dr
-              Major changes:
-
-                - The program now only performs the PCA. Modes of variations 
-                  can be produced using pcmodes.cc
-
-                - file format supported is vtkStructuredGrid
-
-              Revision 1.1.2.1  2001/01/11 14:02:55  dr
-              Incorportated Alex's software
-
-
-=========================================================================*/
 
 #if (defined HAS_VTK && defined HAS_CONTRIB)
 
@@ -440,6 +380,12 @@ int main(int argc, char **argv)
 
   cout << "Writing components to " << componentsFile << endl;
   comps.Write(componentsFile);
+  
+  
+  // Read the first dataset for its structure.
+  data    = read(argv[1]);
+  points  = data->GetPoints();
+  vectors = data->GetPointData()->GetVectors();
 
   // Convert mean back to VTK
   for (j = 0; j < iNoOfLandmarks; j++){
@@ -456,7 +402,8 @@ int main(int argc, char **argv)
       vectors->SetTuple(j,v);
     }	 
   }
-
+  
+  data->SetPoints(points);
   cerr << " Writing mean shape to " << meanFile << endl;  
   write(meanFile, data);
 }
