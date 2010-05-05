@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
 
   double centre[3] = { 0, 0, 0 };
 
-  double radius = 1;
+  double radius = -1;
 
   if (argc < 3) {
     usage();
@@ -86,6 +86,7 @@ int main(int argc, char **argv) {
       usage();
     }
   }
+
 
   // Read the polydata file
   vtkPolyDataReader* reader = vtkPolyDataReader::New();
@@ -171,6 +172,12 @@ int main(int argc, char **argv) {
   cout << "Original radius : " << meanDistOrig << endl;
   cout << "Original centre : " << meanx << ", " << meany << ", " << meanz << endl;
 
+  if (radius == -1){
+    radius = meanDistOrig;
+  }
+
+  cout << "New radius : " << radius << endl;
+  cout << "New centre : " << centre[0] << ", " << centre[1] << ", " << centre[2] << endl;
 
   // Loop over surface to scale data to new radius.
   for (i = 0; i < noOfPoints; ++i) {
