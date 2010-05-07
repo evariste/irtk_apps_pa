@@ -6,6 +6,7 @@
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
+#include <vtkLinearSubdivisionFilter.h>
 
 void usage(){
   cerr << "polydataaddtoscalars [input] [value] [output]"<<endl;
