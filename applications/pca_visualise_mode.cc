@@ -18,7 +18,17 @@ char *scalar_nameZ = NULL;
 
 void usage()
 {
-  cerr << "Usage: XXXX [meanSurf] [eigenvectors] [outsurf]" << endl;
+  cerr << "" << endl;
+  cerr << " Usage: pca_visualise_mode [meanSurface.vtk] [eigenvectors.mat] [outputSurface.vtk] <-options>" << endl;
+  cerr << " " << endl;
+  cerr << " Eigenvectors should be a file describing the modes of variation around" << endl;
+  cerr << " the mean surface. See pcanalysis executable." << endl;
+  cerr << " The output surface has the same points as the mean surface and also" << endl;
+  cerr << " has scalars to indicate the extent to which the eigenmodes deviate from " << endl;
+  cerr << " the mean.  Postive values are outward and negative values are inward." << endl;
+  cerr << " " << endl;
+  cerr << " Options:" << endl;
+  cerr << " -mode n    : Which mode to use, default = 0." << endl;
   cerr << "" << endl;
 
   exit(1);
