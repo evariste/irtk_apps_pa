@@ -16,12 +16,18 @@
 
 char *input_name  = NULL;
 char *output_name = NULL;
+char *scalar_name = NULL;
 
 void usage()
 {
   cerr << " " << endl;
-  cerr << " Usage: polydatarandomscalars [input] [output] " << endl; // <options>" << endl;
+  cerr << " Usage: polydatarandomscalars [input] [output]  <options>" << endl;
   cerr << " " << endl;
+  cerr << " Random scalars given to input surface.  Uniform distribution in [0,1]." << endl;
+  cerr << " " << endl;
+  cerr << " " << endl;
+  cerr << " Options:" << endl;
+  cerr << " -name name   : Give the output scalars the name 'name'" << endl;
   cerr << " " << endl;
   cerr << " " << endl;
   exit(1);
@@ -31,7 +37,7 @@ int main(int argc, char **argv)
 {
   long i;
 
-  int noOfPoints;
+  int noOfPoints, ok;
   time_t seconds;
   long ran2Seed;
   long ran2initialSeed;
@@ -54,6 +60,22 @@ int main(int argc, char **argv)
   argv++;
   argc--;
 
+  while (argc > 1){
+    ok = False;
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+       argc--;
+       argv++;
+       scalar_name = argv[1];
+       argc--;
+       argv++;
+       ok = True;
+     }
+    if (!ok){
+      cerr << "Cannot parse argument " << argv[1] << endl;
+      usage();
+    }
+  }
+
   cerr << "Input      : " << input_name << endl;
   cerr << "Output     : " << output_name << endl;
 
@@ -75,7 +97,12 @@ int main(int argc, char **argv)
     scalars->SetTuple1(i, ran2(&ran2Seed));
   }
 
-  scalars->SetName("Random");
+  if (scalar_name == NULL){
+ 	  scalars->SetName("Random");
+  } else {
+  	scalars->SetName(scalar_name);
+  }
+
   input->GetPointData()->AddArray(scalars);
 
   // Write the result.
