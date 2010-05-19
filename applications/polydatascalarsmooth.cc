@@ -33,7 +33,7 @@ void usage()
   cerr << " result in smoother output." << endl;
   cerr << " " << endl;
   cerr << " Options:" << endl;
-  cerr << " <-scalarName>    Name of scalars to smooth." << endl;
+  cerr << " -name Name    Name of scalars to smooth." << endl;
   cerr << " " << endl;
   exit(1);
 }
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 {
   vtkIdType i;
   long j, k, n, ok;
-  int noOfIterations;
+  int noOfIterations, ind;
   double kernel;
 	int noOfPoints, noOfCells;
 
@@ -78,7 +78,7 @@ int main(int argc, char **argv)
 
   while (argc > 1){
     ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-scalarName") == 0)){
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
       argc--;
       argv++;
       scalar_name = argv[1];
@@ -180,9 +180,14 @@ int main(int argc, char **argv)
   // Initialise the updated scalars' size by copying the current.
   if (scalar_name != NULL){
     scalarsOut = (vtkFloatArray *) input->GetPointData()->GetScalars(scalar_name);
+    if (ind == -1 || scalarsOut == NULL){
+      cerr << "Scalars unavailable with name " << scalar_name << endl;
+      exit(0);
+    }
   } else {
     scalarsOut = (vtkFloatArray *) input->GetPointData()->GetScalars();
   }
+
   cerr << "Iterating"; cerr.flush();
 
   double denom = 2 * kernel * kernel * meanDist * meanDist;
