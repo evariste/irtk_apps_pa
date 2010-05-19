@@ -9,18 +9,20 @@
 #include <vtkPointData.h>
 
 char *input_name = NULL, *output_name = NULL;
-
+char *scalar_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydatascalarhist [in] <options>" << endl;
-  cerr << "" << endl;
-  cerr << "Options:" << endl;
-  cerr << "-bins" << endl;
-  cerr << "" << endl;
-  cerr << "" << endl;
-  cerr << "" << endl;
-  cerr << "" << endl;
+  cerr << " " << endl;
+  cerr << " Usage: polydatascalarhist [in] <options>" << endl;
+  cerr << " " << endl;
+  cerr << " Options:" << endl;
+  cerr << " -bins N      : Number of bins (default 100)." << endl;
+  cerr << " -name Name   : Name of scalars to use." << endl;
+  cerr << " -limits a b  : Set the limits of the histogram to a and b (default min and max of scalar values)." << endl;
+  cerr << " -f           : File for output (csv format)." << endl;
+  cerr << " -all         : Print all bins (including zero bins)." << endl;
+  cerr << " " << endl;
   
   exit(1);
 }
@@ -85,6 +87,14 @@ int main(int argc, char **argv)
       loHiSet = True;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+       argc--;
+       argv++;
+       scalar_name = argv[1];
+       argc--;
+       argv++;
+       ok = True;
+     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
@@ -108,10 +118,21 @@ int main(int argc, char **argv)
 
   vtkFloatArray *scalars = vtkFloatArray::New();
 
-  scalars = (vtkFloatArray*) surface->GetPointData()->GetScalars();
+  if (scalar_name == NULL){
+    scalars = (vtkFloatArray*) surface->GetPointData()->GetScalars();
+  } else {
+  	int ind;
+    scalars = (vtkFloatArray*) surface->GetPointData()->GetArray(scalar_name, ind);
+
+    if (ind == -1 || scalars == NULL){
+      cerr << "Scalars unavailable with name " << scalar_name << endl;
+      exit(0);
+    }
+
+  }
 
   if (loHiSet == False){
-    surface->GetPointData()->GetScalars()->GetRange(loHi);
+    scalars->GetRange(loHi);
   }
 
   range = loHi[1] - loHi[0];
@@ -120,8 +141,9 @@ int main(int argc, char **argv)
   hist.PutMin(loHi[0]);// - 0.5 * binWidth);
   hist.PutMax(loHi[1]);// + 0.5 * binWidth);
 
-  cout << "lo,hi:         " << loHi[0] << "     " << loHi[1] << endl;
-
+  cout << "Limits used : " << loHi[0] << " - " << loHi[1] << endl;
+  cout << "No. of Bins : " << nBins << endl;
+  cout << "Width       : " << binWidth << endl;
 
   hist.PutNumberOfBins(nBins);
 
