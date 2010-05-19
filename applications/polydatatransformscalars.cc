@@ -20,13 +20,19 @@
 char *target_name = NULL, *output_name = NULL, *dof_name  = NULL;
 char *source_name = NULL;
 char *scalar_name = NULL;
+char *scalar_out_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydatatransformscalars [target] [source] [output] <options>\n" << endl;
-  cerr << "where <options> is one or more of the following:\n" << endl;
-  cerr << "<-dofin file>      Transformation" << endl;
-  cerr << "<-scalar name>     Name of scalar array to be transformed." << endl;
+  cerr << "  " << endl;
+  cerr << "  Usage: polydatatransformscalars [target] [source] [output] <options>\n" << endl;
+  cerr << "  " << endl;
+  cerr << "  Where <options> is one or more of the following:\n" << endl;
+  cerr << "  -dofin file      Transformation" << endl;
+  cerr << "  -scalar name     Name of scalar array to be transformed." << endl;
+  cerr << "  -output_name name    Name to give to scalars after transforming (defaults to original name in the source surface)." << endl;
+  cerr << "  -matching        Target and source have the same mesh topology (i.e. same number of vertices)." << endl;
+  cerr << "  " << endl;
   exit(1);
 }
 
@@ -91,12 +97,18 @@ int main(int argc, char **argv)
       argv++;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-output_name") == 0)) {
+      argc--;
+      argv++;
+      scalar_out_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
     if ((ok == False) && (strcmp(argv[1], "-matching") == 0)) {
       argc--;
       argv++;
       matching = True;
-      argc--;
-      argv++;
       ok = True;
     }
     if (ok == False) {
@@ -220,8 +232,11 @@ int main(int argc, char **argv)
     }
   }
 
-  scalarsOut->SetName(scalar_name);
-
+  if (scalar_out_name == NULL){
+  	scalarsOut->SetName(scalar_name);
+  } else {
+  	scalarsOut->SetName(scalar_out_name);
+  }
 
   targetSurf->GetPointData()->AddArray(scalarsOut);
   targetSurf->GetPointData()->SetActiveScalars(scalar_name);
