@@ -14,12 +14,14 @@ char *scalar_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydatascalarstats [in] <options>" << endl;
-  cerr << "" << endl;
-  cerr << "Options: " << endl;
-  cerr << "-q           Give the same output as normal but just the " << endl;
-  cerr << "             numbers on a space separated line." << endl;
-  cerr << "-name [name] Name of scalars for which stats are required." << endl;
+  cerr << " " << endl;
+  cerr << " Usage: polydatascalarstats [in] <options>" << endl;
+  cerr << " " << endl;
+  cerr << " Options: " << endl;
+  cerr << " -q           Give the same output as normal but just the " << endl;
+  cerr << "              numbers on a space separated line." << endl;
+  cerr << " -name [name] Name of scalars for which stats are required." << endl;
+  cerr << " " << endl;
 
   exit(1);
 }
