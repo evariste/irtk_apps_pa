@@ -4,6 +4,7 @@
 
 #include <nr.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <vtkMath.h>
 #include <vtkPointData.h>
@@ -47,9 +48,16 @@ int main(int argc, char **argv)
   }
 
   // Prepare for random stuff.
+  pid_t procId = getpid();
+
   seconds = time(NULL);
-  ran2Seed = seconds;
+  ran2Seed = seconds * procId;
+  if (ran2Seed < 1)
+  	ran2Seed = -1 * ran2Seed;
+
   ran2initialSeed = -1 * ran2Seed;
+  cout << "Initial seed : " << ran2initialSeed << endl;
+
   (void) ran2(&ran2initialSeed);
 
   // Parse arguments.
