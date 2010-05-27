@@ -14,11 +14,20 @@
 #include <string.h>
 #include <fstream>
 
+char *scalar_name = NULL;
+char *input_name = NULL;
+char *output_name = NULL;
+
 void usage(){
-  cerr << "polydatamultiplyscalars [input] [factor] [output]"<<endl;
+  cerr << " polydatamultiplyscalars [input] [factor] [output] <-options>"<<endl;
 //   cerr << "Options:" << endl;
-  cerr << "Multiply the scalars in the [input] polydata by [factor]." << endl;
-  cerr << "Write to [output]" << endl;
+  cerr << " Multiply the scalars in the [input] polydata by [factor]." << endl;
+  cerr << " Write to [output]" << endl;
+  cerr << " " << endl;
+  cerr << " Options: " << endl;
+  cerr << " " << endl;
+  cerr << " -name ScalarsName : Multiply the scalars with the given name." << endl;
+  
   exit(1);
 }
 
@@ -28,10 +37,7 @@ int main(int argc, char **argv ){
     usage();
   }
 
-
-  char *input_name;
-  char *output_name;
-  int i;
+  int i, ok;
   double factor, val;
   int noOfPoints;
 
@@ -47,7 +53,21 @@ int main(int argc, char **argv ){
   argv++;
   argc--;
 
-
+  while (argc > 1) {
+    ok = False;
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)) {
+      argc--;
+      argv++;
+      scalar_name = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
+    if (ok == False) {
+      cerr << "Can not parse argument " << argv[1] << endl;
+      usage();
+    }
+  }
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
   vtkPolyData *polys = vtkPolyData::New();
 
@@ -60,9 +80,19 @@ int main(int argc, char **argv ){
   noOfPoints = polys->GetNumberOfPoints();
   cout << "No of points " << noOfPoints << endl;
 
-  vtkFloatArray *scalars = vtkFloatArray::New();
+  vtkFloatArray *scalars;
+  if (scalar_name != NULL){
+    scalars = (vtkFloatArray*) polys->GetPointData()->GetArray(scalar_name);
+    if (scalars == NULL){
+      cerr << "Cannot retrieve scalars : " << scalar_name << endl;
+      exit(1);
+    }
+  } else {
+    scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
+    cerr << "Using scalars :  " << scalars->GetName() << endl;
+    scalar_name = scalars->GetName();
+  }
 
-  scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
 
   for (i = 0; i < noOfPoints; ++i){
     val = scalars->GetTuple1(i);
