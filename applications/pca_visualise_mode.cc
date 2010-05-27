@@ -148,7 +148,7 @@ int main(int argc, char **argv)
   }
 
   char buf[255];
-  sprintf(buf, "mode_%02d.vtk", mode);
+  sprintf(buf, "mode_%02d", mode);
 
   comps->SetName(buf);
   input->GetPointData()->AddArray(comps);
