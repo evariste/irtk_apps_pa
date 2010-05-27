@@ -9,7 +9,7 @@
 #include <vtkPolyDataWriter.h>
 
 void usage(){
-  cerr << "polydatadeletescalars [input] [output] [scalarName]" << endl;
+  cerr << "polydatadeletearray [input] [output] <-name arrayName | -all>" << endl;
   cerr << "" << endl;
   exit(1);
 }
@@ -20,7 +20,10 @@ char *scalar_name = NULL;
 
 int main(int argc, char **argv)
 {
-  if (argc < 4){
+
+	int ok, deleteAll = False;
+
+	if (argc < 4){
     usage();
   }
 
@@ -30,9 +33,39 @@ int main(int argc, char **argv)
   output_name  = argv[1];
   argc--;
   argv++;
-  scalar_name  = argv[1];
-  argc--;
-  argv++;
+
+  while (argc > 1){
+    ok = False;
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+      argc--;
+      argv++;
+      scalar_name  = argv[1];
+      argc--;
+      argv++;
+      ok = True;
+    }
+    if ((ok == False) && (strcmp(argv[1], "-all") == 0)){
+      argc--;
+      argv++;
+      deleteAll = True;
+      ok = True;
+    }
+    if (ok == False){
+      cerr << "Can not parse argument " << argv[1] << endl;
+      usage();
+    }
+  }
+
+  if (deleteAll == False && scalar_name == NULL){
+  	cerr << "No array(s) specified." << endl;
+  	usage();
+  }
+
+  if (deleteAll == True){
+  	cout << "Deleting all arrays." << endl;
+  	scalar_name = NULL;
+  }
+
 
   // Read surface
   vtkPolyDataReader *surface_reader = vtkPolyDataReader::New();
@@ -47,30 +80,47 @@ int main(int argc, char **argv)
 
   noOfArrays = surface->GetPointData()->GetNumberOfArrays();
 
-  for (i = 0; i < noOfArrays; i++){
-    vtkFloatArray *scalars;
-
-    scalars = (vtkFloatArray*) surface->GetPointData()->GetArray(i);
-
-    if ( scalars->GetNumberOfComponents() != 1 )
-      continue;
-
-    if (strcmp(scalars->GetName(), scalar_name) == 0){
-      cout << "Deleting scalars : " << scalars->GetName() << endl;
-      surface->GetPointData()->RemoveArray(scalar_name);
-      surface->Update();
-      success = True;
-      break;
-    }
+  if (noOfArrays < 1){
+  	cout << "Surface has no arrays." << endl;
+  	exit(1);
   }
+
+  if (deleteAll == True){
+  	while(surface->GetPointData()->GetNumberOfArrays() > 0){
+  		vtkFloatArray *currArray;
+  		currArray = (vtkFloatArray*) surface->GetPointData()->GetArray(0);
+			cout << "Deleting array : " << currArray->GetName() << endl;
+  		surface->GetPointData()->RemoveArray(currArray->GetName());
+  		success = True;
+  	}
+  } else {
+  	for (i = 0; i < noOfArrays; i++){
+  		vtkFloatArray *currArray;
+  		currArray = (vtkFloatArray*) surface->GetPointData()->GetArray(i);
+
+  		if (strcmp(currArray->GetName(), scalar_name) == 0){
+  			cout << "Deleting array : " << currArray->GetName() << endl;
+  			surface->GetPointData()->RemoveArray(scalar_name);
+
+  			surface->Update();
+  			success = True;
+  			break;
+  		}
+  	}
+  }
+
 
   if (success == True){
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+    cout << "Writing surface to file: " << output_name << endl;
     writer->SetInput(surface);
     writer->SetFileName(output_name);
+    writer->SetFileTypeToBinary();
     writer->Write();
   } else {
-    cerr << "No such scalars : " << scalar_name << endl;
+  	if (deleteAll == False){
+  		cerr << "No such scalars : " << scalar_name << endl;
+  	}
   }
 
 
