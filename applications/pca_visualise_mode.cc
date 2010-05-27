@@ -40,6 +40,7 @@ int main(int argc, char **argv)
   int mode = 0;
   int i;
   double n[3], v[3];
+  int lateralComps = False;
   
   if (argc < 4){
     usage();
@@ -60,11 +61,10 @@ int main(int argc, char **argv)
   // Parse remaining arguments
   while (argc > 1){
     ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
+    if ((ok == False) && (strcmp(argv[1], "-lateral") == 0)){
       argc--;
       argv++;
-
-      // maybe argc-- etc.
+      lateralComps = True;
       ok = True;
     }
     if ((ok == False) && (strcmp(argv[1], "-mode") == 0)){
@@ -116,7 +116,10 @@ int main(int argc, char **argv)
   vtkFloatArray *comps = vtkFloatArray::New();
   comps->SetNumberOfComponents(1);
   comps->SetNumberOfTuples(noOfPoints);
-
+  
+  double nPart[3], lPart[3];
+  double compN, compL;
+  
   for (i = 0; i < noOfPoints; ++i){
   	normals->GetTuple(i, n);
 
@@ -125,7 +128,22 @@ int main(int argc, char **argv)
   	v[2] = Ev(3*i+2,mode);
 
   	(void) vtkMath::Normalize(n);
-  	comps->SetTuple1(i, vtkMath::Dot(n, v));
+
+  	if (lateralComps == True){
+  	  compN = vtkMath::Dot(n, v);
+      nPart[0] = compN * n[0];
+      nPart[1] = compN * n[1];
+      nPart[2] = compN * n[2];
+      
+      lPart[0] = v[0] - nPart[0];
+      lPart[1] = v[1] - nPart[1];
+      lPart[2] = v[2] - nPart[2];
+
+      comps->SetTuple1(i, vtkMath::Norm(lPart));
+  	  
+  	} else {
+      comps->SetTuple1(i, vtkMath::Dot(n, v));
+  	}
 
   }
 
