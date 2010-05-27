@@ -5,7 +5,7 @@
 
 #include <vtkFloatArray.h>
 #include <vtkCellArray.h>
-
+#include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataConnectivityFilter.h>
@@ -183,12 +183,12 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int ok;
+  int ok, i;
   int noOfVerts, noOfEdges, noOfFaces;
   int noOfComponents;
   int eulerChar;
   double genus;
-
+  int noOfArrays;
 
   input_name  = argv[1];
   argc--;
@@ -252,6 +252,20 @@ int main(int argc, char **argv)
   cout << "Genus : " << genus << endl;
 
   deleteIdListArray(adj, noOfVerts);
+
+
+  noOfArrays = input->GetPointData()->GetNumberOfArrays();
+  if (noOfArrays > 0){
+  	cout << "Arrays :" << endl;
+  }
+  for (i = 0; i < noOfArrays; i++){
+    vtkFloatArray *scalars;
+
+    scalars = (vtkFloatArray*) input->GetPointData()->GetArray(i);
+
+    printf(" %2d %-20s (dim: %2d)\n", i, scalars->GetName(), scalars->GetNumberOfComponents());
+
+  }
 
 }
 
