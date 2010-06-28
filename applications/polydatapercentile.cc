@@ -8,6 +8,7 @@
 #define MAXVALS 100
 
 char *input_name = NULL;
+char *scalar_name = NULL;
 
 void usage()
 {
@@ -15,8 +16,11 @@ void usage()
   cerr << " Find percentiles of the scalars for a surface." << endl;
   cerr << " N : number of percentiles required (max " << MAXVALS << ")." << endl;
   cerr << " [prctile_1] ... [prctile_N] : percentiles required." << endl;
+  cerr << " " << endl;
   cerr << " Options:" << endl;
-  cerr << " -q   : Quiet reporting; space separated percentiles only." << endl;
+  cerr << " -q         : Quiet reporting; space separated percentiles only." << endl;
+  cerr << " -name Name : Use scalars with given name." << endl;
+  cerr << " " << endl;
   exit(1);
 }
 
@@ -60,6 +64,15 @@ int main(int argc, char **argv)
       quiet = True;
       ok = True;
     }
+    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+       argc--;
+       argv++;
+       scalar_name = argv[1];
+       argc--;
+       argv++;
+       ok = True;
+     }
+
     if (ok == False){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
@@ -76,16 +89,23 @@ int main(int argc, char **argv)
   // Find number of values.
   count = input->GetNumberOfPoints();
 
-  if (count != input->GetPointData()->GetScalars()->GetNumberOfTuples()){
-    cerr << "Size of scalars doesn't match number of points." << endl;
-    exit(1);
+  vtkFloatArray *scalars;
+  int ind;
+
+  if (scalar_name == NULL){
+    scalars = (vtkFloatArray*) input->GetPointData()->GetScalars();
+  } else {
+    scalars = (vtkFloatArray*) input->GetPointData()->GetArray(scalar_name, ind);
+
+    if (ind == -1 || scalars == NULL){
+      cerr << "Scalars unavailable with name " << scalar_name << endl;
+      exit(0);
+    }
+
   }
 
   // NR subroutines use 1-indexing.
   float *data = new float[1 + count];
-
-  vtkFloatArray *scalars = vtkFloatArray::New();
-  scalars = (vtkFloatArray*) input->GetPointData()->GetScalars();
 
   for (i = 0; i < count; ++i){
     data[1 + i] = scalars->GetTuple1(i);
