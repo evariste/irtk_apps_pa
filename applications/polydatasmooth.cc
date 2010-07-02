@@ -372,9 +372,15 @@ int main(int argc, char **argv)
         }
       }
 
-      update[0] /= totalArea;
-      update[1] /= totalArea;
-      update[2] /= totalArea;
+      if (totalArea <= 0.0){
+        update[0] = currPos[0];
+        update[1] = currPos[1];
+        update[2] = currPos[2];
+      } else {
+      	update[0] /= totalArea;
+      	update[1] /= totalArea;
+      	update[2] /= totalArea;
+      }
 
       dx = relaxationFactor * (update[0] - currPos[0]);
       dy = relaxationFactor * (update[1] - currPos[1]);
