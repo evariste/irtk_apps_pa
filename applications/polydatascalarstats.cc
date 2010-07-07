@@ -99,8 +99,8 @@ int main(int argc, char **argv)
   }
 
   if (scalars->GetNumberOfComponents() > 1){
-	cerr << "Scalars " << scalars->GetName() << " has more than one component." << endl;
-	exit(1);
+  cerr << "Scalars " << scalars->GetName() << " has more than one component." << endl;
+  exit(1);
   }
 
   sum = 0.0;
@@ -110,53 +110,57 @@ int main(int argc, char **argv)
   maxVal = -1 * minVal;
 
   for (i = 0; i < noOfPoints; ++i){
-	  val = scalars->GetTuple1(i);
-	  sum += val;
-	  sumSq += val*val;
-	  sumAbs += fabs(val);
-	  if (minVal > val)
-		  minVal = val;
-	  if (maxVal < val)
-		  maxVal = val;
+    val = scalars->GetTuple1(i);
+    sum += val;
+    sumSq += val*val;
+    sumAbs += fabs(val);
+    if (minVal > val)
+      minVal = val;
+    if (maxVal < val)
+      maxVal = val;
   }
 
-//    // Weighting by cell area.
-//    vtkTriangle *triangle;
-//    vtkIdType *cells;
-//    unsigned short noOfCells;
-//    int k;
-//    vtkIdList *ptIds;
-//    double v1[3], v2[3], v3[3], triangleArea;
-//    double totalWeight;
-//    totalWeight = 0.0;
-//
-//    for (i = 0; i < noOfPoints; ++i){
-//
-//      input->GetPointCells(i, noOfCells, cells);
-//
-//      if ( cells == NULL )
-//        continue;
-//
-//      val = scalars->GetTuple1(i);
-//
-//      for (k = 0; k < noOfCells; ++k){
-//        triangle = vtkTriangle::SafeDownCast(input->GetCell(cells[k]));
-//
-//        if ( triangle != NULL ){
-//          ptIds = triangle->GetPointIds();
-//
-//          input->GetPoint(ptIds->GetId(0), v1);
-//          input->GetPoint(ptIds->GetId(1), v2);
-//          input->GetPoint(ptIds->GetId(2), v3);
-//
-//          triangleArea = vtkTriangle::TriangleArea(v1, v2, v3) / 3.0;
-//          sum += triangleArea * val;
-//          totalWeight += triangleArea;
-//
-//        }
-//      }
-//    }
-//    cerr << sum / totalWeight << endl;
+  // Weighting by cell area.
+  vtkTriangle *triangle;
+  vtkIdType *cells;
+  unsigned short noOfCells;
+  int k;
+  vtkIdList *ptIds;
+  double v1[3], v2[3], v3[3], triangleArea;
+  double totalWeight;
+  totalWeight = 0.0;
+  double integral = 0.0;
+
+  for (i = 0; i < noOfPoints; ++i){
+
+    input->GetPointCells(i, noOfCells, cells);
+
+    if ( cells == NULL )
+      continue;
+
+    val = scalars->GetTuple1(i);
+
+    for (k = 0; k < noOfCells; ++k){
+      triangle = vtkTriangle::SafeDownCast(input->GetCell(cells[k]));
+
+      if ( triangle != NULL ){
+        ptIds = triangle->GetPointIds();
+
+        input->GetPoint(ptIds->GetId(0), v1);
+        input->GetPoint(ptIds->GetId(1), v2);
+        input->GetPoint(ptIds->GetId(2), v3);
+
+        triangleArea = vtkTriangle::TriangleArea(v1, v2, v3) / 3.0;
+        integral += triangleArea * val;
+        totalWeight += triangleArea;
+
+      } else {
+        cerr << ".";
+      }
+
+    }
+  }
+
 
   mean    = sum / ((double) noOfPoints);
   meanSq  = sumSq / ((double) noOfPoints);
@@ -177,16 +181,20 @@ int main(int argc, char **argv)
     cout << " " << sd;
     cout << " " << meanAbs;
     cout << " " << sdAbs;
-    cout << " " << minVal << " " << maxVal << endl;
+    cout << " " << minVal << " " << maxVal;
+    cout << " " << integral;
+    cout << " " << sqrt(integral / 4.0 / M_PI) << endl;
   } else {
-    cout << "Scalar name " << scalars->GetName() << endl;
-    cout << "No of pts   " << noOfPoints << endl;
-    cout << "Mean        " << mean << endl;
-    cout << "Mean Sq     " << meanSq << endl;
-    cout << "S.D.        " << sd << endl;
-    cout << "Mean(abs)   " << meanAbs << endl;
-    cout << "S.D(abs)    " << sdAbs << endl;
-    cout << "Min/Max     " << minVal << " " << maxVal << endl;
+    cout << "Scalar name   " << scalars->GetName() << endl;
+    cout << "No of pts     " << noOfPoints << endl;
+    cout << "Mean          " << mean << endl;
+    cout << "Mean Sq       " << meanSq << endl;
+    cout << "S.D.          " << sd << endl;
+    cout << "Mean(abs)     " << meanAbs << endl;
+    cout << "S.D(abs)      " << sdAbs << endl;
+    cout << "Min/Max       " << minVal << " " << maxVal << endl;
+    cout << "Area int.     " << integral << endl;
+    cout << "L2 Norm       " << sqrt(integral / 4.0 / M_PI) << endl;
     cout << "" << "" << endl;
   }
 
