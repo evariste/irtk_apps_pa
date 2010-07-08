@@ -32,7 +32,6 @@ void usage()
 int main(int argc, char **argv)
 {
   int i, ok, noOfPoints;
-  double surfaceBounds[6];
   double xmin, xmax, ymin, ymax, zmin, zmax;
   double pt[3];
   float val;
@@ -97,38 +96,25 @@ int main(int argc, char **argv)
   interp->SetInput(scalarImage);
   interp->Initialize();
 
-  //Check that surface does not go outside fov of label image.
-  surface->ComputeBounds();
-  surface->GetBounds(surfaceBounds);
-
-  xmin = surfaceBounds[0];
-  xmax = surfaceBounds[1];
-  ymin = surfaceBounds[2];
-  ymax = surfaceBounds[3];
-  zmin = surfaceBounds[4];
-  zmax = surfaceBounds[5];
-
-  cerr << "Bounds of surface : ";
-  cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
-  cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
-
-  scalarImage->WorldToImage(xmin, ymin, zmin);
-  scalarImage->WorldToImage(xmax, ymax, zmax);
-  cerr << "In image coords : ";
-  cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
-  cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
-
-  if (xmin < -0.5 || xmax > scalarImage->GetX()-0.5 ||
-      ymin < -0.5 || ymax > scalarImage->GetY()-0.5 ||
-      zmin < -0.5 || zmax > scalarImage->GetZ()-0.5){
-        cerr << "Surface outside bounds of image." << endl;
-        exit(1);
-  }
+  xmin = -0.5;
+  ymin = -0.5;
+  zmin = -0.5;
+  xmax = scalarImage->GetX()-0.5;
+  ymax = scalarImage->GetY()-0.5;
+  zmax = scalarImage->GetZ()-0.5;
 
   cerr << "Assigning scalars ... " << endl;
   for (i = 0; i < noOfPoints; ++i){
     surface->GetPoint(i, pt);
     scalarImage->WorldToImage(pt[0], pt[1], pt[2]);
+
+    //Check that surface does not go outside fov of label image.
+    if (pt[0] < xmin || pt[0] > xmax ||
+        pt[1] < ymin || pt[1] > ymax ||
+        pt[2] < zmin || pt[2] > zmax){
+          cerr << "Surface outside bounds of image." << endl;
+          exit(1);
+    }
 
     val = interp->Evaluate(pt[0], pt[1], pt[2]);
     scalars->SetTuple1(i,val);
