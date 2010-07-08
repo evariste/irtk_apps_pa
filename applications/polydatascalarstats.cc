@@ -11,6 +11,7 @@
 
 char *input_name = NULL;
 char *scalar_name = NULL;
+char *mask_name = NULL;
 
 void usage()
 {
@@ -31,7 +32,7 @@ int main(int argc, char **argv)
   int ok;
   double sum, sumSq, sumAbs;
   int i;
-  int noOfPoints;
+  int noOfPoints, count;
   double minVal, maxVal;
   double mean, var, sd, val;
   double meanSq, meanAbs, varAbs, sdAbs;
@@ -59,6 +60,14 @@ int main(int argc, char **argv)
        argc--;
        argv++;
        scalar_name = argv[1];
+       argc--;
+       argv++;
+       ok = True;
+     }
+    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+       argc--;
+       argv++;
+       mask_name = argv[1];
        argc--;
        argv++;
        ok = True;
@@ -93,14 +102,38 @@ int main(int argc, char **argv)
 
     if (ind == -1 || scalars == NULL){
       cerr << "Scalars unavailable with name " << scalar_name << endl;
-      exit(0);
+      exit(1);
+    }
+  }
+
+  int *mask = new int[noOfPoints];
+  for (i = 0; i < noOfPoints; ++i){
+  	mask[i] = 1;
+  }
+
+  if (mask_name != NULL){
+    vtkFloatArray *mask_scalars = (vtkFloatArray*) input->GetPointData()->GetArray(mask_name, ind);
+    if (ind == -1 || mask_scalars == NULL){
+      cerr << "Masking scalars unavailable with name " << mask_name << endl;
+      exit(1);
+    }
+    if (mask_scalars->GetNumberOfComponents() > 1){
+    	cerr << "Masking scalars " << mask_scalars->GetName() << " has more than one component." << endl;
+    	exit(1);
+    }
+
+    for (i = 0; i < noOfPoints; ++i){
+      if (mask_scalars->GetTuple1(i) > 0){
+      	continue;
+      }
+      mask[i] = 0;
     }
 
   }
 
   if (scalars->GetNumberOfComponents() > 1){
-  cerr << "Scalars " << scalars->GetName() << " has more than one component." << endl;
-  exit(1);
+  	cerr << "Scalars " << scalars->GetName() << " has more than one component." << endl;
+  	exit(1);
   }
 
   sum = 0.0;
@@ -109,7 +142,14 @@ int main(int argc, char **argv)
   minVal = FLT_MAX;
   maxVal = -1 * minVal;
 
+  count = 0;
+
   for (i = 0; i < noOfPoints; ++i){
+  	if (mask[i] <= 0){
+  		continue;
+  	}
+  	++count;
+
     val = scalars->GetTuple1(i);
     sum += val;
     sumSq += val*val;
@@ -132,6 +172,10 @@ int main(int argc, char **argv)
   double integral = 0.0;
 
   for (i = 0; i < noOfPoints; ++i){
+
+  	if (mask[i] <= 0){
+  		continue;
+  	}
 
     input->GetPointCells(i, noOfCells, cells);
 
@@ -161,10 +205,14 @@ int main(int argc, char **argv)
     }
   }
 
+  if (count < 1){
+  	cerr << "Zero points remain after masking, exiting " << endl;
+  	exit(0);
+  }
 
-  mean    = sum / ((double) noOfPoints);
-  meanSq  = sumSq / ((double) noOfPoints);
-  meanAbs = sumAbs / ((double) noOfPoints);
+  mean    = sum / ((double) count);
+  meanSq  = sumSq / ((double) count);
+  meanAbs = sumAbs / ((double) count);
 
   var = meanSq - (mean*mean);
   sd  = sqrt(var);
@@ -176,6 +224,7 @@ int main(int argc, char **argv)
   if (quiet){
     //cout << ""  << scalars->GetName();
     cout << noOfPoints;
+    cout << count;
     cout << " " << mean;
     cout << " " << meanSq;
     cout << " " << sd;
@@ -187,6 +236,7 @@ int main(int argc, char **argv)
   } else {
     cout << "Scalar name   " << scalars->GetName() << endl;
     cout << "No of pts     " << noOfPoints << endl;
+    cout << "After masking " << count << endl;
     cout << "Mean          " << mean << endl;
     cout << "Mean Sq       " << meanSq << endl;
     cout << "S.D.          " << sd << endl;
@@ -198,6 +248,7 @@ int main(int argc, char **argv)
     cout << "" << "" << endl;
   }
 
+  delete [] mask;
   return 0;
 }
 
