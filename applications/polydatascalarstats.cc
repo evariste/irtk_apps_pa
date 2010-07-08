@@ -224,7 +224,7 @@ int main(int argc, char **argv)
   if (quiet){
     //cout << ""  << scalars->GetName();
     cout << noOfPoints;
-    cout << count;
+    cout << " " << count;
     cout << " " << mean;
     cout << " " << meanSq;
     cout << " " << sd;
