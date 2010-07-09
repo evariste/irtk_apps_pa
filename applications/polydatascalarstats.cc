@@ -19,9 +19,12 @@ void usage()
   cerr << " Usage: polydatascalarstats [in] <options>" << endl;
   cerr << " " << endl;
   cerr << " Options: " << endl;
-  cerr << " -q           Give the same output as normal but just the " << endl;
-  cerr << "              numbers on a space separated line." << endl;
-  cerr << " -name [name] Name of scalars for which stats are required." << endl;
+  cerr << " -q            Give the same output as normal but just the " << endl;
+  cerr << "               numbers on a space separated line." << endl;
+  cerr << " -name [name]  Name of scalars for which stats are required." << endl;
+  cerr << " -mask [name]  Name of scalars to use as a mask, stats only" << endl;
+  cerr << "               calculated where mask value is > 0." << endl;
+  cerr << " " << endl;
   cerr << " " << endl;
 
   exit(1);
@@ -37,6 +40,18 @@ int main(int argc, char **argv)
   double mean, var, sd, val;
   double meanSq, meanAbs, varAbs, sdAbs;
   int quiet = False;
+
+  // For weighting by cell area.
+  vtkTriangle *triangle;
+  vtkIdType *cells;
+  unsigned short noOfCells;
+  int k;
+  vtkIdList *ptIds;
+  double v1[3], v2[3], v3[3], triangleArea;
+  double totalArea;
+  totalArea = 0.0;
+  double integral = 0.0;
+
 
   if (argc < 2){
     usage();
@@ -160,17 +175,6 @@ int main(int argc, char **argv)
       maxVal = val;
   }
 
-  // Weighting by cell area.
-  vtkTriangle *triangle;
-  vtkIdType *cells;
-  unsigned short noOfCells;
-  int k;
-  vtkIdList *ptIds;
-  double v1[3], v2[3], v3[3], triangleArea;
-  double totalWeight;
-  totalWeight = 0.0;
-  double integral = 0.0;
-
   for (i = 0; i < noOfPoints; ++i){
 
   	if (mask[i] <= 0){
@@ -196,7 +200,7 @@ int main(int argc, char **argv)
 
         triangleArea = vtkTriangle::TriangleArea(v1, v2, v3) / 3.0;
         integral += triangleArea * val;
-        totalWeight += triangleArea;
+        totalArea += triangleArea;
 
       } else {
         cerr << ".";
@@ -231,6 +235,7 @@ int main(int argc, char **argv)
     cout << " " << meanAbs;
     cout << " " << sdAbs;
     cout << " " << minVal << " " << maxVal;
+    cout << " " << totalArea << endl;
     cout << " " << integral;
     cout << " " << sqrt(integral / 4.0 / M_PI) << endl;
   } else {
@@ -243,7 +248,8 @@ int main(int argc, char **argv)
     cout << "Mean(abs)     " << meanAbs << endl;
     cout << "S.D(abs)      " << sdAbs << endl;
     cout << "Min/Max       " << minVal << " " << maxVal << endl;
-    cout << "Area int.     " << integral << endl;
+    cout << "Area          " << totalArea << endl;
+    cout << "Area integral " << integral << endl;
     cout << "L2 Norm       " << sqrt(integral / 4.0 / M_PI) << endl;
     cout << "" << "" << endl;
   }
