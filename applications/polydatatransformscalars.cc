@@ -245,6 +245,7 @@ int main(int argc, char **argv)
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetInput(targetSurf);
+  writer->SetFileTypeToBinary();
   writer->SetFileName(output_name);
   writer->Write();
 }
