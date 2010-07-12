@@ -51,7 +51,7 @@ int main(int argc, char **argv)
   double totalArea;
   totalArea = 0.0;
   double integral = 0.0;
-
+  int	nonTriangleFaces = 0;
 
   if (argc < 2){
     usage();
@@ -112,6 +112,10 @@ int main(int argc, char **argv)
 
   if (scalar_name == NULL){
     scalars = (vtkFloatArray*) input->GetPointData()->GetScalars();
+    if (scalars == NULL){
+      cerr << "No scalars available." << endl;
+      exit(1);
+    }
   } else {
     scalars = (vtkFloatArray*) input->GetPointData()->GetArray(scalar_name, ind);
 
@@ -160,12 +164,14 @@ int main(int argc, char **argv)
   count = 0;
 
   for (i = 0; i < noOfPoints; ++i){
+
   	if (mask[i] <= 0){
   		continue;
   	}
   	++count;
 
     val = scalars->GetTuple1(i);
+
     sum += val;
     sumSq += val*val;
     sumAbs += fabs(val);
@@ -173,20 +179,11 @@ int main(int argc, char **argv)
       minVal = val;
     if (maxVal < val)
       maxVal = val;
-  }
-
-  for (i = 0; i < noOfPoints; ++i){
-
-  	if (mask[i] <= 0){
-  		continue;
-  	}
 
     input->GetPointCells(i, noOfCells, cells);
 
     if ( cells == NULL )
       continue;
-
-    val = scalars->GetTuple1(i);
 
     for (k = 0; k < noOfCells; ++k){
       triangle = vtkTriangle::SafeDownCast(input->GetCell(cells[k]));
@@ -203,7 +200,7 @@ int main(int argc, char **argv)
         totalArea += triangleArea;
 
       } else {
-        cerr << ".";
+      	++nonTriangleFaces;
       }
 
     }
@@ -224,6 +221,9 @@ int main(int argc, char **argv)
   varAbs = meanSq - (meanAbs*meanAbs);
   sdAbs  = sqrt(varAbs);
 
+  // Normalisation based on the area of a sphere. Becomes an L2 norm if input stat is a squared measurement.
+  double normedIntegral = sqrt(integral / 4.0 / M_PI);
+
 
   if (quiet){
     //cout << ""  << scalars->GetName();
@@ -237,7 +237,7 @@ int main(int argc, char **argv)
     cout << " " << minVal << " " << maxVal;
     cout << " " << totalArea << endl;
     cout << " " << integral;
-    cout << " " << sqrt(integral / 4.0 / M_PI) << endl;
+    cout << " " << normedIntegral << endl;
   } else {
     cout << "Scalar name   " << scalars->GetName() << endl;
     cout << "No of pts     " << noOfPoints << endl;
@@ -249,8 +249,10 @@ int main(int argc, char **argv)
     cout << "S.D(abs)      " << sdAbs << endl;
     cout << "Min/Max       " << minVal << " " << maxVal << endl;
     cout << "Area          " << totalArea << endl;
-    cout << "Area integral " << integral << endl;
-    cout << "L2 Norm       " << sqrt(integral / 4.0 / M_PI) << endl;
+    cout << "Area int      " << integral << endl;
+    cout << "sqrt(Area int / 4 pi) " << normedIntegral << endl;
+    if (nonTriangleFaces > 0)
+    	cout << "Non Triangle Faces " << nonTriangleFaces << endl;
     cout << "" << "" << endl;
   }
 
