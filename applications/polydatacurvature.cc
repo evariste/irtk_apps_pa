@@ -14,7 +14,7 @@
 
 char *input_name = NULL, *output_name = NULL;
 
-typedef enum { K, H, H2, kmin, kmax, Kabs, K2 } curvatureType;
+typedef enum { K, H, H2, K2, kmin, kmax, Kabs, Habs, Kplus, Hplus } curvatureType;
 
 void usage()
 {
@@ -22,11 +22,17 @@ void usage()
   cerr << "" << endl;
   cerr << "Calculate curvatures for a surface." << endl;
   cerr << "Options:" << endl;
-  cerr << "<type>  Can be one of {-K -H -H2 -kmin -kmax -Kabs -K2} representing the " << endl;
-  cerr << "        Gaussian curvature, mean curvature, the two principal curvatures," << endl;
-  cerr << "        the absolute Gaussian and the squared Gaussian curvature." << endl;
+  cerr << "<type>  Can be one of:" << endl;
+  cerr << "        " << endl;
+  cerr << "        -K     -H      Gaussian curvature and mean curvature" << endl;
+  cerr << "        -K2    -H2     Squared values" << endl;
+  cerr << "        -Kabs  -Habs   Absolute values" << endl;
+  cerr << "        -Kplus -Hplus  Values thresholded at zero" << endl;
+  cerr << "        " << endl;
+  cerr << "        -kmin  -kmax   The two principal curvatures," << endl;
+  cerr << "        " << endl;
   cerr << "        The default option is Gaussian." << endl;
-
+  cerr << "        " << endl;
   exit(1);
 }
 
@@ -73,6 +79,12 @@ int main(int argc, char **argv)
       cType = H;
       ok = True;
     }
+    if ((!ok) && (strcmp(argv[1], "-K2") == 0)) {
+      argc--;
+      argv++;
+      cType = K2;
+      ok = True;
+    }
     if ((!ok) && (strcmp(argv[1], "-H2") == 0)) {
       argc--;
       argv++;
@@ -97,10 +109,22 @@ int main(int argc, char **argv)
       cType = Kabs;
       ok = True;
     }
-    if ((!ok) && (strcmp(argv[1], "-K2") == 0)) {
+    if ((!ok) && (strcmp(argv[1], "-Habs") == 0)) {
       argc--;
       argv++;
-      cType = K2;
+      cType = Habs;
+      ok = True;
+    }
+    if ((!ok) && (strcmp(argv[1], "-Kplus") == 0)) {
+      argc--;
+      argv++;
+      cType = Kplus;
+      ok = True;
+    }
+    if ((!ok) && (strcmp(argv[1], "-Hplus") == 0)) {
+      argc--;
+      argv++;
+      cType = Hplus;
       ok = True;
     }
     if ((!ok) && (strcmp(argv[1], "-dec") == 0)) {
@@ -176,11 +200,14 @@ int main(int argc, char **argv)
   switch (cType){
     case K:
     case Kabs:
+    case Kplus:
     case K2:
       cout << "Setting curvature to Gaussian" << endl;
       curve->SetCurvatureTypeToGaussian();
       break;
     case H:
+    case Habs:
+    case Hplus:
     case H2:
       cout << "Setting curvature to mean" << endl;
       curve->SetCurvatureTypeToMean();
@@ -207,40 +234,13 @@ int main(int argc, char **argv)
   // Retrieve the computed curvature values.
   curve->Update();
 
-//  vtkPolyData *output1 = vtkPolyData::New();
-//  output1 = curve->GetOutput();
-//  output1->Update();
-//
-//  vtkCurvatures *curve2 = vtkCurvatures::New();
-//  curve2->SetInput(surface);
-//  curve2->SetCurvatureTypeToMean();
-//  curve2->Update();
-//  vtkPolyData *output2 = vtkPolyData::New();
-//  output2 = curve2->GetOutput();
-//  output2->Update();
-//
-//  vtkFloatArray *scalars = vtkFloatArray::New();
-//  output1->GetPointData()->SetActiveScalars("Gauss_Curvature");
-//  scalars = (vtkFloatArray*) output1->GetPointData()->GetScalars();
-//
-//  cerr << "bla" << endl;
-//  cerr << scalars->GetName() << endl;
-//  cerr << "-------------" << endl;
-//  for (i = 0; i < output1->GetPointData()->GetNumberOfArrays(); ++i){
-//    cerr << output1->GetPointData()->GetArray(i)->GetName() << endl;
-//  }
-//  cerr << "-------------" << endl;
-//
-//  output2->GetPointData()->AddArray(scalars);
-//  output2->Update();
-
   vtkPolyData *output = vtkPolyData::New();
   output = curve->GetOutput();
 
   vtkFloatArray *scalars = vtkFloatArray::New();
 
   // Any more work to be done?
-  if (cType == K2 || cType == Kabs){
+  if (cType == K2 || cType == Kabs || cType == Kplus){
 
     scalars = (vtkFloatArray *) output->GetPointData()->GetScalars("Gauss_Curvature");
     noOfPoints = scalars->GetNumberOfTuples();
@@ -259,7 +259,19 @@ int main(int argc, char **argv)
         val = scalars->GetTuple1(i);
         scalars->SetTuple1(i, fabs(val));
       }
+    } else if (cType == Kplus){
+      scalars->SetName("K_plus");
+      cout << "Finding K_plus ..." << endl;
+      for (i = 0; i < noOfPoints; ++i){
+        val = scalars->GetTuple1(i);
+        if (val > 0){
+          scalars->SetTuple1(i, val);
+        } else {
+          scalars->SetTuple1(i, 0.0);
+        }
+      }
     }
+
     output->GetPointData()->AddArray(scalars);
     output->Update();
     output->GetPointData()->RemoveArray("Gauss_Curvature");
@@ -267,29 +279,56 @@ int main(int argc, char **argv)
 
     if (cType == K2){
       output->GetPointData()->SetActiveScalars("K2");
-    } else {
+    } else if (cType == Kabs) {
       output->GetPointData()->SetActiveScalars("K_abs");
+    } else if (cType == Kplus){
+    	output->GetPointData()->SetActiveScalars("K_plus");
     }
 
+  } else if (cType == H2 || cType == Habs || cType == Hplus){
 
-  } else if (cType == H2){
-
-    scalars = (vtkFloatArray *) output->GetPointData()->GetScalars();
+    scalars = (vtkFloatArray *) output->GetPointData()->GetScalars("Mean_Curvature");
     noOfPoints = scalars->GetNumberOfTuples();
 
-    scalars->SetName("H2");
-    cout << "Squaring  ..." << endl;
-
-    for (i = 0; i < noOfPoints; ++i){
-      val = scalars->GetTuple1(i);
-      scalars->SetTuple1(i, val * val);
+    if (cType == H2){
+      scalars->SetName("H2");
+      cout << "Squaring  ..." << endl;
+      for (i = 0; i < noOfPoints; ++i){
+        val = scalars->GetTuple1(i);
+        scalars->SetTuple1(i, val * val);
+      }
+    } else if (cType == Habs){
+      scalars->SetName("H_abs");
+      cout << "Finding absolute value ..." << endl;
+      for (i = 0; i < noOfPoints; ++i){
+        val = scalars->GetTuple1(i);
+        scalars->SetTuple1(i, fabs(val));
+      }
+    } else if (cType == Hplus){
+      scalars->SetName("H_plus");
+      cout << "Finding H_plus ..." << endl;
+      for (i = 0; i < noOfPoints; ++i){
+        val = scalars->GetTuple1(i);
+        if (val > 0){
+          scalars->SetTuple1(i, val);
+        } else {
+          scalars->SetTuple1(i, 0.0);
+        }
+      }
     }
 
     output->GetPointData()->AddArray(scalars);
     output->Update();
     output->GetPointData()->RemoveArray("Mean_Curvature");
     output->Update();
-    output->GetPointData()->SetActiveScalars("H2");
+
+    if (cType == H2){
+      output->GetPointData()->SetActiveScalars("H2");
+    } else if (cType == Habs) {
+      output->GetPointData()->SetActiveScalars("H_abs");
+    } else if (cType == Hplus){
+    	output->GetPointData()->SetActiveScalars("H_plus");
+    }
   }
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
