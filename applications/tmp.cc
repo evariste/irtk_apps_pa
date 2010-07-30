@@ -4,6 +4,7 @@
 
 #include <nr.h>
 
+
 #include <vtkFloatArray.h>
 #include <vtkTriangle.h>
 #include <vtkPointData.h>
@@ -16,11 +17,26 @@
 char *input_name = NULL;
 char *mask_name = NULL;
 
+#define CLAMP_LO_HI(v,d,u)    ((v)<(d) ? (d) : (v) > (u) ? (u) : v)
 
 void usage()
 {
-  cerr << "Usage: polydatacurvatureindices [in] <options>" << endl;
+  cerr << "Usage: polydatacurvatureindices [input] <options>" << endl;
   cerr << "" << endl;
+  cerr << "Give out some curvature indices for a polydata set." << endl;
+  cerr << "See Batchelor TMI 2002." << endl;
+  cerr << "" << endl;
+  cerr << " Options:" << endl;
+  cerr << "-mask [maskName]   Name of a scalar array [input] polydata " << endl;
+  cerr << "                   that is used to mask off unwanted regions " << endl;
+  cerr << "                   of the surface." << endl;
+  cerr << "-pLo [value]       Lower percentile for treating outliers. " << endl;
+  cerr << "                   Values below this are clamped up the the value " << endl;
+  cerr << "                   of the minimum percentile for each of K and H." << endl;
+  cerr << "-pHi [value]       Upper percentile for treating outliers." << endl;
+  cerr << "-invert            Mean curvature can change sign depending " << endl;
+  cerr << "                   on the direction of the normals. Use this flag" << endl;
+  cerr << "                   to flip the normals if required." << endl;
   exit(1);
 }
 
@@ -35,7 +51,7 @@ int main(int argc, char **argv)
   vtkIdList *ptIds;
   double v1[3], v2[3], v3[3];
   int nonTriangleFaces = 0;
-  int unmaskedCount;
+  unsigned long unmaskedCount;
   double pMin = 0, pMax = 100;
   double kLo = FLT_MAX * -1.0;
   double hLo = FLT_MAX * -1.0;
@@ -213,7 +229,7 @@ int main(int argc, char **argv)
   unmaskedCount = 0;
   for (i = 0; i < noOfPoints; ++i){
 
-  	if (mask <= 0)
+  	if (mask[i] <= 0)
   		continue;
 
   	kCentileData[unmaskedCount + 1] = scalars_K->GetTuple1(i);
@@ -248,8 +264,11 @@ int main(int argc, char **argv)
     K = scalars_K->GetTuple1(i);
     H = scalars_H->GetTuple1(i);
 
-    if (mask <= 0 || K < kLo || K > kHi || H < hLo || H > hHi)
+    if (mask[i] <= 0)
     	continue;
+
+    K = CLAMP_LO_HI(K, kLo, kHi);
+    H = CLAMP_LO_HI(H, hLo, hHi);
 
     H2 = H*H;
     K2 = K*K;
@@ -279,16 +298,18 @@ int main(int argc, char **argv)
 
   GLN = sqrt(totalArea * GLN);
 
+  // Printing:
+  cout.ios::precision(5);
 
-  cout << muH << endl;
-  cout << muK << endl;
-  cout << MLN << endl;
-  cout << ICI << endl;
-  cout << GLN << endl;
-  cout << ECI << endl;
-  cout << totalArea << endl;
-  cout << kLo << " " << kHi << endl;
-  cout << hLo << " " << hHi << endl;
+  cout << "MLN        " << MLN << endl;
+  cout << "ICI        " << ICI << endl;
+  cout << "GLN        " << GLN << endl;
+  cout << "ECI        " << ECI << endl;
+  cout << "Total Area " << totalArea << endl;
+  cout << "Min Max K  " << kLo << " " << kHi << endl;
+  cout << "Min Max H  " << hLo << " " << hHi << endl;
+  cout << "Mean K     "<< muK << endl;
+  cout << "Mean H     "<< muH << endl;
 
 
   delete [] area;
