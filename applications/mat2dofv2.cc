@@ -1,23 +1,3 @@
-/*=========================================================================
- 
-  Library   : packages
-  Module    : $RCSfile: mat2dof.cc,v $
-  Authors   : Daniel Rueckert
-  Copyright : Imperial College, Department of Computing
-              Visual Information Processing (VIP), 2000-2001
-  Purpose   :
-  Date      : $Date: 2003/04/17 14:10:51 $
-  Version   : $Revision: 1.2 $
-  Changes   : $Locker:  $
-	      $Log: mat2dof.cc,v $
-	      Revision 1.2  2003/04/17 14:10:51  dr
-	      Merged branch
-	
-	      Revision 1.1.1.1.2.2  2003/01/03 17:21:12  dr
-	      Imported sources
-	
-
-=========================================================================*/
 
 #include <irtkImage.h>
 
@@ -50,7 +30,7 @@ int main(int argc, char **argv)
     }
   }
 
-  // Convert to rigid transformation
+  // Assign to a transformation. This call should update the parameters.
   transformation.PutMatrix(matrix);
 
   // Write transformation
