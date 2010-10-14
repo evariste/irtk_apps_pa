@@ -14,8 +14,14 @@ void usage()
   cerr << "Create a random ffd with sigma (default 1) at the same control points." << endl;
   cerr << "Affine component is identity.  If blur specified then components are blurred first." << endl;
   cerr << "Default is for a 2D image unless -3d specified, then z components also included." << endl;
-  cerr << "Default is to set min and max values for random cp components as +/- half a spacing."  << endl;
+  cerr << "Default is to set min and max values for random control point components as 0.4 * half a spacing.*"  << endl;
   cerr << "This is overridden if -nolimits is specified."  << endl;
+  cerr << "" << endl;
+  cerr << "" << endl;
+  cerr << "" << endl;
+  cerr << "" << endl;
+  cerr << "*   Choi, Y., Lee, S.: Injectivity conditions of 2D and 3D uniform cubic b-spline functions." << endl;
+  cerr << "    Graphical Models 62(6) (2000) 411427" << endl;
 
   exit(1);
 }
@@ -29,6 +35,8 @@ int main(int argc, char **argv)
   double blur_sigma = 0.0;
   int threeD = False;
   int setLimits = True;
+
+  double fractionLimit = 0.4;
 
   irtkRealImage *xcomps, *ycomps, *zcomps;
 
@@ -131,8 +139,8 @@ int main(int argc, char **argv)
         minspacing = yspacing;
       if (threeD == True && minspacing > zspacing)
         minspacing = zspacing;
-      gaussian_noise->SetMinVal(-0.5*minspacing);
-      gaussian_noise->SetMaxVal(0.5*minspacing);
+      gaussian_noise->SetMinVal(fractionLimit * minspacing * -1.0);
+      gaussian_noise->SetMaxVal(fractionLimit * minspacing);
     }
 
     noise->SetInput(xcomps);
