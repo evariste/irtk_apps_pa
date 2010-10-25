@@ -2,68 +2,51 @@
 
 #include <irtkImage.h>
 
-#include <nr.h>
-
-
 #include <vtkFloatArray.h>
 #include <vtkTriangle.h>
+#include <vtkCellArray.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
+#include <vtkPolyDataWriter.h>
+#include <vtkPointLocator.h>
 
+#include <vtkTriangleFilter.h>
+#include <vtkMath.h>
 
-#include <vtkCurvatures.h>
-
-char *input_name = NULL;
-char *mask_name = NULL;
-
-#define CLAMP_LO_HI(v,d,u)    ((v)<(d) ? (d) : (v) > (u) ? (u) : v)
+char *input_nameA = NULL;
+char *input_nameB = NULL;
 
 void usage()
 {
-  cerr << "Usage: polydatacurvatureindices [input] <options>" << endl;
-  cerr << "" << endl;
-  cerr << "Give out some curvature indices for a polydata set." << endl;
-  cerr << "See Batchelor TMI 2002." << endl;
-  cerr << "" << endl;
-  cerr << " Options:" << endl;
-  cerr << "-mask [maskName]   Name of a scalar array [input] polydata " << endl;
-  cerr << "                   that is used to mask off unwanted regions " << endl;
-  cerr << "                   of the surface." << endl;
-  cerr << "-pLo [value]       Lower percentile for treating outliers. " << endl;
-  cerr << "                   Values below this are clamped up the the value " << endl;
-  cerr << "                   of the minimum percentile for each of K and H." << endl;
-  cerr << "-pHi [value]       Upper percentile for treating outliers." << endl;
-  cerr << "-invert            Mean curvature can change sign depending " << endl;
-  cerr << "                   on the direction of the normals. Use this flag" << endl;
-  cerr << "                   to flip the normals if required." << endl;
+  cerr << "polydatasurfacedistance [inputA] [inputB]" << endl;
   exit(1);
 }
 
 int main(int argc, char **argv)
 {
-	int ok, i, j, invert = False;
-  int noOfPoints;
-  double K, H;
-  vtkTriangle *triangle;
-  vtkIdType *cells;
-  unsigned short noOfCells;
-  vtkIdList *ptIds;
-  double v1[3], v2[3], v3[3];
-  int nonTriangleFaces = 0;
-  unsigned long unmaskedCount;
-  double pMin = 0, pMax = 100;
-  double kLo = FLT_MAX * -1.0;
-  double hLo = FLT_MAX * -1.0;
-  double kHi = FLT_MAX;
-  double hHi = FLT_MAX;
+	int i, j, ok;
+  double searchRadius;
+  double a[3], b[3], c[3];
+  double e1[3], e2[3], e3[3];
+  double n1[3], n2[3];
+  double volA, volB, rA, rB, sigmaKer, kernelFraction;
+  int nearestPtCount;
+  int noOfFacesA, noOfFacesB;
+  double boundsA[6], boundsB[6];
+  double constA, constB;
 
-  if (argc < 2){
+  kernelFraction = 0.05;
+
+
+	if (argc < 2){
     usage();
   }
 
-  // Parse image
-  input_name  = argv[1];
+  input_nameA = argv[1];
+  argc--;
+  argv++;
+  input_nameB = argv[1];
   argc--;
   argv++;
 
@@ -71,43 +54,14 @@ int main(int argc, char **argv)
   // Parse remaining arguments
   while (argc > 1){
     ok = False;
-    if ((!ok) && (strcmp(argv[1], "-invert") == 0)) {
-      argc--;
-      argv++;
-      invert = True;
-      ok = True;
-    }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
-    	argc--;
-    	argv++;
-    	mask_name = argv[1];
-    	argc--;
-    	argv++;
-    	ok = True;
-    }
-    if ((ok == False) && (strcmp(argv[1], "-pLo") == 0)){
-    	argc--;
-    	argv++;
-    	pMin = atof(argv[1]);
-    	argc--;
-    	argv++;
-    	ok = True;
-    }
-    if ((ok == False) && (strcmp(argv[1], "-pHi") == 0)){
-    	argc--;
-    	argv++;
-    	pMax = atof(argv[1]);
-    	argc--;
-    	argv++;
-    	ok = True;
-    }
-    if ((!ok) && (strcmp(argv[1], "-opt") == 0)) {
-      argc--;
-      argv++;
-      //	Do stuff and maybe
-//      argc--;
-//      argv++;
-      ok = True;
+    if ((!ok) && (strcmp(argv[1], "-bla") == 0)) {
+    	//      argc--;
+    	//      argv++;
+    	//      stuff
+    	// maybe
+    	//      argc--;
+    	//      argv++;
+    	//      ok = True;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -115,206 +69,232 @@ int main(int argc, char **argv)
     }
   }
 
-  vtkPolyData *surface;
 
   // Read surface
-  vtkPolyDataReader *surface_reader = vtkPolyDataReader::New();
-  surface_reader->SetFileName(input_name);
-  surface_reader->Modified();
-  surface_reader->Update();
+  vtkPolyDataReader *surface_readerA = vtkPolyDataReader::New();
+  surface_readerA->SetFileName(input_nameA);
+  surface_readerA->Modified();
+  surface_readerA->Update();
 
-  surface = surface_reader->GetOutput();
-  surface->Update();
-  surface->BuildCells();
-  surface->BuildLinks();
-
-  noOfPoints = surface->GetNumberOfPoints();
-
-  vtkCurvatures *curve_K = vtkCurvatures::New();
-  curve_K->SetInput(surface);
-  curve_K->SetCurvatureTypeToGaussian();
-
-  vtkCurvatures *curve_H = vtkCurvatures::New();
-  curve_H->SetInput(surface);
-  curve_H->SetCurvatureTypeToMean();
+  vtkPolyDataReader *surface_readerB = vtkPolyDataReader::New();
+  surface_readerB->SetFileName(input_nameB);
+  surface_readerB->Modified();
+  surface_readerB->Update();
 
 
-  if (invert  == True){
-    cout << "Inverting mean curvature flag." << endl;
-    int invertFlag = curve_H->GetInvertMeanCurvature();
-    curve_H->SetInvertMeanCurvature(1 - invertFlag);
+  vtkPolyData *readerAout;
+  readerAout = surface_readerA->GetOutput();
+  readerAout->Update();
+  readerAout->BuildCells();
+  readerAout->BuildLinks();
+
+  vtkPolyData *readerBout;
+  readerBout = surface_readerB->GetOutput();
+  readerBout->Update();
+  readerBout->BuildCells();
+  readerBout->BuildLinks();
+
+
+  // Derive a new polydata set with points equal to the
+  // centers of the faces of the input surfaces and vectors
+  // associated with each point that are the normals of the faces.
+
+  vtkTriangleFilter *triFilterA = vtkTriangleFilter::New();
+  triFilterA->SetInput(readerAout);
+  triFilterA->Update();
+  vtkPolyData *triAout = vtkPolyData::New();
+  triAout = triFilterA->GetOutput();
+  triAout->BuildCells();
+  triAout->BuildLinks();
+
+  vtkTriangleFilter *triFilterB = vtkTriangleFilter::New();
+  triFilterB->SetInput(readerBout);
+  triFilterB->Update();
+  vtkPolyData *triBout = vtkPolyData::New();
+  triBout = triFilterB->GetOutput();
+  triBout->BuildCells();
+  triBout->BuildLinks();
+
+
+  triAout->GetBounds(boundsA);
+  triBout->GetBounds(boundsB);
+
+  if (boundsA[0] > boundsB[1] ||
+  		boundsB[0] > boundsA[1] ||
+  		boundsA[2] > boundsB[3] ||
+  		boundsB[2] > boundsA[3] ||
+  		boundsA[4] > boundsB[5] ||
+  		boundsB[4] > boundsA[5]){
+  	cout << "Surfaces' bounding boxes do not intersect." << endl;
+  	exit(1);
   }
 
-  // Retrieve the computed curvature values.
-  curve_K->Update();
-  curve_H->Update();
-
-  // Deal with mask.
-  int ind;
-  int *mask = new int[noOfPoints];
-  for (i = 0; i < noOfPoints; ++i){
-  	mask[i] = 1;
-  }
-
-  if (mask_name != NULL){
-    vtkFloatArray *mask_scalars = (vtkFloatArray*) surface->GetPointData()->GetArray(mask_name, ind);
-    if (ind == -1 || mask_scalars == NULL){
-      cerr << "Masking scalars unavailable with name " << mask_name << endl;
-      exit(1);
-    }
-    if (mask_scalars->GetNumberOfComponents() > 1){
-    	cerr << "Masking scalars " << mask_scalars->GetName() << " has more than one component." << endl;
-    	exit(1);
-    }
-
-    for (i = 0; i < noOfPoints; ++i){
-      if (mask_scalars->GetTuple1(i) > 0){
-      	continue;
-      }
-      mask[i] = 0;
-    }
-  }
 
 
+  vtkCellArray *facesA = triAout->GetPolys();
+  noOfFacesA = facesA->GetNumberOfCells();
 
-  vtkFloatArray *scalars_K = vtkFloatArray::New();
-  vtkFloatArray *scalars_H = vtkFloatArray::New();
-
-  scalars_K =
-  		(vtkFloatArray*) curve_K->GetOutput()->GetPointData()->GetScalars("Gauss_Curvature");
-  scalars_H =
-  		(vtkFloatArray*) curve_H->GetOutput()->GetPointData()->GetScalars("Mean_Curvature");
+  vtkCellArray *facesB = triBout->GetPolys();
+  noOfFacesB = facesB->GetNumberOfCells();
 
 
-  // Calculate areas.
-  double *area = new double[noOfPoints];
-  unmaskedCount = 0;
+  vtkPoints *centres = vtkPoints::New();
+  centres->SetNumberOfPoints(noOfFacesA + noOfFacesB);
 
-  for (i = 0; i < noOfPoints; ++i){
-  	area[i] = 0.0;
+  vtkFloatArray *normals = vtkFloatArray::New();
+  normals->SetNumberOfComponents(3);
+  normals->SetNumberOfTuples(noOfFacesA + noOfFacesB);
 
-  	if (mask[i] <= 0){
-  		continue;
+  vtkIdType nptsForFace = 0;
+  vtkIdType *ptIdsForFace;
+
+
+  facesA->InitTraversal();
+  for (i = 0; i < noOfFacesA; ++i){
+
+  	facesA->GetNextCell(nptsForFace, ptIdsForFace);
+
+  	if (nptsForFace != 3){
+  		cerr << "Error: faces must have three points each." << endl;
+  		exit(0);
   	}
 
-  	++unmaskedCount;
+  	triAout->GetPoint(ptIdsForFace[0], a);
+  	triAout->GetPoint(ptIdsForFace[1], b);
+  	triAout->GetPoint(ptIdsForFace[2], c);
 
-    surface->GetPointCells(i, noOfCells, cells);
+  	for (j = 0; j < 3; ++j){
+  		e1[j] = b[j] - a[j];
+  		e2[j] = c[j] - a[j];
+  	}
 
-    if ( cells == NULL )
-      continue;
+  	vtkMath::Cross(e1, e2, e3);
+  	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
 
-    for (j = 0; j < noOfCells; ++j){
-      triangle = vtkTriangle::SafeDownCast(surface->GetCell(cells[j]));
+  	// Get centroid.
+  	for (j = 0; j < 3; ++j){
+  		a[j] += (b[j] + c[j]);
+  		a[j] /= 3.0;
+  	}
 
-      if ( triangle != NULL ){
-        ptIds = triangle->GetPointIds();
-
-        surface->GetPoint(ptIds->GetId(0), v1);
-        surface->GetPoint(ptIds->GetId(1), v2);
-        surface->GetPoint(ptIds->GetId(2), v3);
-
-        area[i] += vtkTriangle::TriangleArea(v1, v2, v3) / 3.0;
-
-      } else {
-      	++nonTriangleFaces;
-      }
-    }
+  	centres->SetPoint(i, a);
   }
 
-  // Outlier control.
-  float *kCentileData = new float[1 + unmaskedCount];
-  float *hCentileData = new float[1 + unmaskedCount];
+  facesB->InitTraversal();
+  for (i = noOfFacesA; i < noOfFacesA + noOfFacesB; ++i){
 
-  unmaskedCount = 0;
-  for (i = 0; i < noOfPoints; ++i){
+  	facesB->GetNextCell(nptsForFace, ptIdsForFace);
 
-  	if (mask[i] <= 0)
-  		continue;
+  	if (nptsForFace != 3){
+  	  		cerr << "Error: faces must have three points each." << endl;
+  	  		exit(0);
+  	}
 
-  	kCentileData[unmaskedCount + 1] = scalars_K->GetTuple1(i);
-  	hCentileData[unmaskedCount + 1] = scalars_H->GetTuple1(i);
-  	++unmaskedCount;
+  	triBout->GetPoint(ptIdsForFace[0], a);
+  	triBout->GetPoint(ptIdsForFace[1], b);
+  	triBout->GetPoint(ptIdsForFace[2], c);
+
+  	for(j = 0; j < 3; ++j){
+  		e1[j] = b[j] - a[j];
+  		e2[j] = c[j] - a[j];
+  	}
+
+  	// Cross product is skew symmetric for the second surface, we do e2 x e1 while we did
+  	// e1 x e2 for the first surface - i.e.  the sense is negated.
+  	vtkMath::Cross(e2, e1, e3);
+  	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
+
+  	// Get centroid.
+  	for (j = 0; j < 3; ++j){
+  		a[j] += (b[j] + c[j]);
+  		a[j] /= 3.0;
+  	}
+
+  	centres->SetPoint(i, a);
   }
 
-  sort(unmaskedCount, kCentileData);
-  sort(unmaskedCount, hCentileData);
+  normals->SetName("faceNormals");
 
-  ind = 1 + (int) round((double) pMin * (unmaskedCount-1) / 100.0);
-  kLo = kCentileData[ind];
-  hLo = hCentileData[ind];
+  vtkPolyData *combined = vtkPolyData::New();
 
-  ind = 1 + (int) round((double) pMax * (unmaskedCount-1) / 100.0);
-  kHi = kCentileData[ind];
-  hHi = hCentileData[ind];
+  combined->SetPoints(centres);
+  combined->GetPointData()->AddArray(normals);
+  combined->Update();
+
+//  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+//  writer->SetInput(combined);
+//  writer->SetFileTypeToBinary();
+//  writer->SetFileName("temp.vtk");
+//  writer->Write();
+//  exit(0);
+
+  vtkPointLocator *point_locator = vtkPointLocator::New();
+  point_locator->SetNumberOfPointsPerBucket(5);
+  point_locator->SetDataSet(combined);
+  point_locator->BuildLocator();
 
 
+  // Need to establish a suitable radius for the kernel on centre
+  // to centre distances.
 
-  // Now calculate indices.
-  double muH = 0.0;
-  double muK = 0.0;
-  double MLN = 0.0;
-  double ICI = 0.0;
-  double GLN = 0.0;
-  double ECI = 0.0;
-  double totalArea = 0.0;
-  double K2, H2;
+  volA = (boundsA[1] - boundsA[0]) *
+				 (boundsA[3] - boundsA[2]) *
+  		   (boundsA[5] - boundsA[4]);
 
-  for (i = 0; i < noOfPoints; ++i){
-    K = scalars_K->GetTuple1(i);
-    H = scalars_H->GetTuple1(i);
+  volB = (boundsB[1] - boundsB[0]) *
+  		   (boundsB[3] - boundsB[2]) *
+  		   (boundsB[5] - boundsB[4]);
 
-    if (mask[i] <= 0)
-    	continue;
+  // Assume points distributed on spheres.
+  rA = pow(volA, (1.0/3.0)) * 3.0 / 4.0 / M_PI;
+  rB = pow(volB, (1.0/3.0)) * 3.0 / 4.0 / M_PI;
 
-    K = CLAMP_LO_HI(K, kLo, kHi);
-    H = CLAMP_LO_HI(H, hLo, hHi);
+  sigmaKer = 0.5 * (rA + rB) * kernelFraction;
 
-    H2 = H*H;
-    K2 = K*K;
 
-    muK += K * area[i];
-    muH += H * area[i];
+  // Constants for kernel
+  constA = 1 / sigmaKer / sqrt(2 * M_PI);
+  constB = -1.0 / sigmaKer / sigmaKer;
 
-    MLN += H2 * area[i];
+  searchRadius = 2.5 * sigmaKer;
 
-    if (K > 0){
-    	ICI += K * area[i];
-    }
 
-    GLN += K2 * area[i];
+  vtkIdList *nearestPtIDs = vtkIdList::New();
 
-    if (H2 > K)
-    	ECI += 4 * H * sqrt(H2 - K) * area[i];
+  double val, pt2ptDistSq, totalDist;
 
-    totalArea += area[i];
+  // The distance we seek to measure and return.
+  totalDist = 0.0;
+
+  for (i = 0; i < noOfFacesA + noOfFacesB; ++i){
+  	combined->GetPoint(i, a);
+  	point_locator->FindPointsWithinRadius(searchRadius, a, nearestPtIDs);
+
+  	nearestPtCount = nearestPtIDs->GetNumberOfIds();
+
+  	// Current normal.
+  	normals->GetTuple(i, n1);
+
+
+  	for (j = 0; j < nearestPtCount; ++j){
+  		combined->GetPoint(nearestPtIDs->GetId(j), b);
+
+  		normals->GetTuple(nearestPtIDs->GetId(j), n2);
+
+  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(a, b);
+
+  		val = constA * exp(constB * pt2ptDistSq);
+  		val *= vtkMath::Dot(n1, n2);
+
+  		totalDist += val;
+
+  	}
+
   }
 
-  // Finishing off some of the calculations.
-  muH = muH / totalArea;
-  muK = muK / totalArea;
+  totalDist = sqrt(totalDist);
 
-  MLN = sqrt(MLN / 4.0 / M_PI);
-
-  GLN = sqrt(totalArea * GLN);
-
-  // Printing:
-  cout.ios::precision(5);
-
-  cout << "MLN        " << MLN << endl;
-  cout << "ICI        " << ICI << endl;
-  cout << "GLN        " << GLN << endl;
-  cout << "ECI        " << ECI << endl;
-  cout << "Total Area " << totalArea << endl;
-  cout << "Min Max K  " << kLo << " " << kHi << endl;
-  cout << "Min Max H  " << hLo << " " << hHi << endl;
-  cout << "Mean K     "<< muK << endl;
-  cout << "Mean H     "<< muH << endl;
-
-
-  delete [] area;
-  delete [] kCentileData;
-  delete [] hCentileData;
+  cout << totalDist << endl;
 
   return 0;
 }

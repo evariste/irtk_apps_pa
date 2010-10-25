@@ -75,8 +75,6 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       quiet = True;
-      argc--;
-      argv++;
       ok = True;
     }
     if (ok == False){
