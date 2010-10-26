@@ -27,7 +27,8 @@ int main(int argc, char **argv){
   irtkRealPixel min, max;
   double xsize, ysize, zsize, voxelVolume, totalVol;
   double threshold = 0.0;
-  int voxels, i, ok;
+  int voxels, i;
+  bool ok;
   irtkRealPixel *pPix;
 
   // Parse arguments.
@@ -40,24 +41,24 @@ int main(int argc, char **argv){
 
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-t") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-t") == 0)){
       argc--;
       argv++;
       threshold = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-max") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-max") == 0)){
       argc--;
       argv++;
       max = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

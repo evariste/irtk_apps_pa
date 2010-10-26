@@ -32,9 +32,10 @@ int main(int argc, char **argv ){
     usage();
   }
 
-  int i, j, noOfPoints, inputCount, regionCount, ok;
-  int lcc = False;
-  int newScalars = True;
+  int i, j, noOfPoints, inputCount, regionCount;
+  bool ok;
+  bool lcc = false;
+  bool newScalars = true;
 
   inputCount = atoi(argv[1]);
   argv++;
@@ -55,26 +56,26 @@ int main(int argc, char **argv ){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-lcc") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-lcc") == 0)){
       argc--;
       argv++;
-      lcc = True;
-      ok  = True;
+      lcc = true;
+      ok  = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-keepscalars") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-keepscalars") == 0)){
       argc--;
       argv++;
-      newScalars = False;
-      ok  = True;
+      newScalars = false;
+      ok  = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
   }
 
-  if (lcc == True){
+  if (lcc == true){
     cout << "Warning! Extracting largest connected components before appending." << endl;
   }
 
@@ -114,7 +115,7 @@ int main(int argc, char **argv ){
 
     noOfPoints = inputPolys[i]->GetNumberOfPoints();
 
-    if (newScalars == True){
+    if (newScalars == true){
       // Add a scalar value for current polydata set.
       for (j = 0; j < noOfPoints; j++){
         scalars->InsertTuple1(j, i);
@@ -122,7 +123,7 @@ int main(int argc, char **argv ){
       inputPolys[i]->GetPointData()->SetScalars(scalars);
     }
 
-    if (lcc == True){
+    if (lcc == true){
       regionCount = checkingFilter->GetNumberOfExtractedRegions();
       if (regionCount > 1){
         cout <<" Warning:: using the largest region of ( ";

@@ -18,9 +18,10 @@ char *dofin_name = NULL;
 
 int main(int argc, char **argv){
 
-  int ok, locatorType;
+  bool ok;
+  int locatorType;
   irtkTransformation *transformation = NULL;
-  int matching = False;
+  bool matching = false;
 
   if (argc < 3){
     cerr << argv[0] << " [targetLandmarks] [sourceSurface] " << endl;
@@ -42,31 +43,31 @@ int main(int argc, char **argv){
   locatorType = 1;
 
   while (argc > 1){
-    ok = False;
+    ok = false;
 
-    if ((ok == False) && (strcmp(argv[1], "-locator") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-locator") == 0)){
       argc--;
       argv++;
       locatorType = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dofin_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-matching") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-matching") == 0)){
       argc--;
       argv++;
-      matching = True;
-      ok = True;
+      matching = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
@@ -108,7 +109,7 @@ int main(int argc, char **argv){
   double squaredDist;
   double sumSquaredDists = 0.0;
 
-  if (matching == False){
+  if (matching == false){
     for (int i = 0; i < n; i++){
       targetLandmarks->GetPoints()->GetPoint (i, target_point);
       tmp_point[0] = target_point[0];

@@ -27,12 +27,12 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   int target = 0;
   int noOfPoints;
   double reduction = 0.5;
   vtkSmoothPolyDataFilter *smooth = NULL;  
-  int preserveTopology = False;
+  int preserveTopology = false;
   
   int fileType = VTK_BINARY;
 
@@ -60,12 +60,12 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
+    ok = false;
     if ((!ok) && (strcmp(argv[1], "-smooth") == 0)) {
       argc--;
       argv++;
       smooth = vtkSmoothPolyDataFilter::New();
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-reduction") == 0)) {
       argc--;
@@ -73,7 +73,7 @@ int main(int argc, char **argv)
       reduction = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-target") == 0)) {
       argc--;
@@ -81,19 +81,19 @@ int main(int argc, char **argv)
       target = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }  
     if ((!ok) && (strcmp(argv[1], "-ascii") == 0)) {
       argc--;
       argv++;
       fileType = VTK_ASCII;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-preserveTopology") == 0)) {
       argc--;
       argv++;
-      preserveTopology = True;
-      ok = True;
+      preserveTopology = true;
+      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -109,7 +109,7 @@ int main(int argc, char **argv)
 
   decimate->SetTargetReduction(reduction);
   
-  if (preserveTopology == True)
+  if (preserveTopology == true)
     decimate->PreserveTopologyOn();
   else
     decimate->PreserveTopologyOff();

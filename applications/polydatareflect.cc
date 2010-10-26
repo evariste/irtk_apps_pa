@@ -23,11 +23,12 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int i, ok;
+  int i;
+  bool ok;
 
-  int reflectX = False;
-  int reflectY = False;
-  int reflectZ = False;
+  int reflectX = false;
+  int reflectY = false;
+  int reflectZ = false;
   double coord[3];
 
   input_name  = argv[1];
@@ -38,26 +39,26 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-x") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-x") == 0)){
       argc--;
       argv++;
-      reflectX = True;
-      ok = True;
+      reflectX = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-y") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-y") == 0)){
       argc--;
       argv++;
-      reflectY = True;
-      ok = True;
+      reflectY = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-z") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-z") == 0)){
       argc--;
       argv++;
-      reflectZ = True;
-      ok = True;
+      reflectZ = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -74,13 +75,13 @@ int main(int argc, char **argv)
 
     (surface->GetPoints())->GetPoint(i, coord);
 
-    if (reflectX == True)
+    if (reflectX == true)
       coord[0] = -1.0 * coord[0];
 
-    if (reflectY == True)
+    if (reflectY == true)
       coord[1] = -1.0 * coord[1];
 
-    if (reflectZ == True)
+    if (reflectZ == true)
       coord[2] = -1.0 * coord[2];
 
     surface->GetPoints()->SetPoint(i, coord);

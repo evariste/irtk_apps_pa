@@ -87,7 +87,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok, i, j, k, ii, jj, kk;
+  bool ok; 
+  int i, j, k, ii, jj, kk;
   int xdim, ydim, zdim;
   double x, y, z, wx, wy, wz;
   irtkRealPixel *ptr2pixN, *ptr2pixC, *ptr2pixS, *ptr2pixOut;
@@ -122,41 +123,41 @@ int main(int argc, char **argv)
   target_padding = MIN_GREY;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-source") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-source") == 0)){
       argc--;
       argv++;
       source = new irtkRealImage(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       target_padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sp") == 0)){
       argc--;
       argv++;
       source_padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

@@ -28,7 +28,7 @@ int main(int argc, char **argv ){
     usage();
   }
 
-  int ok;
+  bool ok;
   char *input_name;
   char *output_name;
 
@@ -40,14 +40,14 @@ int main(int argc, char **argv ){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-option") == 0)){
       argc--;
       argv++;
 //stuff
-      ok  = True;
+      ok  = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

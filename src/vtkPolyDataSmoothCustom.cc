@@ -18,7 +18,7 @@ vtkPolyDataSmoothCustom::~vtkPolyDataSmoothCustom()
 
 void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
 {
-  _TrackingOn = False;
+  _TrackingOn = false;
 
   _SmoothnessThreshold = -1.0f;
 
@@ -175,7 +175,7 @@ void vtkPolyDataSmoothCustom::Run()
       pts[j*3+1] = currPos[1] + dy;
       pts[j*3+2] = currPos[2] + dz;
 
-      if (_TrackingOn == True){
+      if (_TrackingOn == true){
         dist = sqrt(dx*dx + dy*dy + dz*dz);
 
         normal = _normals->GetTuple3(j);
@@ -221,7 +221,7 @@ void vtkPolyDataSmoothCustom::Run()
 void vtkPolyDataSmoothCustom::Finalize()
 {
 
-  if (_TrackingOn == True){
+  if (_TrackingOn == true){
     _distances->SetName("smoothingDists");
     _input->GetPointData()->AddArray(_distances);
     _input->Update();

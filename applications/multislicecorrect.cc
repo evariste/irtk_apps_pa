@@ -645,15 +645,16 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, inputIndex, ok, pad;
+  int i, inputIndex, pad;
+  bool ok;
   char buffer[256];
 
   // Default values.
   int levels = 3;
   int lastLevel = 1;
-  int writeCoeffs = False;
-  int writeWeights = False;
-  int writeAllLevels = False;
+  bool writeCoeffs = false;
+  bool writeWeights = false;
+  bool writeAllLevels = false;
 
   if (argc < 6)
     usage();
@@ -688,50 +689,50 @@ int main(int argc, char **argv)
 
   // Parse options.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-weights") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-weights") == 0)){
       argc--;
       argv++;
-      writeWeights = True;
-      ok = True;
+      writeWeights = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-coeffs") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-coeffs") == 0)){
       argc--;
       argv++;
-      writeCoeffs = True;
-      ok = True;
+      writeCoeffs = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-levels") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-levels") == 0)){
       argc--;
       argv++;
       levels = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-lastlevel") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-lastlevel") == 0)){
       argc--;
       argv++;
       lastLevel = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-reconLattice") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-reconLattice") == 0)){
       argc--;
       argv++;
       _evalTarget_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-allLevels") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-allLevels") == 0)){
       argc--;
       argv++;
-      writeAllLevels = True;
-      ok = True;
+      writeAllLevels = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -830,10 +831,10 @@ int main(int argc, char **argv)
     clearGreyImage(_temp2);
     evaluateCoeffsOnImageLattice(_temp2, _coeffs[i]);
 
-    if (i == lastLevel - 1 && writeAllLevels == False){
+    if (i == lastLevel - 1 && writeAllLevels == false){
       sprintf(buffer, "%s.nii.gz", _output_name);
       _temp2->Write(buffer);
-    } else if (writeAllLevels == True){
+    } else if (writeAllLevels == true){
       sprintf(buffer, "%s-level.%d.nii.gz", _output_name, i+1);
       _temp2->Write(buffer);
     }
@@ -848,12 +849,12 @@ int main(int argc, char **argv)
       cout << "done." << endl;
     }
 
-    if (writeWeights == True){
+    if (writeWeights == true){
       sprintf(buffer, "%s-weights_%d.nii.gz", _output_name, i+1);
       _weights[i]->Write(buffer);
     }
 
-    if (writeCoeffs == True){
+    if (writeCoeffs == true){
       sprintf(buffer, "%s-coeffs_%d.nii.gz", _output_name, i+1);
       _coeffs[i]->Write(buffer);
     }

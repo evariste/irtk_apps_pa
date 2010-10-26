@@ -36,7 +36,8 @@ int main(int argc, char **argv)
 
   irtkGreyPixel *pIn, *pRef;
 
-  int voxels, i, unpaddedCountIn = 0, unpaddedCountRef = 0,ok;
+  int voxels, i, unpaddedCountIn = 0, unpaddedCountRef = 0;
+  bool ok;
   float *intsRef;
   float *intsIn;
   float *offsetsIn;
@@ -58,20 +59,20 @@ int main(int argc, char **argv)
   input = new irtkGreyImage(input_name);
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;      argv++;
       pad = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-sigma") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-sigma") == 0)){
       argc--;      argv++;
       sigma = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

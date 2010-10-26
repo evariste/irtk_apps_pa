@@ -55,11 +55,12 @@ void resetRigidComponents(irtkAffineTransformation *a){
 
 int main(int argc, char **argv)
 {
-  int ok, i, j, k, n, xdim, ydim, zdim, inputCount;
+  bool ok;
+  int i, j, k, n, xdim, ydim, zdim, inputCount;
   double x, y, z, xAffCorr, yAffCorr, zAffCorr;
   double dx, dy, dz;
   double xAv, yAv, zAv, xFinal, yFinal, zFinal;
-  int combineaffine = True;
+  int combineaffine = true;
 
   irtkMatrix *globalMatrices;
   irtkMatrix *localMatrices;
@@ -97,14 +98,14 @@ int main(int argc, char **argv)
 
   // Parse options.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-noaffine") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-noaffine") == 0)){
       argc--;
       argv++;
-      combineaffine = False;
-      ok = True;
+      combineaffine = false;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -136,7 +137,7 @@ int main(int argc, char **argv)
   globalMatrixAv.Ident();
 
   // Is affine portion to be averaged?
-  if (combineaffine == True){
+  if (combineaffine == true){
 
     // Average the affine parts separately from the displacement fields.
     // Only the scales and skew are actually averaged.
@@ -270,7 +271,7 @@ int main(int argc, char **argv)
         yAv = temp(1, 3);
         zAv = temp(2, 3);
 
-        if (combineaffine == True){
+        if (combineaffine == true){
           // Now introduce the affine component.
           xFinal = globalAvJac(0, 0) * xAv + globalAvJac(0, 1) * yAv + globalAvJac(0, 2) * zAv;
           yFinal = globalAvJac(1, 0) * xAv + globalAvJac(1, 1) * yAv + globalAvJac(1, 2) * zAv;
@@ -294,7 +295,7 @@ int main(int argc, char **argv)
   }
 
   // Some reporting.
-  if (combineaffine == True){
+  if (combineaffine == true){
     cout << "Affine component combined with ffd." << endl;
   } else {
     cout << "ffd has identity affine component." << endl;

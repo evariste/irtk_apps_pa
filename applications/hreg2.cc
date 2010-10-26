@@ -140,7 +140,8 @@ void usage()
 
 void padding(irtkGreyImage image, irtkMultiLevelFreeFormTransformation *mffd)
 {
-  int i, j, k, x, y, z, x1, y1, z1, x2, y2, z2, ok, index;
+  int i, j, k, x, y, z, x1, y1, z1, x2, y2, z2, index;
+  bool ok;
 
   // Extract current transformation level
   irtkFreeFormTransformation *ffd = mffd->GetLocalTransformation(0);  
@@ -155,17 +156,17 @@ void padding(irtkGreyImage image, irtkMultiLevelFreeFormTransformation *mffd)
 	// Calculate bounding box of control point in voxels
 	ffd->BoundingBox(&image, index, x1, y1, z1, x2, y2, z2);
 
-	ok = False;
+	ok = false;
 	for (z = z1; z <= z2; z++){
 	  for (y = y1; y <= y2; y++){
 	    for (x = x1; x <= x2; x++){
 	      if (image(x, y, z) > paddingValue){
-		ok = True;
+		ok = true;
 	      }
 	    }
 	  }
 	}
-	if (ok == False){
+	if (ok == false){
 	  ffd->PutStatus(i, j, k, _Passive);
 	}
       }
@@ -193,8 +194,8 @@ void mreg(irtkGreyImage target, irtkGreyImage source,
   // Read default parameter
   registration.irtkImageRegistration::Read(parameter_name[i]);
 
-  if (debug == True){
-    registration.SetDebugFlag(True);
+  if (debug == true){
+    registration.SetDebugFlag(true);
   }
 
   // Run registration filter
@@ -223,7 +224,7 @@ int main(int argc, char **argv)
   int source_x1, source_y1, source_z1, source_x2, source_y2, source_z2; 
   double dx, dy, dz;
   irtkAffineTransformation transformation;
-  int debug = False;
+  int debug = false;
 
   // Check command line
   if (argc < 3){
@@ -280,20 +281,20 @@ int main(int argc, char **argv)
   dz = 20;
 
   // Parse remaining parameters
-  no_areg = False;
-  debug   = False;
+  no_areg = false;
+  debug   = false;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dofin_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dofout") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dofout") == 0)){
       argc--;
       argv++;
       for (i = 0; i < numberOfLevels; i++){
@@ -301,185 +302,185 @@ int main(int argc, char **argv)
 	argc--;
 	argv++;
       }
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rx1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rx1") == 0)){
       argc--;
       argv++;
       target_x1 = source_x1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rx2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rx2") == 0)){
       argc--;
       argv++;
       target_x2 = source_x2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ry1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ry1") == 0)){
       argc--;
       argv++;
       target_y1 = source_y1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ry2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ry2") == 0)){
       argc--;
       argv++;
       target_y2 = source_y2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rz1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rz1") == 0)){
       argc--;
       argv++;
       target_z1 = source_z1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rz2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rz2") == 0)){
       argc--;
       argv++;
       target_z2 = source_z2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tx1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tx1") == 0)){
       argc--;
       argv++;
       target_x1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tx2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tx2") == 0)){
       argc--;
       argv++;
       target_x2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ty1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ty1") == 0)){
       argc--;
       argv++;
       target_y1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ty2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ty2") == 0)){
       argc--;
       argv++;
       target_y2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tz1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tz1") == 0)){
       argc--;
       argv++;
       target_z1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tz2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tz2") == 0)){
       argc--;
       argv++;
       target_z2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sx1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sx1") == 0)){
       argc--;
       argv++;
       source_x1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sx2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sx2") == 0)){
       argc--;
       argv++;
       source_x2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sy1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sy1") == 0)){
       argc--;
       argv++;
       source_y1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sy2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sy2") == 0)){
       argc--;
       argv++;
       source_y2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sz1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sz1") == 0)){
       argc--;
       argv++;
       source_z1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Sz2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Sz2") == 0)){
       argc--;
       argv++;
       source_z2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       paddingValue = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dx") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dx") == 0)){
       argc--;
       argv++;
       dx = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dy") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dy") == 0)){
       argc--;
       argv++;
       dy = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dz") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dz") == 0)){
       argc--;
       argv++;
       dz = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-ds") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-ds") == 0)){
       argc--;
       argv++;
       dx = atof(argv[1]);
@@ -487,33 +488,33 @@ int main(int argc, char **argv)
       dz = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-parameter") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-parameter") == 0)){
       argc--;
       argv++;
-      ok = True;
+      ok = true;
       for (i = 0; i < numberOfLevels; i++){
 	parameter_name[i] = argv[1];
 	argc--;
 	argv++;
       }
     }
-    if ((ok == False) && (strcmp(argv[1], "-debug") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-debug") == 0)){
       argc--;
       argv++;
-      debug = True;
+      debug = true;
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-debug") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-debug") == 0)){
       argc--;
       argv++;
-      ok = True;
-      debug = True;
+      ok = true;
+      debug = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

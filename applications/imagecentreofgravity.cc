@@ -27,19 +27,19 @@ int main(int argc, char **argv){
   irtkRealImage *image = new irtkRealImage(image_name);
 
   int pad = 0;
-  int ok = True;
+  bool ok = true;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;
       argv++;
       pad = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

@@ -39,7 +39,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   int threshold = false;
 
   if (argc < 3){
@@ -55,14 +55,14 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-threshold") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-threshold") == 0)){
       argc--;
       argv++;
       threshold = true;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

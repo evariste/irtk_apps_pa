@@ -155,7 +155,8 @@ void usage(){
 //
 int main(int argc, char **argv)
 {
-  int i, j, k, ok;
+  int i, j, k;
+  bool ok;
   int iNoOfLandmarks, iNoOfLandmarks_1, iNoOfLandmarks_2;
   int iNoOfDatasets;
 
@@ -343,32 +344,32 @@ int main(int argc, char **argv)
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-matrix_pred") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-matrix_pred") == 0)){
       argc--;
       argv++;
       predictingDataOutputMatrix = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-matrix_dep") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-matrix_dep") == 0)){
       argc--;
       argv++;
       dependentDataOutputMatrix = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-modes") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-modes") == 0)){
       argc--;
       argv++;
       R = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

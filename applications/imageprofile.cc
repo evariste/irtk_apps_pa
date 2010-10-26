@@ -13,7 +13,8 @@ void usage()
 int main(int argc, char **argv)
 {
   irtkRealImage image;
-  int i, j, k, ok;
+  int i, j, k;
+  bool ok;
   int px, py, pz;
   px = py = pz = -1;
 
@@ -26,30 +27,30 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-x") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-x") == 0)){
       argc--;
       argv++;
       px = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-y") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-y") == 0)){
       argc--;
       argv++;
       py = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-z") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-z") == 0)){
       argc--;
       argv++;
       pz = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

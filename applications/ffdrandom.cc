@@ -29,12 +29,13 @@ void usage()
 int main(int argc, char **argv)
 {
   int xdim, ydim, zdim;
-  int i, j, k, level, ok;
+  int i, j, k, level;
+  bool ok;
   double x, y, z, xspacing, yspacing, zspacing, minspacing;
   double noise_sigma = 1.0;
   double blur_sigma = 0.0;
-  int threeD = False;
-  int setLimits = True;
+  bool threeD = false;
+  bool setLimits = true;
 
   double fractionLimit = 0.4;
 
@@ -52,30 +53,30 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-sigma") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-sigma") == 0)){
       argc--;      argv++;
       noise_sigma = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-blur") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-blur") == 0)){
       argc--;      argv++;
       blur_sigma = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-3d") == 0)){
-      threeD = True;
+    if ((ok == false) && (strcmp(argv[1], "-3d") == 0)){
+      threeD = true;
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-nolimits") == 0)){
-      setLimits = False;
+    if ((ok == false) && (strcmp(argv[1], "-nolimits") == 0)){
+      setLimits = false;
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -133,11 +134,11 @@ int main(int argc, char **argv)
 //    ycomps = new irtkRealImage(xdim, ydim, zdim, xspacing, yspacing, zspacing);
 //    zcomps = new irtkRealImage(xdim, ydim, zdim, xspacing, yspacing, zspacing);
 
-    if (setLimits == True){
+    if (setLimits == true){
       minspacing = xspacing;
       if (minspacing > yspacing)
         minspacing = yspacing;
-      if (threeD == True && minspacing > zspacing)
+      if (threeD == true && minspacing > zspacing)
         minspacing = zspacing;
       gaussian_noise->SetMinVal(fractionLimit * minspacing * -1.0);
       gaussian_noise->SetMaxVal(fractionLimit * minspacing);
@@ -149,7 +150,7 @@ int main(int argc, char **argv)
     noise->SetInput(ycomps);
     noise->SetOutput(ycomps);
     noise->Run();
-    if (threeD == True){
+    if (threeD == true){
       noise->SetInput(zcomps);
       noise->SetOutput(zcomps);
       noise->Run();
@@ -162,7 +163,7 @@ int main(int argc, char **argv)
       gaussianBlurring.SetInput (ycomps);
       gaussianBlurring.SetOutput(ycomps);
       gaussianBlurring.Run();
-      if (threeD == True){
+      if (threeD == true){
         gaussianBlurring.SetInput (zcomps);
         gaussianBlurring.SetOutput(zcomps);
         gaussianBlurring.Run();

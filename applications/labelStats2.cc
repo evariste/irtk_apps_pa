@@ -45,11 +45,12 @@ int main(int argc, char **argv)
   int marginalB[MAX_LABELS];
   int includeLabel[MAX_LABELS];
 
-  int printSummary = False;
-  int quiet = False;
-  int printFalseValues = False;
-  int ok, temp;
-  int siRow = False;
+  bool printSummary = false;
+  bool quiet = false;
+  bool printfalseValues = false;
+  int temp;
+  bool ok;
+  bool siRow = false;
 
   // Read arguments
   if (argc < 3){
@@ -64,48 +65,48 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-summary") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-summary") == 0)){
       argc--;
       argv++;
-      printSummary = True;
-      ok = True;
+      printSummary = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
-      quiet = True;
-      ok = True;
+      quiet = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-siRow") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-siRow") == 0)){
       argc--;
       argv++;
-      siRow = True;
-      ok = True;
+      siRow = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-file") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-file") == 0)){
       argc--;
       argv++;
       labelFile = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-false") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-false") == 0)){
       argc--;
       argv++;
-      printFalseValues = True;
-      ok = True;
+      printfalseValues = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
   } 
 
-  if (quiet == True){
+  if (quiet == true){
     // Force summary.
-    printSummary = True;
+    printSummary = true;
   }
 
 
@@ -237,7 +238,7 @@ int main(int argc, char **argv)
   double sumOverlap, sumSi;
   int count;
 
-  if (printSummary == True){
+  if (printSummary == true){
     count = 0;
     sumOverlap = sumSi = 0;
 
@@ -285,11 +286,11 @@ int main(int argc, char **argv)
         overlap = jointLabels[i][i] / ((double) ( marginalA[i] + marginalB[i] - jointLabels[i][i] ));
         si = 2 *  jointLabels[i][i] / ((double) marginalA[i] + marginalB[i] );
 
-        if (siRow == True){
+        if (siRow == true){
           cout << si << ",";
         } else {
           cout << iter->first << "," << marginalA[i] << "," << marginalB[i] << "," << jointLabels[i][i];
-          if (printFalseValues == True){
+          if (printfalseValues == true){
             cout << "," << marginalA[i] - jointLabels[i][i] << "," << marginalB[i] - jointLabels[i][i];
           }
           cout << "," << overlap << "," << si << endl;
@@ -298,7 +299,7 @@ int main(int argc, char **argv)
       }
     }
 
-    if (siRow == True){
+    if (siRow == true){
       cout << endl;
     }
   }

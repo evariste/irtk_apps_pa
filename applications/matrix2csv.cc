@@ -24,9 +24,10 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, j, ok;
-  int infoOnly = False;
-  int transpose = False;
+  int i, j;
+  bool ok;
+  int infoOnly = false;
+  int transpose = false;
   
   if (argc < 3){
     usage();
@@ -40,25 +41,25 @@ int main(int argc, char **argv)
   
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-info") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-info") == 0)){
       argc--;
       argv++;
-      infoOnly = True;
-      ok = True;
+      infoOnly = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-transpose") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-transpose") == 0)){
       argc--;
       argv++;
-      transpose = True;
-      ok = True;
-    }    if ((ok == False) && (strcmp(argv[1], "-file") == 0)){
+      transpose = true;
+      ok = true;
+    }    if ((ok == false) && (strcmp(argv[1], "-file") == 0)){
       argc--;
       argv++;
       csvfile_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }   
       
      if (!ok){
@@ -71,13 +72,13 @@ int main(int argc, char **argv)
   
   m.Read(matrix_name);
 
-  if (transpose == True){
+  if (transpose == true){
     m.Transpose();
   }
   
-  if (infoOnly == True){
+  if (infoOnly == true){
     cout << "Matrix " << matrix_name << " : " << m.Rows() << "x" << m.Cols();
-    if (transpose == True)
+    if (transpose == true)
       cout << " (after transposition) ";
     cout << endl;
     exit(0);

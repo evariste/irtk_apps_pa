@@ -41,7 +41,8 @@ void usage()
 int main(int argc, char **argv)
 {
   vtkIdType i;
-  long j, k, n, ok;
+  long j, k, n;
+  bool ok;
   int noOfIterations, ind;
   double kernel;
 	int noOfPoints, noOfCells;
@@ -77,17 +78,17 @@ int main(int argc, char **argv)
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-name") == 0)){
       argc--;
       argv++;
       scalar_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

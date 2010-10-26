@@ -26,8 +26,8 @@ int main(int argc, char **argv)
 {
   int i, j, k;
   double x, y, z;
-  int ok;
-  int magnitudeOnly = False;
+  bool ok;
+  bool magnitudeOnly = false;
   int xdim, ydim, zdim;
   char buffer[256];
   double val;
@@ -51,22 +51,22 @@ int main(int argc, char **argv)
 
   // Parse options.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-mag") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-mag") == 0)){
       argc--;
       argv++;
-      magnitudeOnly = True;
-      ok = True;
+      magnitudeOnly = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;
       argv++;
       pad = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

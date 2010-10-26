@@ -25,7 +25,7 @@ void usage(){
 
 int main(int argc, char **argv){
 
-  irtkHistogram_2D hist;
+  irtkHistogram_2D<int> hist;
 
   irtkRealImage target, source;
   irtkTransformation *transformation = NULL;
@@ -37,12 +37,14 @@ int main(int argc, char **argv){
   irtkRealPixel tval, sval;
 
   int i, j, k, nBins = 0;
+  int binx, biny;
+
   double padding = -1 * FLT_MAX;
   int xdim, ydim, zdim;
   double x, y, z;
   double x1, y1, z1, x2, y2, z2;
 
-  int ok;
+  bool ok;
   double width = -1.0;
   double widthX, widthY;
 
@@ -60,50 +62,50 @@ int main(int argc, char **argv){
 
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-f") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-f") == 0)){
       argc--;
       argv++;
       output_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       padding = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-bins") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-bins") == 0)){
       argc--;
       argv++;
       nBins = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if ((ok == False) && (strcmp(argv[1], "-width") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-width") == 0)){
       argc--;
       argv++;
       width = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -194,8 +196,9 @@ int main(int argc, char **argv){
     } else {
       // Width only set.
       hist.PutWidth(width, width);
-      cerr << "Histogram assigned width " << width << ", using " << hist.GetNumberOfBinsX();
-      cerr << " x " << hist.GetNumberOfBinsY() << " bins." << endl; 
+      hist.GetNumberOfBins(&binx, &biny);
+      cerr << "Histogram assigned width " << width << ", using " << binx;
+      cerr << " x " << biny << " bins." << endl;
     }
   } else {
     // Width not set.
@@ -209,7 +212,8 @@ int main(int argc, char **argv){
     } else {
       // Neither set.
       hist.GetWidth(&widthX, &widthY);
-      cerr << "Histogram uses " << hist.GetNumberOfBinsX() << " x " << hist.GetNumberOfBinsY()  << " bins with widths ";
+      hist.GetNumberOfBins(&binx, &biny);
+      cerr << "Histogram uses " << binx << " x " << biny  << " bins with widths ";
       cerr << widthX << " x " << widthY << endl;
     }
   }
@@ -256,18 +260,20 @@ int main(int argc, char **argv){
       exit(1);
     }
 
-    for (i = 0; i < hist.GetNumberOfBinsX() - 1; ++i){
+    hist.GetNumberOfBins(&binx, &biny);
+
+    for (i = 0; i < binx - 1; ++i){
       fileOut << hist.BinToValX(i) << ",";
     }
     fileOut << hist.BinToValX(i) << endl;
 
-    for (j = 0; j < hist.GetNumberOfBinsY() - 1; ++j){
+    for (j = 0; j < biny - 1; ++j){
       fileOut << hist.BinToValY(j) << ",";
     }
     fileOut << hist.BinToValY(j) << endl;
 
-    for (j = 0; j < hist.GetNumberOfBinsY(); ++j){
-      for (i = 0; i < hist.GetNumberOfBinsX() - 1; ++i){
+    for (j = 0; j < biny - 1; ++j){
+      for (i = 0; i < binx - 1; ++i){
         fileOut << hist(i, j) << ",";
       }
       // Avoid trailing comma.
@@ -278,19 +284,19 @@ int main(int argc, char **argv){
   } else {
 
     // write to std out.
-    for (i = 0; i < hist.GetNumberOfBinsX() - 1; ++i){
+    for (i = 0; i < binx - 1; ++i){
       cout << hist.BinToValX(i) << ",";
     }
     cout << hist.BinToValX(i) << endl;
 
-    for (j = 0; j < hist.GetNumberOfBinsY() - 1; ++j){
+    for (j = 0; j < biny - 1; ++j){
       cout << hist.BinToValY(j) << ",";
     }
 
     cout << hist.BinToValY(j) << endl;
 
-    for (j = 0; j < hist.GetNumberOfBinsY(); ++j){
-      for (i = 0; i < hist.GetNumberOfBinsX() - 1; ++i){
+    for (j = 0; j < biny - 1; ++j){
+      for (i = 0; i < binx - 1; ++i){
         cout << hist(i, j) << ",";
       }
       // Avoid trailing comma.

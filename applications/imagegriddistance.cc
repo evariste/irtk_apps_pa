@@ -16,7 +16,8 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int i, j, k, ok;
+  int i, j, k;
+  bool ok;
   double x, y, z;
   double l, m, n, s, t, u;
   double sum, sumx, sumy, sumz;
@@ -36,16 +37,16 @@ int main(int argc, char **argv)
   irtkTransformation *transformation = NULL;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

@@ -482,11 +482,13 @@ int main(int argc, char **argv)
   // This code does a Procustes alignment of a series of shapes using
   // scaling, rotations and translations output is all the aligned shapes
 
-  int i, j, k, ok, writeDofs, writeMean, verbose;
+  int i, j, k;
+  bool writeDofs, writeMean, verbose;
+  bool ok;
 
-  writeDofs = False;
-  writeMean = False;
-  verbose = False;
+  writeDofs = false;
+  writeMean = false;
+  verbose = false;
 
   irtkMatrix *matrices;
   irtkMatrix dummyMatrix(4, 4);
@@ -536,38 +538,38 @@ int main(int argc, char **argv)
 
   // Read optional arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofs") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofs") == 0)){
       argc--;
       argv++;
-      writeDofs = True;
-      ok = True;
+      writeDofs = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-v") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-v") == 0)){
       argc--;
       argv++;
-      verbose = True;
-      ok = True;
+      verbose = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-m") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-m") == 0)){
       argc--;
       argv++;
-      writeMean = True;
+      writeMean = true;
       meanFilename = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-av") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-av") == 0)){
       argc--;
       argv++;
       alignVersion = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
@@ -748,7 +750,7 @@ int main(int argc, char **argv)
     writer->SetFileName(outputFilenames[j]);
     writer->Write();
 
-    if (writeDofs == True){
+    if (writeDofs == true){
       strcpy(buf, outputFilenames[j]);
       k = 0;
       while (buf[k] != '\0'){
@@ -764,7 +766,7 @@ int main(int argc, char **argv)
 
   }
 
-  if (writeMean == True && meanFilename != NULL){
+  if (writeMean == true && meanFilename != NULL){
 
     for (i = 0; i < surface->GetNumberOfPoints(); i++){
 

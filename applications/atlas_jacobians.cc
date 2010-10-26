@@ -22,7 +22,8 @@ void usage()
 int main(int argc, char **argv)
 {
   double scale, val;
-  int i, j, n, padding, no, ok;
+  int i, j, n, padding, no;
+  bool ok;
 
   irtkRealPixel *ptr2input;
   irtkRealImage input;
@@ -67,32 +68,32 @@ int main(int argc, char **argv)
 
   // Parse any remaining paramters
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-scale") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-scale") == 0)){
       argc--;
       argv++;
       scale = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)){
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-sd") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-sd") == 0)){
       argc--;
       argv++;
       sd_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

@@ -47,9 +47,10 @@ void usage()
 int main(int argc, char **argv)
 {
   double blur;
-  int ok, padding;
+  bool ok;
+  int padding;
   double csfPercentile = 5;
-  int debug = False;
+  bool debug = false;
 
   if (argc < 5) {
     usage();
@@ -99,62 +100,62 @@ int main(int argc, char **argv)
 
   // Parse remaining parameters
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)){
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-blur") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-blur") == 0)){
       argc--;
       argv++;
       blur = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-target_bias") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-target_bias") == 0)){
       argc--;
       argv++;
       biasOutputT = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-source_bias") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-source_bias") == 0)){
       argc--;
       argv++;
       biasOutputS = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-csfPercentile") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-csfPercentile") == 0)){
       argc--;
       argv++;
       csfPercentile = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-debug") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-debug") == 0)){
       argc--;
       argv++;
-      debug = True;
-      ok = True;
+      debug = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -259,7 +260,7 @@ int main(int argc, char **argv)
 //         // Bias as a multiplicative factor.
 //         bias = exp( biasfield->Bias(x, y, z) );
 
-//         if (preserve == False){
+//         if (preserve == false){
 //           *ptr2src = round (((*ptr2src) - alpha) / beta / bias);
 //         } else {
 //           *ptr2src = round (alpha + ((*ptr2src) - alpha) / bias );

@@ -36,7 +36,8 @@ void usage(){
 
 int main(int argc, char **argv){
 
-  int ok, i, j, k, xdim, ydim, zdim;
+  bool ok;
+  int i, j, k, xdim, ydim, zdim;
   int integralPoints = 100, bins = 100;
 
   double x, y, z, x1, x2, y1, y2, z1, z2;
@@ -90,64 +91,64 @@ int main(int argc, char **argv){
 
   // Parse args.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       padding = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-kernel") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-kernel") == 0)){
       argc--;
       argv++;
       kernelWidthX = kernelWidthY = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-kernelX") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-kernelX") == 0)){
       argc--;
       argv++;
       kernelWidthX = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-kernelY") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-kernelY") == 0)){
       argc--;
       argv++;
       kernelWidthY = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-bins") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-bins") == 0)){
       argc--;
       argv++;
       bins = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-integralPts") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-integralPts") == 0)){
       argc--;
       argv++;
       integralPoints = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

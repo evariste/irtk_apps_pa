@@ -25,7 +25,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-	int i, j, ok;
+  int i, j;
+  bool ok;
   double searchRadius;
   double a[3], b[3], c[3];
   double e1[3], e2[3], e3[3];
@@ -53,7 +54,7 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
+    ok = false;
     if ((!ok) && (strcmp(argv[1], "-bla") == 0)) {
     	//      argc--;
     	//      argv++;
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
     	// maybe
     	//      argc--;
     	//      argv++;
-    	//      ok = True;
+    	//      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;

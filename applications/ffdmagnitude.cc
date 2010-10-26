@@ -20,12 +20,14 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok, i, j, k, level, useActiveOnly = False;
+  bool ok;
+  int i, j, k, level;
+  bool useActiveOnly = false;
   double x, y, z;
   double sum, max, min, d;
   int count;
   _Status statusX, statusY, statusZ;
-  int quiet = False;
+  int quiet = false;
   int numberOfValues;
   float *data;
 
@@ -40,20 +42,20 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-active") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-active") == 0)){
       argc--;
       argv++;
-      useActiveOnly = True;
-      ok = True;
+      useActiveOnly = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
-      quiet = True;
-      ok = True;
+      quiet = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -86,7 +88,7 @@ int main(int argc, char **argv)
 
           ffd->GetStatus(i, j, k, statusX, statusY, statusZ);
 
-          if (useActiveOnly == True &&
+          if (useActiveOnly == true &&
               statusX == _Passive && statusY == _Passive && statusZ == _Passive){
             continue;
           }

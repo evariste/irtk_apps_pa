@@ -25,7 +25,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, numberOfPoints, ok;
+  int i, numberOfPoints;
+  bool ok;
   int rows, cols;
   double p[3];
   irtkMatrix matrix;
@@ -43,16 +44,16 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-template") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-template") == 0)){
       argc--;
       argv++;
       template_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

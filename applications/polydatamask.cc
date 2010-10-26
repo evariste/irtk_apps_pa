@@ -51,7 +51,8 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int i, ok;
+  int i;
+  bool ok;
   int noOfPoints;
   int newPtCount;
   double p[3];
@@ -85,16 +86,16 @@ int main(int argc, char **argv)
   /////////////////////////////////////////////////
   // Remaining arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-threshold") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-threshold") == 0)){
       argc--;
       argv++;
       threshold = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -389,12 +390,12 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-XXX") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-XXX") == 0)){
       argc--;
       argv++;
       // do stuff and maybe argv++ etc.
-      ok = True;
+      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;

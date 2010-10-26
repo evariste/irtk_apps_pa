@@ -18,7 +18,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   irtkRealImage input;
   irtkRealImage output;
   irtkRealImage gradX;
@@ -46,16 +46,16 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-sep") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-sep") == 0)){
       argc--;
       argv++;
       sepBasename = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

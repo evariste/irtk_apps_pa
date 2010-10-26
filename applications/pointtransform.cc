@@ -15,7 +15,8 @@ int main(int argc, char **argv)
   if (argc < 5)
     usage();
 
-  int ok, count, i, j, k, ii, jj, kk;
+  int count, i, j, k, ii, jj, kk;
+  bool ok;
   double *x, *y, *z;
 
   irtkTransformation *transformation = NULL;

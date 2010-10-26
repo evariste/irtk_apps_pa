@@ -19,7 +19,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, j, k, ok, count;
+  bool ok;
+  int i, j, k, count;
   double x, y, z, padding;
 //   double jac, sumJac, bend, sumBend, absLogJac, sumAbsLogJac, topPen, sumTopPen;
   double Lnorm, sumLnorm, sumLnormSq;
@@ -48,40 +49,40 @@ int main(int argc, char **argv)
 
 
   while (argc > 1) {
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)) {
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)) {
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mask") == 0)){
       argc--;
       argv++;
       mask_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-alpha") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-alpha") == 0)){
       argc--;
       argv++;
       alpha = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-beta") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-beta") == 0)){
       argc--;
       argv++;
       beta = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False) {
+    if (ok == false) {
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

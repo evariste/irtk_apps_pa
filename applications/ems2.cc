@@ -67,8 +67,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, n, ok, padding, iterations;
-  bool nobg=false;
+  int i, n, padding, iterations;
+  bool ok, nobg=false;
 
   if (argc < 4) {
     usage();
@@ -110,24 +110,24 @@ int main(int argc, char **argv)
 
   // Parse remaining parameters
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-iterations") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-iterations") == 0)){
       argc--;
       argv++;
       iterations = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)){
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-background") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-background") == 0)){
       argc--;
       argv++;
       background = new irtkRealImage;
@@ -135,27 +135,27 @@ int main(int argc, char **argv)
       cout << "Background map     = " << argv[1] <<endl;
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-parameter") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-parameter") == 0)){
       argc--;
       argv++;
       parameters_name = argv[1];
       cout << "Parameters file    = " << parameters_name <<endl;
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mask") == 0)){
       argc--;
       argv++;
       mask_name = argv[1];
       cout << "Using mask            " << mask_name <<endl;
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-softmaps") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-softmaps") == 0)){
       argc--;
       argv++;
       soft_csf_name = argv[1];
@@ -167,12 +167,12 @@ int main(int argc, char **argv)
       soft_wm_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
       cout << "Writing soft to csf    " << soft_csf_name << endl;
       cout << "Writing soft to wm     " << soft_wm_name << endl;
       cout << "Writing soft to gm     " << soft_gm_name << endl;
     }
-    if (ok == False){
+    if (ok == false){
       cout << "Can not parse argument " << argv[1] << endl;
       usage();
     }

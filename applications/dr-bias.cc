@@ -108,8 +108,9 @@ void subtract(irtkGreyImage &target, irtkGreyImage &source, irtkGreyPixel paddin
 int main(int argc, char **argv)
 {
   double blur;
-  int ok, padding;
-  
+  int padding;
+  bool ok;
+
   if (argc < 4) {
     usage();
     exit(1);
@@ -137,24 +138,24 @@ int main(int argc, char **argv)
 
   // Parblur se remaining parameters
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)){
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-blur") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-blur") == 0)){
       argc--;
       argv++;
       blur = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

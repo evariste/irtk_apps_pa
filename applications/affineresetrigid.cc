@@ -35,7 +35,7 @@ void myPrint(irtkAffineTransformation *t)
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   bool blnQuiet = false;
 
   if (argc < 3)
@@ -49,16 +49,16 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
       blnQuiet = true;
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

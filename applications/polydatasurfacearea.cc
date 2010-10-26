@@ -30,21 +30,21 @@ int main(int argc, char **argv)
   }
 
   int i;
-  int ok;
+  bool ok;
 
   input_name  = argv[1];
   argc--;
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-XXX") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-XXX") == 0)){
       argc--;
       argv++;
       // Do stuff and maybe argv++ etc.
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

@@ -141,7 +141,8 @@ int main(int argc, char **argv)
   // appropriate scaling SVD now performed on this covariance matrix
   // instead.
 
-  int i, j, k, ok, verbose = True;
+  int i, j, k;
+  bool ok, verbose = true;
   int iNoOfLandmarks_1, iNoOfLandmarks_2;
   int iNoOfDatasets;
 
@@ -199,22 +200,22 @@ int main(int argc, char **argv)
 
   // Read optional arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-modes") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-modes") == 0)){
       argc--;
       argv++;
       modesUsed = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-csv") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-csv") == 0)){
       argc--;
       argv++;
-      verbose = False;
-      ok = True;
+      verbose = false;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cout << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
@@ -299,7 +300,7 @@ int main(int argc, char **argv)
   /////////////////////////////////////////////////////////
 
   // Some blurb.
-  if (verbose == True){
+  if (verbose == true){
     cout << iNoOfDatasets << " datasets. " << endl;
     cout << "Landmarks :" << endl;
     cout << "Structure 1             : " << iNoOfLandmarks_1 << endl;
@@ -340,7 +341,7 @@ int main(int argc, char **argv)
   ea_1.DecrSortEigenStuff();
 
   if (ea_1.error){
-    if (verbose == True){
+    if (verbose == true){
       cout << "ea_1.error = "<< ea_1.error << endl;
     } else {
       cout << "ea_1.err="<< ea_1.error << ",";
@@ -412,7 +413,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "min and max norms 1     = " << minNorm << " " << maxNorm << endl;
     cout << "Var Struct 1            = " << 100.0 * explainedVariance / fTotalVar << "%" << endl;
   } else {
@@ -446,7 +447,7 @@ int main(int argc, char **argv)
   ea_2.DecrSortEigenStuff();
 
   if (ea_2.error){
-    if (verbose == True){
+    if (verbose == true){
       cout << "ea_2.error = " << ea_2.error << endl;
     } else {
       cout << "ea_2.err=" << ea_2.error << ",";
@@ -518,7 +519,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "min and max norms 2     = " << minNorm << " " << maxNorm << endl;
     cout << "Var Struct 2            = " << 100.0 * explainedVariance / fTotalVar << "%" << endl;
   } else {
@@ -552,7 +553,7 @@ int main(int argc, char **argv)
   // Check data transformation is working by transforming reduced data back
   // and comparing with original data.
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Back projected PCA representation compared with original : " << endl;
   }
 
@@ -569,7 +570,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Average squared error 1 = " << check / iNoOfLandmarks_1 / iNoOfDatasets << endl;
   } else {
     cout << check / iNoOfLandmarks_1 / iNoOfDatasets << ",";
@@ -588,7 +589,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Average squared error 2 = " << check / iNoOfLandmarks_2 / iNoOfDatasets << endl;
   } else {
     cout << check / iNoOfLandmarks_2 / iNoOfDatasets << ",";
@@ -649,7 +650,7 @@ int main(int argc, char **argv)
 //    reducedData_2.Write("reducedData2.mat");
 //    C_22.Write("c22.mat");
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Block determinants : " << endl;
     cout << "C_11, det = " << C_11.Det() << endl;
     cout << "C_22, det = " << C_22.Det() << endl;
@@ -668,7 +669,7 @@ int main(int argc, char **argv)
     C_11 *= scaleup;
     C_11.Invert();
     C_11 *= scaleup;
-    if (verbose == True){
+    if (verbose == true){
       cout << "Scaled up C_11, det = " << C_11.Det() << endl;
     } else {
       cout << "sc," << C_11.Det() << ",";
@@ -682,7 +683,7 @@ int main(int argc, char **argv)
     C_22 *= scaleup;
     C_22.Invert();
     C_22 *= scaleup;
-    if (verbose == True){
+    if (verbose == true){
       cout << "Scaled up C_22, det = " << C_22.Det() << endl;
     } else {
       cout << "sc," << C_22.Det() << ",";
@@ -744,7 +745,7 @@ int main(int argc, char **argv)
       negativeCorrelations++;
   }
 
-  if (verbose == True){
+  if (verbose == true){
     if (complexcorrelations > 0)
       cout << "Structure 1: Complex correlations!" << endl;
     else 
@@ -781,7 +782,7 @@ int main(int argc, char **argv)
 
   avcorrelation = totalCorrelation / modesUsed;
 
-  if (verbose == True){
+  if (verbose == true){
    cout << "Largest Correlation     = " << sqrt(er1[1]) << endl;
    cout << "Accumulated Correlation = " << accumulatedCorrelation << endl;
    cout << "Accumulated fraction    = " << accumulatedCorrelation / (totalCorrelation * modesUsed) << endl;

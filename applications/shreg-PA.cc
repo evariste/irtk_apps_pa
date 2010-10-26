@@ -117,7 +117,8 @@ void MarkBoundary(vtkPolyData *polydata)
 int main(int argc, char **argv)
 {
   int i, elementsPerBucket, numberOfLevels;
-  int locatorType, iterations, ok;
+  int locatorType, iterations;
+  bool ok;
   float epsilon;
   double dx, dy, dz;
   bool ignoreEdges, subdivide;
@@ -137,8 +138,8 @@ int main(int argc, char **argv)
   locatorType = 1;
   epsilon = 0.01;
   ok = 0;
-  ignoreEdges = False;
-  subdivide = False;
+  ignoreEdges = false;
+  subdivide = false;
 
   // Fix spacing
   dx = 20;
@@ -182,61 +183,61 @@ int main(int argc, char **argv)
 
   // Parse remaining parameters
   while (argc > 1) {
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-iterations") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-iterations") == 0)){
       argc--;
       argv++;
       iterations = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-locator") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-locator") == 0)){
       argc--;
       argv++;
       locatorType = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-ignoreedges") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-ignoreedges") == 0)){
       argc--;
       argv++;
       ignoreEdges = true;
       MarkBoundary(target);
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dofout") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dofout") == 0)){
       argc--;
       argv++;
       dofout_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dofin_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-epsilon") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-epsilon") == 0)){
       argc--;
       argv++;
       epsilon = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-subdivide") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-subdivide") == 0)){
       argc--;
       argv++;
-      subdivide = True;
-      ok = True;
+      subdivide = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-ds") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-ds") == 0)){
       argc--;
       argv++;
       dx = atof(argv[1]);
@@ -244,29 +245,29 @@ int main(int argc, char **argv)
       dz = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-surfaces") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-surfaces") == 0)){
       argc--;
       argv++;
       multipleSurfaces = true;
-      ok = True;      
+      ok = true;      
     }
-    if ((ok == False) && (strcmp(argv[1], "-fovImage") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-fovImage") == 0)){
       argc--;
       argv++;
       fov_image_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-fovDofin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-fovDofin") == 0)){
       argc--;
       argv++;
       copyDofinDetails = true;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -300,15 +301,15 @@ int main(int argc, char **argv)
 
   // Read transformation
   if (dofin_name != NULL){
-    if (irtkRigidTransformation::CheckHeader(dofin_name) == True){
+    if (irtkRigidTransformation::CheckHeader(dofin_name) == true){
       mffd = new irtkMultiLevelBSplineFreeFormTransformation;
       mffd->irtkRigidTransformation::Read(dofin_name);
     } else {
-      if (irtkAffineTransformation::CheckHeader(dofin_name) == True){
+      if (irtkAffineTransformation::CheckHeader(dofin_name) == true){
 	mffd = new irtkMultiLevelBSplineFreeFormTransformation;
 	mffd->irtkAffineTransformation::Read(dofin_name);
       } else {
-	if (irtkMultiLevelFreeFormTransformation::CheckHeader(dofin_name) == True){
+	if (irtkMultiLevelFreeFormTransformation::CheckHeader(dofin_name) == true){
 	mffd = new irtkMultiLevelBSplineFreeFormTransformation(dofin_name);
 	} else {
 	  cerr << "Input transformation is not of type rigid, affine " << endl;
@@ -387,7 +388,7 @@ int main(int argc, char **argv)
     registration->SetOutput(mffd);
     registration->Run();
 
-    if (subdivide == False){
+    if (subdivide == false){
       // Add transformation
       dx = dx/2.0;
       dy = dy/2.0;

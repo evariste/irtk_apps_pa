@@ -32,7 +32,8 @@ int main(int argc, char **argv)
   double lowerPercentage = 0;
   double upperPercentage = 100;
 
-  int count, voxels, i, ok;
+  int count, voxels, i;
+  bool ok;
   float *values;
   int minIndex, maxIndex;
   double minVal, maxVal;
@@ -45,35 +46,35 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;      argv++;
       pad = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
 
-    if ((ok == False) && (strcmp(argv[1], "-p") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-p") == 0)){
       argc--;      argv++;
       lowerPercentage = atof(argv[1]);
       upperPercentage = 100.0 - atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-l") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-l") == 0)){
       argc--;      argv++;
       lowerPercentage = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-u") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-u") == 0)){
       argc--;      argv++;
       upperPercentage = atof(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

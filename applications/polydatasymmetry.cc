@@ -58,7 +58,7 @@ void usage()
 
 int main(int argc, char **argv){
 
-  int ok;
+  bool ok;
   int noOfPoints;
   double cx, cy, cz;
   double pt[3];
@@ -68,7 +68,7 @@ int main(int argc, char **argv){
   double x, y, z;
   double val;
   float phi, theta;
-  int hasPositivePoint = False;
+  int hasPositivePoint = false;
   float posiPoint[3];
   int rankMeasure, minRankMeasure;
   float minSymmMeasure;
@@ -78,7 +78,7 @@ int main(int argc, char **argv){
   float boundsRank[3] = {0, 1, 2};
   float symmMeasures[3];
   float boundsMeasures[3];
-  int normalInit = False;
+  int normalInit = false;
 
 
 
@@ -97,19 +97,19 @@ int main(int argc, char **argv){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-polydata") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-polydata") == 0)){
        argc--;
        argv++;
        output_surface_name = argv[1];
        argc--;
        argv++;
-       ok = True;
+       ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-point") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-point") == 0)){
         argc--;
         argv++;
-        hasPositivePoint = True;
+        hasPositivePoint = true;
         posiPoint[0] = atof(argv[1]);
         argc--;
         argv++;
@@ -119,12 +119,12 @@ int main(int argc, char **argv){
         posiPoint[2] = atof(argv[1]);
         argc--;
         argv++;
-        ok = True;
+        ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-normal") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-normal") == 0)){
       argc--;
       argv++;
-      normalInit = True;
+      normalInit = true;
       normal[0] = atof(argv[1]);
       argc--;
       argv++;
@@ -134,10 +134,10 @@ int main(int argc, char **argv){
       normal[2] = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
@@ -183,7 +183,7 @@ int main(int argc, char **argv){
   _locator->SelectLocatorType(1);
   _locator->SetDataSet(_surface);
 
-  if (normalInit == True){
+  if (normalInit == true){
     cout << "Using initial normal estimate supplied :" << endl;
     cout << "    " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
     val = sqrt(vtkMath::Dot(normal, normal));
@@ -333,7 +333,7 @@ int main(int argc, char **argv){
     cout << "Initial normal estimate : " << normal[0] << " " << normal[1] << " " << normal[2] << endl;
 
 
-  } // else if normalInit == True
+  } // else if normalInit == true
 
 
 
@@ -398,7 +398,7 @@ int main(int argc, char **argv){
   }
 
   // Check if we need to flip the normal.
-  if (hasPositivePoint == True){
+  if (hasPositivePoint == true){
     for (i = 0; i < 3; ++i){
       posiPoint[i] -= centre[i];
     }

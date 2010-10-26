@@ -183,7 +183,8 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int ok, i;
+  bool ok;
+  int i;
   int noOfVerts, noOfEdges, noOfFaces;
   int noOfComponents;
   int eulerChar;
@@ -195,14 +196,14 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-//    if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
+    ok = false;
+//    if ((ok == false) && (strcmp(argv[1], "-option") == 0)){
 //      argc--;
 //      argv++;
 //do stuff
-//      ok = True;
+//      ok = true;
 //    }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

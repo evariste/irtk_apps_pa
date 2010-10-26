@@ -53,7 +53,8 @@ double mean(vtkFloatArray *scalars){
 
 int main(int argc, char *argv[])
 {
-  int ok, i;
+  bool ok;
+  int i;
   int numberOfPoints;
   int id1, id2;
   time_t seconds;
@@ -75,33 +76,33 @@ int main(int argc, char *argv[])
 
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-XX") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-XX") == 0)){
       argc--;
       argv++;
       // Do stuff and possible increment argv etc
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-reps") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-reps") == 0)){
       argc--;
       argv++;
       reps = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-output") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-output") == 0)){
       argc--;
       argv++;
       out_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

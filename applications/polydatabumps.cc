@@ -102,7 +102,8 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int i, ok, useRand;
+  int i;
+  bool ok, useRand;
   int noOfPoints;
   double x, y, z, r, pt[3];
   double a, b, bump_r;
@@ -127,7 +128,7 @@ int main(int argc, char **argv)
   ran2initialSeed = -1 * ran2Seed;
   (void) ran2(&ran2initialSeed);
 
-  useRand = True;
+  useRand = true;
 
   a = 1.0f;
   b = 1.0f;
@@ -144,40 +145,40 @@ int main(int argc, char **argv)
 
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-l") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-l") == 0)){
       argc--;
       argv++;
       l_max = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-lmin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-lmin") == 0)){
       argc--;
       argv++;
       l_min = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-uniform") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-uniform") == 0)){
       argc--;
       argv++;
-      useRand = False;
+      useRand = false;
       cout << "Using uniform weights" << endl;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-r") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-r") == 0)){
       argc--;
       argv++;
       bump_r = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
@@ -262,7 +263,7 @@ int main(int argc, char **argv)
 
   for (l = l_min; l <= l_max; ++l){
     for (m = m_min; m <= l; ++m){
-      if (useRand == True){
+      if (useRand == true){
         weight[wIndex] = ran2(&ran2Seed);
       } else {
         weight[wIndex] = 1.0;

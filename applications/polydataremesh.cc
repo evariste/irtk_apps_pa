@@ -31,7 +31,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, ok;
+  int i;
+  bool ok;
   irtkTransformation *transformation = NULL;
 
   // Check command line
@@ -64,24 +65,24 @@ int main(int argc, char **argv)
   vtkPolyData *sourceSurf = source_reader->GetOutput();
 
   while (argc > 1) {
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)) {
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)) {
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-lookup") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-lookup") == 0)) {
       argc--;
       argv++;
       lookup_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False) {
+    if (ok == false) {
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

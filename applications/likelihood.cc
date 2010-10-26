@@ -25,7 +25,8 @@ int main(int argc, char **argv){
     usage(argv[0]);
   }
 
-  int ok, voxels, i;
+  bool ok;
+  int voxels, i;
   double mu, sigma;
   double pad = -1.0 * FLT_MAX;
   double z, likelihood, denominator;
@@ -45,24 +46,24 @@ int main(int argc, char **argv){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;
       argv++;
       pad = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-scale") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-scale") == 0)){
       argc--;
       argv++;
       scale = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

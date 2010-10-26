@@ -62,7 +62,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, ok, noOfPoints;
+  int i, noOfPoints;
+  bool ok;
   double surfaceBounds[6];
   double xmin, xmax, ymin, ymax, zmin, zmax;
   double pt[3];
@@ -86,12 +87,12 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-XXX") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-XXX") == 0)){
       argc--;
       argv++;
       // do stuff and maybe argv++ etc.
-      ok = True;
+      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;

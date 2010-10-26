@@ -25,10 +25,10 @@ void usage(char *exeName){
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   double pad = -1.0 * FLT_MAX;
   double threshold = 3.0;
-  int quiet = False;
+  bool quiet = false;
 
   irtkRealImage *input = NULL;
 
@@ -54,30 +54,30 @@ int main(int argc, char **argv)
   input = new irtkRealImage(input_name);
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = true;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;
       argv++;
       pad = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-t") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-t") == 0)){
       argc--;
       argv++;
       threshold = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
-      quiet = True;
-      ok = True;
+      quiet = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage(executableName);
     }
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (quiet == True){
+  if (quiet == true){
     cout << count << "," << penalty << "," << penalty / (double) count << endl;
   } else {
     cout << "count : " << count << ", penalty : " << penalty << ", mean : " << penalty / (double) count << endl;

@@ -34,7 +34,7 @@ void normalise(irtkRealImage &input, irtkRealImage &output)
   cerr << "Setting up input histogram..."; cout.flush();
   irtkRealPixel min, max;
   input.GetMinMax(&min, &max);
-  irtkHistogram_1D histogram((int) round(max-min+1));
+  irtkHistogram_1D<int> histogram((int) round(max-min+1));
   histogram.PutMin(min-0.5);
   histogram.PutMax(max+0.5);
 
@@ -61,7 +61,8 @@ void normalise(irtkRealImage &input, irtkRealImage &output)
 int main(int argc, char **argv)
 {
   double scale, mean, sigma, epsilon;
-  int i, j, n, padding, norm, no, ok;
+  int i, j, n, padding, norm, no;
+  bool ok;
   irtkRealPixel *ptr1;
   irtkRealImage input;
   irtkRealPixel *ptr2;
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
   sigma = 1;
 
   // Default: No intensity  normalisation
-  norm  = False;
+  norm  = false;
 
   // Default: Epsilon
   epsilon = EPSILON;
@@ -112,16 +113,16 @@ int main(int argc, char **argv)
   }
 
   while (argc > 1) {
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-scaling") == 0)) {
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-scaling") == 0)) {
       argc--;
       argv++;
       scale = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-gaussian") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-gaussian") == 0)) {
       argc--;
       argv++;
       mean = atof(argv[1]);
@@ -130,47 +131,47 @@ int main(int argc, char **argv)
       sigma = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-norm") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-norm") == 0)) {
       argc--;
       argv++;
-      norm = True;
-      ok = True;
+      norm = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-imagenames") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-imagenames") == 0)) {
       argc--;
       argv++;
       textfile = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-padding") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-padding") == 0)) {
       argc--;
       argv++;
       padding = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-prefix") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-prefix") == 0)) {
       argc--;
       argv++;
       prefix_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-epsilon") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-epsilon") == 0)) {
       argc--;
       argv++;
       epsilon = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False) {
+    if (ok == false) {
       cerr << "Unknown argument: " << argv[1] << endl << endl;
       usage();
     }
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
     }
 
     tmp = input;
-    if (norm == True) normalise(input, tmp);
+    if (norm == true) normalise(input, tmp);
 
     cerr << "Adding input to atlas..."; cout.flush();
     tmp *= input_weight[i];

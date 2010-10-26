@@ -29,10 +29,10 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
-  int printAll = False;
+  bool ok;
+  int printAll = false;
   double loHi[2];
-  int loHiSet = False;
+  int loHiSet = false;
   double range;
   int nBins = 100;
   double binWidth;
@@ -52,30 +52,30 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-f") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-f") == 0)){
       argc--;
       argv++;
       output_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-all") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-all") == 0)){
       argc--;
       argv++;
-      printAll = True;
-      ok = True;
+      printAll = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-bins") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-bins") == 0)){
       argc--;
       argv++;
       nBins = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-limits") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-limits") == 0)){
       argc--;
       argv++;
       loHi[0] = atof(argv[1]);
@@ -84,16 +84,16 @@ int main(int argc, char **argv)
       loHi[1] = atof(argv[1]);
       argc--;
       argv++;
-      loHiSet = True;
-      ok = True;
+      loHiSet = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-name") == 0)){
        argc--;
        argv++;
        scalar_name = argv[1];
        argc--;
        argv++;
-       ok = True;
+       ok = true;
      }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     }
   }
 
-  irtkHistogram_1D hist;
+  irtkHistogram_1D<int> hist;
   hist.Reset();
 
   vtkPolyData *surface = vtkPolyData::New();
@@ -131,7 +131,7 @@ int main(int argc, char **argv)
 
   }
 
-  if (loHiSet == False){
+  if (loHiSet == false){
     scalars->GetRange(loHi);
   }
 
@@ -161,8 +161,8 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    for (i = 0; i < hist.GetNumberOfBins(); ++i){
-      if (printAll == True){
+    for (i = 0; i < hist.NumberOfBins(); ++i){
+      if (printAll == true){
         fileOut << hist.BinToVal(i) << "," << hist(i) << endl;
       } else if (hist(i) > 0){
         fileOut << hist.BinToVal(i) << "," << hist(i) << endl;
@@ -171,8 +171,8 @@ int main(int argc, char **argv)
     fileOut.close();
   } else {
     // write to std out.
-    for (i = 0; i < hist.GetNumberOfBins(); ++i){
-      if (printAll == True){
+    for (i = 0; i < hist.NumberOfBins(); ++i){
+      if (printAll == true){
         cout << hist.BinToVal(i) << "," << hist(i) << endl;
       } else if (hist(i) > 0){
         cout << hist.BinToVal(i) << "," << hist(i) << endl;

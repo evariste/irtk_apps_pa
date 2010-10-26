@@ -38,7 +38,8 @@ void resetRigidComponents(irtkAffineTransformation *a){
 
 int main(int argc, char **argv)
 {
-  int i, inputCount, ok;
+  int i, inputCount;
+  bool ok;
   irtkMatrix *globalMatrices;
   irtkMatrix globalMatrixAv(4, 4);
   bool ignoreRigid = true;
@@ -64,21 +65,21 @@ int main(int argc, char **argv)
   }
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-includeRigid") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-includeRigid") == 0)){
       argc--;
       argv++;
       ignoreRigid = false;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-noID") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-noID") == 0)){
       argc--;
       argv++;
       useIdentity = 0;
       cout << "Ignoring extra identity matrix." << endl;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

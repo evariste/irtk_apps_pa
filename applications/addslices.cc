@@ -19,7 +19,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  Bool ok;
+  bool ok;
   irtkRealImage in;
 
   int xslices = 0, yslices = 0, zslices = 0;
@@ -27,7 +27,7 @@ int main(int argc, char **argv)
   int xdimnew, ydimnew, zdimnew;
   int i, j, k;
 
-  int useReal = False;
+  bool useReal = false;
 
   double xsize, ysize, zsize;
   double oX, oY, oZ;
@@ -48,38 +48,38 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-x") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-x") == 0)){
       argc--;
       argv++;
       xslices = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-y") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-y") == 0)){
       argc--;
       argv++;
       yslices = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-z") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-z") == 0)){
       argc--;
       argv++;
       zslices = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-real") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-real") == 0)){
       argc--;
       argv++;
-      useReal = True;
-      ok = True;
+      useReal = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Unknown option: " << argv[1] << endl;
       usage();
     }
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
   }
 
 
-  if (useReal == True){
+  if (useReal == true){
     cerr << "Writing floating point image." << endl;
     out.Write(output_name);
   } else {

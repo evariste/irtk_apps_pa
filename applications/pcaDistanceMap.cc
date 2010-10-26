@@ -500,7 +500,8 @@ int main(int argc, char **argv)
   irtkMatrix mainModeVects, projData, covMatrix;
   irtkVector meanWindow, eigenvals, dists;
 
-  int radius = 1, i, j, ok;
+  int radius = 1, i, j;
+  bool ok;
   irtkGreyImage *input, *mask;
   irtkGreyPixel padding = MIN_GREY;
   irtkRealImage *output;
@@ -523,14 +524,14 @@ int main(int argc, char **argv)
   argv++; argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;      argv++;
       padding = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

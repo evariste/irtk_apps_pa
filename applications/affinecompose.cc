@@ -17,7 +17,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   irtkMatrix matrix1, matrix2, matrixOut;
   irtkAffineTransformation transformation1, transformation2;
 

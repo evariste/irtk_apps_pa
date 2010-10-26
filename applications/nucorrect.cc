@@ -42,7 +42,8 @@ int main(int argc, char **argv)
     usage();
   }
 
-  int ok, i, j, k, xdim, ydim, zdim;
+  bool ok;
+  int  i, j, k, xdim, ydim, zdim;
   double x1, y1, z1, x2, y2, z2, dx, dy, dz, xaxis[3], yaxis[3], zaxis[3];
   int voxels, noOfCPs;
   int gmCount, wmCount;
@@ -81,8 +82,8 @@ int main(int argc, char **argv)
 
   // Parse remaining parameters
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-ds") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-ds") == 0)){
       argc--;
       argv++;
       dx = atof(argv[1]);
@@ -90,17 +91,17 @@ int main(int argc, char **argv)
       dz = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-iterations") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-iterations") == 0)){
       argc--;
       argv++;
-      ok = True;
+      ok = true;
       iterations = atoi(argv[1]);
       argc--;
       argv++;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

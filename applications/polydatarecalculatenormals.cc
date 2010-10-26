@@ -26,9 +26,9 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
-  int splitting = False;
-  int autoOrient = False;
+  bool ok;
+  int splitting = false;
+  int autoOrient = false;
 
   if (argc < 3){
     usage();
@@ -43,20 +43,20 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-split") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-split") == 0)){
       argc--;
       argv++;
-      splitting = True;
-      ok = True;
+      splitting = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-auto") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-auto") == 0)){
       argc--;
       argv++;
-      autoOrient = True;
-      ok = True;
+      autoOrient = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -74,14 +74,14 @@ int main(int argc, char **argv)
 
   normalsFilter->SetInput(input);
 
-  if (splitting == True){
+  if (splitting == true){
     cerr << "Setting splitting to on" << endl;
     normalsFilter->SplittingOn();
   } else {
     normalsFilter->SplittingOff();
   }
 
-  if (autoOrient == True){
+  if (autoOrient == true){
     cout << "Setting auto orientation estimation to on." << endl;
     normalsFilter->AutoOrientNormalsOn();
   } else {

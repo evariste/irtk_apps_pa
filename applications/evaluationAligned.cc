@@ -35,7 +35,8 @@ void usage()
 int main(int argc, char **argv)
 {
   irtkRealPixel target_min, source_min, target_max, source_max;
-  int ok, x, y, z, i1, j1, k1, i2, j2, k2; 
+  bool ok;
+  int x, y, z, i1, j1, k1, i2, j2, k2; 
   double x1, y1, z1, x2, y2, z2, Tp, widthx, widthy, val;
   double unbinnedSSD;
   int n;
@@ -81,97 +82,97 @@ int main(int argc, char **argv)
   nbins_y = 256;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-nbins_x") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-nbins_x") == 0)){
       argc--;
       argv++;
       nbins_x = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-nbins_y") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-nbins_y") == 0)){
       argc--;
       argv++;
       nbins_y = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       Tp = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rx1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rx1") == 0)){
       argc--;
       argv++;
       i1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rx2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rx2") == 0)){
       argc--;
       argv++;
       i2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ry1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ry1") == 0)){
       argc--;
       argv++;
       j1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Ry2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Ry2") == 0)){
       argc--;
       argv++;
       j2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rz1") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rz1") == 0)){
       argc--;
       argv++;
       k1 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Rz2") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Rz2") == 0)){
       argc--;
       argv++;
       k2 = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mask") == 0)){
       argc--;
       argv++;
       mask_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -224,7 +225,7 @@ int main(int argc, char **argv)
 
 
   // Create histogram
-  irtkHistogram_2D histogram(nbins_x, nbins_y);
+  irtkHistogram_2D<int> histogram(nbins_x, nbins_y);
 
   widthx = (target_max - target_min) / (nbins_x - 1.0);
   widthy = (source_max - source_min) / (nbins_y - 1.0);
@@ -273,7 +274,9 @@ int main(int argc, char **argv)
        << " and " << target_max << endl;
   cout << "ROI Min and max of Y is " << source_min 
        << " and " << source_max << endl;
-  cout << "Number of bins  X x Y : " << histogram.GetNumberOfBinsX() << " x " << histogram.GetNumberOfBinsY() << endl;
+  int binx, biny;
+  histogram.GetNumberOfBins(&binx, &biny);
+  cout << "Number of bins  X x Y : " << binx << " x " << biny << endl;
   cout << "Number of Samples: "     << histogram.NumberOfSamples() << endl;
   cout << "Mean of X: "             << histogram.MeanX() << endl;
   cout << "Mean of Y: "             << histogram.MeanY() << endl;

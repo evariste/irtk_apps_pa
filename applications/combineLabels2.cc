@@ -132,14 +132,16 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int numberOfClassifiers, i, v, ok, voxels, contendedVoxelCount, contendedVoxelIndex, equivocalCount;
+  int numberOfClassifiers, i, v, voxels, contendedVoxelCount, contendedVoxelIndex, equivocalCount;
+  bool ok;
+
   irtkGreyPixel *pIn, *pIn_0, *pOut;
   //  irtkGreyPixel minLabel = MAX_GREY, maxLabel = MIN_GREY;
   irtkGreyImage input, output;
   irtkGreyImage *input_0;
   irtkByteImage mask;
   irtkBytePixel *pMask;
-  int writeMask = False;
+  bool writeMask = false;
   int pad = -1;
   irtkRealImage weightImg;
   irtkRealPixel *ptr2weight;
@@ -172,15 +174,15 @@ int main(int argc, char **argv)
   }
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-pad") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-pad") == 0)){
       argc--;      argv++;
       pad = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

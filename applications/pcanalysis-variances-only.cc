@@ -89,9 +89,9 @@ void usage(){
 int main(int argc, char **argv)
 {
   int i, j, k, iNoOfLandmarks, iNoOfDatasets;
-  int verbose = True;
-  int ok;
-  int csvMode = False;
+  int verbose = true;
+  bool ok;
+  int csvMode = false;
   double norm;
   int modesRequired;
 
@@ -165,36 +165,36 @@ int main(int argc, char **argv)
   
   // Read optional arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
-      verbose = False;
-      ok = True;
+      verbose = false;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-percent") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-percent") == 0)){
       argc--;
       argv++;
       percent = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-csv") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-csv") == 0)){
       argc--;
       argv++;
-      csvMode = True;
-      ok = True;
+      csvMode = true;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
   }
 
-  if (csvMode == True){
-    verbose = False;
+  if (csvMode == true){
+    verbose = false;
   }
 
   if (percent > -1){
@@ -204,7 +204,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cerr << " There are " << iNoOfDatasets;
     cout << " datasets with " << iNoOfLandmarks << " landmarks." << endl;
   }
@@ -292,12 +292,12 @@ int main(int argc, char **argv)
 
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Mode\tEigenvalue\texplains\tcumulative " << endl;
   }
 
   for (i = 0; i < iNoOfDatasets; ++i){
-    if (verbose == True){
+    if (verbose == true){
       cout << i << "\t" <<ea.Eigenvalue(i);
       accumulated += 100 * ea.Eigenvalue(i) / totalVar;
       cout << "\t" << 100 * ea.Eigenvalue(i) / totalVar;
@@ -305,7 +305,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (csvMode == True){
+  if (csvMode == true){
     cout << iNoOfDatasets << "," << iNoOfLandmarks << "," << totalVar << ",";
     cout << totalVar / iNoOfDatasets << ",";
     cout << exp (totalLogVar / totalLogCount);
@@ -362,7 +362,7 @@ int main(int argc, char **argv)
       }
     }
 
-    if (csvMode == True){
+    if (csvMode == true){
       cout << "," << squaredDiff / (iNoOfLandmarks * iNoOfDatasets);
       cout << "," << percent << "," << modesRequired;
     } else {

@@ -137,7 +137,8 @@ int main(int argc, char **argv)
   // appropriate scaling SVD now performed on this covariance matrix
   // instead.
 
-  int i, j, k, ok, verbose = True;
+  int i, j, k;
+  bool ok, verbose = true;
   int iNoOfLandmarks, iNoOfLandmarks_1, iNoOfLandmarks_2;
   int iNoOfDatasets;
 
@@ -241,29 +242,29 @@ int main(int argc, char **argv)
   
   // Read optional arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-modes") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-modes") == 0)){
       argc--;
       argv++;
       modesUsed = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-csv") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-csv") == 0)){
       argc--;
       argv++;
-      verbose = False;
-      ok = True;
+      verbose = false;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cout << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
   } 
 
   // Some blurb.
-  if (verbose == True){
+  if (verbose == true){
     cout << iNoOfDatasets << " datasets. " << endl;
     cout << "Landmarks :" << endl;
     cout << "Structure 1             : " << iNoOfLandmarks_1 << endl;
@@ -375,7 +376,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Variances explained : " << endl;
     cout << "Structure 1             = " << 100.0 * fCummulated / fTotalVar << "%" << endl;
   } else {
@@ -465,7 +466,7 @@ int main(int argc, char **argv)
     }
   }
 
-  if (verbose == True){
+  if (verbose == true){
     cout << "Structure 2             = " << 100.0 * fCummulated / fTotalVar << "%" << endl;
   } else {
     cout << 100.0 * fCummulated / fTotalVar << "%,";
@@ -521,7 +522,7 @@ int main(int argc, char **argv)
 
   // The division below should probably be check / (iNoOfLandmarks * 2) as
   // the concatenated vectors have twice the number of points.
-  if (verbose == True){
+  if (verbose == true){
     cout << "Back projected PCA representation compared with original : " << endl;
     cout << "Average squared error   = " << check / iNoOfLandmarks / iNoOfDatasets << endl;
   } else {
@@ -705,7 +706,7 @@ int main(int argc, char **argv)
       negativeCorrelations++;
   }
 
-  if (verbose == True){
+  if (verbose == true){
     if (complexcorrelations > 0)
       cout << "Structure 1: Complex correlations!" << endl;
     else 
@@ -738,7 +739,7 @@ int main(int argc, char **argv)
       negativeCorrelations++;
   }
 
-  if (verbose == True){
+  if (verbose == true){
     if (complexcorrelations) 
       cout << "Structure 2: Complex correlations!" << endl;
     else 
@@ -775,7 +776,7 @@ int main(int argc, char **argv)
 
   avcorrelation = totalCorrelation / modesUsed;
 
-  if (verbose == True){
+  if (verbose == true){
    cout << "Largest Correlation     = " << sqrt(er1[1]) << endl;
    cout << "Accumulated Correlation = " << accumulatedCorrelation << endl;
    cout << "Accumulated fraction    = " << accumulatedCorrelation / (totalCorrelation * modesUsed) << endl;

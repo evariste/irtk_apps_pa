@@ -34,7 +34,7 @@ int main(int argc, char **argv){
   int labelCounts[MAX_LABELS];
   double jacSums[MAX_LABELS];
   double jacSquaredSums[MAX_LABELS];
-  int ok, useLogs = False, useHeader = True, meanOnly = False;
+  bool ok, useLogs = false, useHeader = true, meanOnly = false;
   double logJac;
   double ejac, ejacsq;
 
@@ -46,26 +46,26 @@ int main(int argc, char **argv){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-log") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-log") == 0)){
       argc--;
       argv++;
-      useLogs = True;
-      ok = True;
+      useLogs = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-noheader") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-noheader") == 0)){
       argc--;
       argv++;
-      useHeader = False;
-      ok = True;
+      useHeader = false;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mean") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mean") == 0)){
       argc--;
       argv++;
-      meanOnly = True;
-      ok = True;
+      meanOnly = true;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

@@ -13,7 +13,7 @@ char *surface_name = NULL;
 
 int main(int argc, char **argv){
 
-  int ok;
+  bool ok;
 
   if (argc < 2){
     cerr << argv[0] << " [surface] " << endl; 
@@ -27,16 +27,16 @@ int main(int argc, char **argv){
 
 
   while (argc > 1){
-    ok = False;
+    ok = false;
 
 
-//     if ((ok == False) && (strcmp(argv[1], "-option") == 0)){
+//     if ((ok == false) && (strcmp(argv[1], "-option") == 0)){
 //       argc--;
 //       argv++;
-      ok = True;
+      ok = true;
 //     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }

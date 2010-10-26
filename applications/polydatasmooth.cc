@@ -191,7 +191,8 @@ double meanRadius(vtkPolyData* input, double*cog){
 
 int main(int argc, char **argv)
 {
-  int i, j, k, ok;
+  int i, j, k;
+  bool ok;
   int noOfIterations;
   double relaxationFactor;
   double* pts;
@@ -218,7 +219,7 @@ int main(int argc, char **argv)
   double shift[3];
   double scaleFactor;
 
-  int trackingOn = False;
+  int trackingOn = false;
 
   if (argc < 4){
     usage();
@@ -240,20 +241,20 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-track") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-track") == 0)){
       argc--;
       argv++;
-      trackingOn = True;
-      ok = True;
+      trackingOn = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-threshold") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-threshold") == 0)){
       argc--;
       argv++;
       smoothnessThreshold = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
      if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -391,7 +392,7 @@ int main(int argc, char **argv)
       pts[j*3+1] = currPos[1] + dy;
       pts[j*3+2] = currPos[2] + dz;
 
-      if (trackingOn == True){
+      if (trackingOn == true){
         dist = sqrt(dx*dx + dy*dy + dz*dz);
 
         normal = normals->GetTuple3(j);
@@ -436,7 +437,7 @@ int main(int argc, char **argv)
   cout << "Final L_2 norm of H^2 (threshold) : " << h2norm << " (" << smoothnessThreshold << ")" << endl;
 
 
-  if (trackingOn == True){
+  if (trackingOn == true){
     dists->SetName("smoothingDists");
     input->GetPointData()->AddArray(dists);
   }

@@ -31,14 +31,14 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  irtkHistogram_1D hist;
+  irtkHistogram_1D<int> hist;
   irtkRealImage input;
   irtkRealPixel min = 0, max = 0;
   irtkRealPixel *pPix, *pMask;
 
   int i, voxels, nBins = 0;
   double padding = -1 * FLT_MAX;
-  int ok, printAll = False;
+  bool ok, printAll = false;
   double width = -1.0;
 
   // Read arguments
@@ -51,55 +51,55 @@ int main(int argc, char **argv)
   argv++;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-f") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-f") == 0)){
       argc--;
       argv++;
       output_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mask") == 0)){
       argc--;
       argv++;
       mask_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-Tp") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-Tp") == 0)){
       argc--;
       argv++;
       padding = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-bins") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-bins") == 0)){
       argc--;
       argv++;
       nBins = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-width") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-width") == 0)){
       argc--;
       argv++;
       width = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-all") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-all") == 0)){
       argc--;
       argv++;
-      printAll = True;
-      ok = True;
+      printAll = true;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cout << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -154,7 +154,8 @@ int main(int argc, char **argv)
     } else {
       // Width only set.
       hist.PutWidth(width);
-      cerr << "Histogram assigned width " << width << ", using " << hist.GetNumberOfBins() << " bins." << endl; 
+
+      cerr << "Histogram assigned width " << width << ", using " << hist.NumberOfBins() << " bins." << endl;
     }
   } else {
     if (nBins > 0){
@@ -164,7 +165,7 @@ int main(int argc, char **argv)
     } else {
       // Neither set.
       hist.PutNumberOfBins(64);
-      cerr << "Histogram uses " << hist.GetNumberOfBins() << " bins with width " << hist.GetWidth() << endl;
+      cerr << "Histogram uses " << hist.NumberOfBins() << " bins with width " << hist.GetWidth() << endl;
     }
   }
 
@@ -187,9 +188,9 @@ int main(int argc, char **argv)
       exit(1);
     }
 
-    fileOut << hist.GetNumberOfBins() << " " << hist.NumberOfSamples() << " " << min << " " << max << endl;
-    for (i = 0; i < hist.GetNumberOfBins(); ++i){
-      if (printAll == True){
+    fileOut << hist.NumberOfBins() << " " << hist.NumberOfSamples() << " " << min << " " << max << endl;
+    for (i = 0; i < hist.NumberOfBins(); ++i){
+      if (printAll == true){
         fileOut << hist.BinToVal(i) << "," << hist(i) << endl;
       } else if (hist(i) > 0){
         fileOut << hist.BinToVal(i) << "," << hist(i) << endl;
@@ -198,9 +199,9 @@ int main(int argc, char **argv)
     fileOut.close();
   } else {
     // write to std out.
-    cout << hist.GetNumberOfBins() << " " << hist.NumberOfSamples() << " " << min << " " << max << endl;
-    for (i = 0; i < hist.GetNumberOfBins(); ++i){
-      if (printAll == True){
+    cout << hist.NumberOfBins() << " " << hist.NumberOfSamples() << " " << min << " " << max << endl;
+    for (i = 0; i < hist.NumberOfBins(); ++i){
+      if (printAll == true){
         cout << hist.BinToVal(i) << "," << hist(i) << endl;
       } else if (hist(i) > 0){
         cout << hist.BinToVal(i) << "," << hist(i) << endl;

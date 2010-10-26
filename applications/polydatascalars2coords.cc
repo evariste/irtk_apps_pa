@@ -31,12 +31,12 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   int i, j;
   int noOfPoints;
   int ind;
   double p[3], len;
-  int normalise = False;
+  int normalise = false;
   double radius = 1.0;
   
   if (argc < 6){
@@ -63,21 +63,21 @@ int main(int argc, char **argv)
   
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-norm") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-norm") == 0)){
       argc--;
       argv++;
-      normalise = True;
-      ok = True;
+      normalise = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-radius") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-radius") == 0)){
       argc--;
       argv++;
-      normalise = True;
+      normalise = true;
       radius = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
      if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -134,7 +134,7 @@ int main(int argc, char **argv)
     p[1] = scalarsY->GetTuple1(i);
     p[2] = scalarsZ->GetTuple1(i);
     
-    if (normalise == True){
+    if (normalise == true){
       len = vtkMath::Norm(p);
 
       for (j = 0; j < 3; ++j){

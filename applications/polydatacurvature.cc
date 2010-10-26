@@ -38,12 +38,13 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok, i;
-  int smoothOn = True;
-  int decimateOn = False;
+  bool ok;
+  int i;
+  bool smoothOn = true;
+  bool decimateOn = false;
   double decimateTarget = 0;
-  int cleanOn = True;
-  int invert = False;
+  bool cleanOn = true;
+  bool invert = false;
   int invertFlag;
   int smoothIterations = 200;
   double smoothConvergence = 0.001;
@@ -66,93 +67,93 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
+    ok = false;
     if ((!ok) && (strcmp(argv[1], "-K") == 0)) {
       argc--;
       argv++;
       cType = K;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-H") == 0)) {
       argc--;
       argv++;
       cType = H;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-K2") == 0)) {
       argc--;
       argv++;
       cType = K2;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-H2") == 0)) {
       argc--;
       argv++;
       cType = H2;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-kmin") == 0)) {
       argc--;
       argv++;
       cType = kmin;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-kmax") == 0)) {
       argc--;
       argv++;
       cType = kmax;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-Kabs") == 0)) {
       argc--;
       argv++;
       cType = Kabs;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-Habs") == 0)) {
       argc--;
       argv++;
       cType = Habs;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-Kplus") == 0)) {
       argc--;
       argv++;
       cType = Kplus;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-Hplus") == 0)) {
       argc--;
       argv++;
       cType = Hplus;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-dec") == 0)) {
       argc--;
       argv++;
-      decimateOn = True;
+      decimateOn = true;
       decimateTarget = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-smoothOff") == 0)) {
       argc--;
       argv++;
-      smoothOn = False;
-      ok = True;
+      smoothOn = false;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-cleanOff") == 0)) {
       argc--;
       argv++;
-      cleanOn = False;
-      ok = True;
+      cleanOn = false;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-invert") == 0)) {
       argc--;
       argv++;
-      invert = True;
-      ok = True;
+      invert = true;
+      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;

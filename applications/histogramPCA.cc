@@ -395,7 +395,8 @@ int main(int argc, char **argv)
   irtkVector eigenvals1, eigenvals2;
   irtkVector dists1, dists2;
 
-  int radius = 1, i, j, ok;
+  int radius = 1, i, j;
+  bool ok;
   irtkGreyImage *input1, *input2, *mask;
   irtkGreyPixel padding1 = MIN_GREY, padding2 = MIN_GREY;
   irtkRealImage *output;
@@ -406,7 +407,7 @@ int main(int argc, char **argv)
   float minPercentage = 1.0;
   int   bins = 100;
   float maxDist1, maxDist2;
-  int overlapping = False;
+  bool overlapping = false;
 
   // Parse arguments.
   if (argc < 4){
@@ -421,37 +422,37 @@ int main(int argc, char **argv)
   argv++; argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-TpA") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-TpA") == 0)){
       argc--;      argv++;
       padding1 = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-TpB") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-TpB") == 0)){
       argc--;      argv++;
       padding2 = atoi(argv[1]);
       argc--;      argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-output") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-output") == 0)){
       output_name = argv[1];
       argv++; argc--;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-overlap") == 0)){
-      overlapping = True;
+    if ((ok == false) && (strcmp(argv[1], "-overlap") == 0)){
+      overlapping = true;
       argv++; argc--;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
   }
 
   // Decide if the windows are overlapping or tiled (default).
-  if (overlapping == True){
+  if (overlapping == true){
     _stepSize = 1;
   } else {
     _stepSize = radius;

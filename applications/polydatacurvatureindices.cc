@@ -42,7 +42,8 @@ void usage()
 
 int main(int argc, char **argv)
 {
-	int ok, i, j, invert = False;
+  int  i, j;
+  bool ok, invert = false;
   int noOfPoints;
   double K, H;
   vtkTriangle *triangle;
@@ -70,36 +71,36 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
+    ok = false;
     if ((!ok) && (strcmp(argv[1], "-invert") == 0)) {
       argc--;
       argv++;
-      invert = True;
-      ok = True;
+      invert = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mask") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mask") == 0)){
     	argc--;
     	argv++;
     	mask_name = argv[1];
     	argc--;
     	argv++;
-    	ok = True;
+    	ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-pLo") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-pLo") == 0)){
     	argc--;
     	argv++;
     	pMin = atof(argv[1]);
     	argc--;
     	argv++;
-    	ok = True;
+    	ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-pHi") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-pHi") == 0)){
     	argc--;
     	argv++;
     	pMax = atof(argv[1]);
     	argc--;
     	argv++;
-    	ok = True;
+    	ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-opt") == 0)) {
       argc--;
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
       //	Do stuff and maybe
 //      argc--;
 //      argv++;
-      ok = True;
+      ok = true;
     }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -139,7 +140,7 @@ int main(int argc, char **argv)
   curve_H->SetCurvatureTypeToMean();
 
 
-  if (invert  == True){
+  if (invert  == true){
     cout << "Inverting mean curvature flag." << endl;
     int invertFlag = curve_H->GetInvertMeanCurvature();
     curve_H->SetInvertMeanCurvature(1 - invertFlag);

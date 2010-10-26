@@ -30,7 +30,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
   int n, i, j, k, xdim, ydim, zdim;
   irtkGreyPixel *ptr1;
   short *ptr2;
@@ -40,7 +40,7 @@ int main(int argc, char **argv)
   double bounds[6];
   int i1, j1, k1, i2, j2, k2;
   double value = 1000;
-  int reverse = False;
+  int reverse = false;
   double xspacing, yspacing, zspacing;
 
 
@@ -61,20 +61,20 @@ int main(int argc, char **argv)
 
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-value") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-value") == 0)){
       argc--;
       argv++;
       value = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-reverse") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-reverse") == 0)){
       argc--;
       argv++;
-      reverse = True;
-      ok = True;
+      reverse = true;
+      ok = true;
     }
 
     if (!ok){
@@ -190,7 +190,7 @@ int main(int argc, char **argv)
   stencil->SetStencil(dataToStencil->GetOutput());
   stencil->SetBackgroundValue(value);
 
-  if (reverse == True){
+  if (reverse == true){
     stencil->ReverseStencilOn();
   } else {
     stencil->ReverseStencilOff();

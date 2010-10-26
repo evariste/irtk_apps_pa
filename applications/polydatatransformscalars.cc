@@ -38,8 +38,9 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, j, ok;
-  int matching = False;
+  int i, j;
+  bool ok;
+  bool matching = false;
 
   irtkTransformation *transformation = NULL;
 
@@ -80,38 +81,38 @@ int main(int argc, char **argv)
     
 
   while (argc > 1) {
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)) {
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)) {
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-scalar") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-scalar") == 0)) {
       argc--;
       argv++;
       scalar_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-output_name") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-output_name") == 0)) {
       argc--;
       argv++;
       scalar_out_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-matching") == 0)) {
+    if ((ok == false) && (strcmp(argv[1], "-matching") == 0)) {
       argc--;
       argv++;
-      matching = True;
-      ok = True;
+      matching = true;
+      ok = true;
     }
-    if (ok == False) {
+    if (ok == false) {
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }
@@ -158,7 +159,7 @@ int main(int argc, char **argv)
   scalarsOut->SetNumberOfComponents(1);
   scalarsOut->SetNumberOfTuples(noOfPoints);
 
-  if (matching == True){
+  if (matching == true){
     if (noOfPoints != sourceSurf->GetNumberOfPoints()){
       cerr << "Matching flag chosen but numbers of points unequal." << endl;
       exit(1);

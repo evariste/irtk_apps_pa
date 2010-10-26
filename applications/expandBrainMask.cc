@@ -284,7 +284,8 @@ int expandSurface(vtkPolyData *surface, vtkDataArray *normals, vtkPointLocator *
                   irtkInterpolateImageFunction *interpolator,
                   double stepLength, int neighbourhood, int noOfSteps, double mean, double stdev)
 {
-  int i, n, nPts, ok;
+  int i, n, nPts;
+  bool ok;
   int nearestPtCount;
   int numberModified = 0;
   double pt[3];
@@ -369,7 +370,7 @@ int expandSurface(vtkPolyData *surface, vtkDataArray *normals, vtkPointLocator *
       continue;
     }
 
-    ok = True;
+    ok = true;
 
     for (u = 0.0; u < 1.0; u += 0.1){
       x = xold + u * dx;
@@ -377,23 +378,23 @@ int expandSurface(vtkPolyData *surface, vtkDataArray *normals, vtkPointLocator *
       z = zold + u * dz;
 
       if (x < int_x1 || x > int_x2 || y < int_y1 || y > int_y2 || z < int_z1 || z > int_z2){
-        ok = False;
+        ok = false;
         break;
       }
 
       intensity = interpolator->EvaluateInside(x, y, z);
 
       if (fabs(intensity - baseline) > 0.2 * baseline){
-        ok = False;
+        ok = false;
         break;
       }
 //       if (intensity < lowerLimit || intensity > upperLimit){
-//         ok = False;
+//         ok = false;
 //         break;
 //       }
     }
 
-    if (ok == False)
+    if (ok == false)
       continue;
 
 

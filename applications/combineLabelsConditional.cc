@@ -42,7 +42,9 @@ int lookupLabelIndex(short label, short labelsUsed[MAX_LABELS], int countLabelsU
 int main(int argc, char **argv)
 {
   short queryLabel, queryIntensity;
-  int i, j, k, ok, noInputImages, voxels, validVoxelCount;
+  int i, j, k, noInputImages, voxels, validVoxelCount;
+  bool ok;
+
   irtkGreyImage query, mask, output, input;
   int *offsets;
   irtkGreyPixel *pIn, *pOut, *pMask, *pQuery;
@@ -91,16 +93,16 @@ int main(int argc, char **argv)
 
   // Parse any remaining arguments.
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-kernel") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-kernel") == 0)){
       argc--;
       argv++;
       sigma = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

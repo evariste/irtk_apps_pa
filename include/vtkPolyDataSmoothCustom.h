@@ -36,7 +36,7 @@ class vtkPolyDataSmoothCustom : public irtkObject
   
   int _NoOfIterations;
   
-  int _TrackingOn;
+  bool _TrackingOn;
   
   float _SmoothnessThreshold;
   

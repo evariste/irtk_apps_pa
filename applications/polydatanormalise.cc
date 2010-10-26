@@ -35,7 +35,8 @@ void usage() {
 }
 
 int main(int argc, char **argv) {
-  int i, ok;
+  int i;
+  bool ok;
   double pt[3];
 
   double centre[3] = { 0, 0, 0 };
@@ -58,7 +59,7 @@ int main(int argc, char **argv) {
   cerr << "Output       : " << output_name << endl;
 
   while (argc > 1) {
-    ok = False;
+    ok = false;
     if ((!ok) && (strcmp(argv[1], "-centre") == 0)) {
       argc--;
       argv++;
@@ -71,7 +72,7 @@ int main(int argc, char **argv) {
       centre[2] = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-radius") == 0)) {
       argc--;
@@ -79,7 +80,7 @@ int main(int argc, char **argv) {
       radius = atof(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
     if (!ok) {
       cerr << "Cannot parse argument " << argv[1] << endl;

@@ -81,7 +81,7 @@ void images2ffd(irtkRealImage *imagex, irtkRealImage *imagey, irtkRealImage *ima
 
 int main(int argc, char **argv)
 {
-  int ok;
+  bool ok;
 
   // Check command line
   if (argc < 6){
@@ -122,8 +122,8 @@ int main(int argc, char **argv)
 
   // Parse remaining parameters
   while (argc > 1){
-    ok = False;
-    if (ok == False){
+    ok = false;
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

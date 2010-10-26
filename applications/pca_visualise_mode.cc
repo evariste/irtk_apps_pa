@@ -36,11 +36,12 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int ok, noOfPoints;
+  bool ok;
+  int noOfPoints;
   int mode = 0;
   int i;
   double n[3], v[3];
-  int lateralComps = False;
+  bool lateralComps = false;
   
   if (argc < 4){
     usage();
@@ -60,20 +61,20 @@ int main(int argc, char **argv)
   
   // Parse remaining arguments
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-lateral") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-lateral") == 0)){
       argc--;
       argv++;
-      lateralComps = True;
-      ok = True;
+      lateralComps = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-mode") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-mode") == 0)){
       argc--;
       argv++;
       mode = atoi(argv[1]);
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
      if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
@@ -129,7 +130,7 @@ int main(int argc, char **argv)
 
   	(void) vtkMath::Normalize(n);
 
-  	if (lateralComps == True){
+  	if (lateralComps == true){
   	  compN = vtkMath::Dot(n, v);
       nPart[0] = compN * n[0];
       nPart[1] = compN * n[1];

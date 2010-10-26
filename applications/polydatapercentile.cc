@@ -32,9 +32,9 @@ int main(int argc, char **argv)
 
   int i, numberOfPercentiles;
   int percentile[MAXVALS];
-  int quiet = False;
+  int quiet = false;
 
-  int ok;
+  bool ok;
   int count, index;
 
   input_name  = argv[1];
@@ -57,23 +57,23 @@ int main(int argc, char **argv)
   }
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-q") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-q") == 0)){
       argc--;
       argv++;
-      quiet = True;
-      ok = True;
+      quiet = true;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-name") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-name") == 0)){
        argc--;
        argv++;
        scalar_name = argv[1];
        argc--;
        argv++;
-       ok = True;
+       ok = true;
      }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
 
   sort(count, data);
 
-  if (quiet == True){
+  if (quiet == true){
     for (i = 0; i < numberOfPercentiles; i++){
       index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
       cout << data[index];

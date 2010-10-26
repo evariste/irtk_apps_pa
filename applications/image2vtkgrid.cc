@@ -38,7 +38,8 @@ void usage(){
 int main(int argc, char **argv){
 
 //   int nPts;
-  int i, j, k, count, ok;
+  int i, j, k, count;
+  bool ok;
   double p[3];
 //   double xaxis[3], yaxis[3], zaxis[3];
 //   double r;
@@ -55,16 +56,16 @@ int main(int argc, char **argv){
   argc--;
 
   while (argc > 1){
-    ok = False;
-    if ((ok == False) && (strcmp(argv[1], "-dofin") == 0)){
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-dofin") == 0)){
       argc--;
       argv++;
       dof_name = argv[1];
       argc--;
       argv++;
-      ok = True;
+      ok = true;
     }
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
     }

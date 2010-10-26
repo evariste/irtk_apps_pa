@@ -36,7 +36,8 @@ void usage(){
 
 int main(int argc, char **argv){
 
-  int i, ok, locatorType, percentile = 100;
+  int i, locatorType, percentile = 100;
+  bool ok;
 
   if (argc < 3){
     usage();
@@ -52,26 +53,26 @@ int main(int argc, char **argv){
   locatorType = 1;
 
   while (argc > 1){
-    ok = False;
+    ok = false;
 
-    if ((ok == False) && (strcmp(argv[1], "-locator") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-locator") == 0)){
       argc--;	
       argv++;
       locatorType = atoi(argv[1]);
       argc--;	
       argv++;	
-      ok = True;
+      ok = true;
     }
-    if ((ok == False) && (strcmp(argv[1], "-percentile") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-percentile") == 0)){
       argc--;	
       argv++;
       percentile = atoi(argv[1]);
       argc--;	
       argv++;	
-      ok = True;
+      ok = true;
     }
 
-    if (ok == False){
+    if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
