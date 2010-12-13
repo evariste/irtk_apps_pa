@@ -27,7 +27,7 @@ int main(int argc, char **argv)
 
   irtkRealImage input;
   int i, numberOfPercentiles;
-  int percentile[MAXVALS];
+  double percentile[MAXVALS];
   int quiet = false;
 
   double pad = -1.0 * FLT_MAX;
@@ -49,7 +49,7 @@ int main(int argc, char **argv)
   }
 
   for (i = 0; i < numberOfPercentiles; i++){
-    percentile[i] = atoi(argv[1]);
+    percentile[i] = atof(argv[1]);
     argc--;
     argv++;
   }
@@ -115,9 +115,9 @@ int main(int argc, char **argv)
       exit(1);
     }
   }
-  
+
   pMask = mask.GetPointerToVoxels();
-  
+
   // Find number of unpadded values.
   count = 0;
   for (i = 0; i < voxels; ++i){
@@ -129,12 +129,12 @@ int main(int argc, char **argv)
 
   // NR subroutines use 1-indexing.
   float *data = new float[1 + count];
-  
+
   pMask = mask.GetPointerToVoxels();
   pPix = input.GetPointerToVoxels();
-  
+
   count = 0;
-  
+
   for (i = 0; i < voxels; ++i){
     if (*pMask > 0){
       data[1 + count] = *pPix;
@@ -148,12 +148,12 @@ int main(int argc, char **argv)
 
   if (quiet == true){
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
+      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
       cout << data[index] << " ";
     }
   } else {
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
+      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
       cout << "  Percentile " << percentile[i] << " = " << data[index] << endl;
     }
   }
