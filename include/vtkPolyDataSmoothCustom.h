@@ -1,3 +1,4 @@
+#ifdef HAS_VTK
 
 #ifndef _VTKPOLYDATASMOOTHCUSTOM_H
 
@@ -23,49 +24,49 @@
 class vtkPolyDataSmoothCustom : public irtkObject
 {
   vtkPolyData *_input;
-  
+
   vtkPolyData *_output;
-  
+
   vtkFloatArray *_normals;
-  
+
   vtkFloatArray *_distances;
-  
+
   double _RelaxationFactor;
-  
+
   double _CofG[3];
-  
+
   int _NoOfIterations;
-  
+
   bool _TrackingOn;
-  
+
   float _SmoothnessThreshold;
-  
+
   double HSquareRobustMean();
 
   double SurfaceArea();
-  
+
   void UpdateCentreOfGravity();
-  
+
   void ShiftAndScaleMesh(double *shift, double factor);
-  
+
   double GetRadius();
-  
-  
+
+
 public:
   vtkPolyDataSmoothCustom();
-  
+
   virtual ~vtkPolyDataSmoothCustom();
-  
+
   void Initialize(vtkPolyData *polydata);
-  
+
   void Finalize();
-  
+
   void SetInput(vtkPolyData *);
-  
+
   void Run();
-  
+
   vtkPolyData *GetOutput();
-  
+
   virtual SetMacro(NoOfIterations, int);
   virtual GetMacro(NoOfIterations, int);
   virtual SetMacro(TrackingOn, int);
@@ -77,3 +78,5 @@ public:
 };
 
 #endif // _VTKPOLYDATASMOOTHCUSTOM_H
+
+#endif
