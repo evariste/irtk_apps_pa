@@ -16,6 +16,8 @@
 
 char *input_nameA = NULL;
 char *input_nameB = NULL;
+char *maskName = NULL;
+
 
 void usage()
 {
@@ -24,13 +26,23 @@ void usage()
   cerr << " Estimate the 'currents' type distance between a pair" << endl;
   cerr << " of surfaces. See the Glaunes IPMI 2009 paper and " << endl;
   cerr << " Linh Ha, MICCAI, 2010." << endl;
+  cerr << " " << endl;
+  cerr << " Options:" << endl;
+  cerr << " " << endl;
+  cerr << " -mask name  : Name of scalars mask. Restrict distance summation to faces with positive values of the mask." << endl;
+  cerr << "               Scalars with the same name must be present in both surfaces" << endl;
+  cerr << " " << endl;
+  cerr << " " << endl;
+  cerr << " " << endl;
+  cerr << " " << endl;
+
   exit(1);
 }
 
 int main(int argc, char **argv)
 {
   int i, j;
-  bool ok;
+  bool ok, useMask;
   double searchRadius;
   double a[3], b[3], c[3];
   double e1[3], e2[3], e3[3];
@@ -40,6 +52,9 @@ int main(int argc, char **argv)
   int noOfFacesA, noOfFacesB;
   double boundsA[6], boundsB[6];
   double constA, constB;
+  double val;
+
+  bool verbose = false;
 
   kernelFraction = 0.05;
 
@@ -59,15 +74,29 @@ int main(int argc, char **argv)
   // Parse remaining arguments
   while (argc > 1){
     ok = false;
-    if ((!ok) && (strcmp(argv[1], "-bla") == 0)) {
-    	//      argc--;
-    	//      argv++;
-    	//      stuff
-    	// maybe
-    	//      argc--;
-    	//      argv++;
-    	//      ok = true;
+    if ((!ok) && (strcmp(argv[1], "-kernelFraction") == 0)) {
+      argc--;
+      argv++;
+      kernelFraction = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
     }
+    if ((!ok) && (strcmp(argv[1], "-mask") == 0)) {
+      argc--;
+      argv++;
+      maskName = argv[1];
+      argc--;
+      argv++;
+      ok = true;
+    }
+    if ((!ok) && (strcmp(argv[1], "-verbose") == 0)) {
+          argc--;
+          argv++;
+          verbose = true;
+          ok = true;
+    }
+
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
@@ -120,6 +149,26 @@ int main(int argc, char **argv)
   triBout->BuildCells();
   triBout->BuildLinks();
 
+  vtkFloatArray *maskA = vtkFloatArray::New();
+  vtkFloatArray *maskB = vtkFloatArray::New();
+
+  useMask = false;
+  int ind;
+
+  if (maskName != NULL){
+    maskA = (vtkFloatArray*) triAout->GetPointData()->GetArray(maskName, ind);
+    if (ind == -1 || maskA == NULL){
+      cerr << "Scalars unavailable with name " << maskName << " in surface " << input_nameA << endl;
+      exit(1);
+    }
+    maskB = (vtkFloatArray*) triBout->GetPointData()->GetArray(maskName, ind);
+    if (ind == -1 || maskB == NULL){
+      cerr << "Scalars unavailable with name " << maskName << " in surface " << input_nameB << endl;
+      exit(1);
+    }
+
+    useMask =true;
+  }
 
   triAout->GetBounds(boundsA);
   triBout->GetBounds(boundsB);
@@ -133,8 +182,6 @@ int main(int argc, char **argv)
   	cout << "Surfaces' bounding boxes do not intersect." << endl;
   	exit(1);
   }
-
-
 
   vtkCellArray *facesA = triAout->GetPolys();
   noOfFacesA = facesA->GetNumberOfCells();
@@ -150,8 +197,14 @@ int main(int argc, char **argv)
   normals->SetNumberOfComponents(3);
   normals->SetNumberOfTuples(noOfFacesA + noOfFacesB);
 
+  vtkFloatArray *maskOut = vtkFloatArray::New();
+  maskOut->SetNumberOfComponents(1);
+  maskOut->SetNumberOfTuples(noOfFacesA + noOfFacesB);
+
+
   vtkIdType nptsForFace = 0;
   vtkIdType *ptIdsForFace;
+  vtkIdType ptIDa, ptIDb, ptIDc;
 
 
   facesA->InitTraversal();
@@ -164,9 +217,13 @@ int main(int argc, char **argv)
   		exit(0);
   	}
 
-  	triAout->GetPoint(ptIdsForFace[0], a);
-  	triAout->GetPoint(ptIdsForFace[1], b);
-  	triAout->GetPoint(ptIdsForFace[2], c);
+    ptIDa = ptIdsForFace[0];
+    ptIDb = ptIdsForFace[1];
+    ptIDc = ptIdsForFace[2];
+
+  	triAout->GetPoint(ptIDa, a);
+  	triAout->GetPoint(ptIDb, b);
+  	triAout->GetPoint(ptIDc, c);
 
   	for (j = 0; j < 3; ++j){
   		e1[j] = b[j] - a[j];
@@ -176,16 +233,35 @@ int main(int argc, char **argv)
   	vtkMath::Cross(e1, e2, e3);
   	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
 
-  	// Get centroid.
+  	// Get centroid and set masking.
   	for (j = 0; j < 3; ++j){
   		a[j] += (b[j] + c[j]);
   		a[j] /= 3.0;
   	}
 
   	centres->SetPoint(i, a);
+
+    val = 0;
+    if (useMask){
+      if( maskA->GetTuple1(ptIDa) > 0 )
+        val++;
+      if( maskA->GetTuple1(ptIDb) > 0 )
+        val++;
+      if( maskA->GetTuple1(ptIDc) > 0 )
+        val++;
+    }
+
+  	maskOut->SetTuple1(i, (val > 1) ? 1 : 0);
+
+
+
+
   }
 
+
   facesB->InitTraversal();
+
+  // Note where this loop starts and ends.
   for (i = noOfFacesA; i < noOfFacesA + noOfFacesB; ++i){
 
   	facesB->GetNextCell(nptsForFace, ptIdsForFace);
@@ -195,9 +271,13 @@ int main(int argc, char **argv)
   	  		exit(0);
   	}
 
-  	triBout->GetPoint(ptIdsForFace[0], a);
-  	triBout->GetPoint(ptIdsForFace[1], b);
-  	triBout->GetPoint(ptIdsForFace[2], c);
+    ptIDa = ptIdsForFace[0];
+    ptIDb = ptIdsForFace[1];
+    ptIDc = ptIdsForFace[2];
+
+    triBout->GetPoint(ptIDa, a);
+    triBout->GetPoint(ptIDb, b);
+    triBout->GetPoint(ptIDc, c);
 
   	for(j = 0; j < 3; ++j){
   		e1[j] = b[j] - a[j];
@@ -209,28 +289,41 @@ int main(int argc, char **argv)
   	vtkMath::Cross(e2, e1, e3);
   	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
 
-  	// Get centroid.
+    // Get centroid and set masking.
   	for (j = 0; j < 3; ++j){
   		a[j] += (b[j] + c[j]);
   		a[j] /= 3.0;
   	}
 
   	centres->SetPoint(i, a);
+
+    val = 0;
+    if (useMask){
+      if( maskB->GetTuple1(ptIDa) > 0 )
+        val++;
+      if( maskB->GetTuple1(ptIDb) > 0 )
+        val++;
+      if( maskB->GetTuple1(ptIDc) > 0 )
+        val++;
+    }
+    maskOut->SetTuple1(i, (val > 1) ? 1 : 0);
   }
 
   normals->SetName("faceNormals");
+  maskOut->SetName("maskOut");
 
   vtkPolyData *combined = vtkPolyData::New();
 
   combined->SetPoints(centres);
   combined->GetPointData()->AddArray(normals);
+  combined->GetPointData()->AddArray(maskOut);
   combined->Update();
 
-//  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-//  writer->SetInput(combined);
-//  writer->SetFileTypeToBinary();
-//  writer->SetFileName("temp.vtk");
-//  writer->Write();
+  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+  writer->SetInput(combined);
+  writer->SetFileTypeToBinary();
+  writer->SetFileName("temp.vtk");
+  writer->Write();
 //  exit(0);
 
   vtkPointLocator *point_locator = vtkPointLocator::New();
@@ -251,11 +344,16 @@ int main(int argc, char **argv)
   		   (boundsB[5] - boundsB[4]);
 
   // Assume points distributed on spheres.
-  rA = pow(volA, (1.0/3.0)) * 3.0 / 4.0 / M_PI;
-  rB = pow(volB, (1.0/3.0)) * 3.0 / 4.0 / M_PI;
+  rA = pow(volA * 3.0 / 4.0 / M_PI, (1.0/3.0));
+  rB = pow(volB * 3.0 / 4.0 / M_PI, (1.0/3.0));
+
 
   sigmaKer = 0.5 * (rA + rB) * kernelFraction;
 
+  if (verbose){
+    cout << "Estimated radii  : " << rA << " and " << rB << endl;
+    cout << "Sigma for kernel : " << sigmaKer << endl;
+  }
 
   // Constants for kernel
   constA = 1 / sigmaKer / sqrt(2 * M_PI);
@@ -266,12 +364,19 @@ int main(int argc, char **argv)
 
   vtkIdList *nearestPtIDs = vtkIdList::New();
 
-  double val, pt2ptDistSq, totalDist;
+  double pt2ptDistSq, totalDist;
 
   // The distance we seek to measure and return.
   totalDist = 0.0;
 
   for (i = 0; i < noOfFacesA + noOfFacesB; ++i){
+
+    if (useMask){
+      if (maskOut->GetTuple1(i) <= 0){
+        continue;
+      }
+    }
+
   	combined->GetPoint(i, a);
   	point_locator->FindPointsWithinRadius(searchRadius, a, nearestPtIDs);
 
