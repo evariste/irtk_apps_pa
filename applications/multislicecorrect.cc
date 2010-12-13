@@ -112,9 +112,6 @@ irtkRealImage * zeroPad(irtkRealImage *in, int count)
     attr._zaxis[i] = zaxis[i];
   }
   out = new irtkRealImage(attr);
-//  out = new irtkRealImage(xdim + xinc, ydim + yinc, zdim + zinc,
-//                         xspacing, yspacing, zspacing,
-//                         origin, xaxis, yaxis, zaxis);
 
   // Copy data:
   for (k = 0; k < zdim; ++k){
@@ -218,9 +215,6 @@ irtkRealImage * growImage(irtkRealImage *in, int levels)
     attr._zaxis[i] = zaxis[i];
   }
   out = new irtkRealImage(attr);
-//  out = new irtkRealImage(xdim + xinc, ydim + yinc, zdim + zinc,
-//                         xspacing, yspacing, zspacing,
-//                         origin, xaxis, yaxis, zaxis);
 
   // Testing stuff:
   for (k = 0; k < zdim; ++k){
@@ -286,19 +280,6 @@ irtkRealImage * downsampleFactorTwo(irtkRealImage *in)
     attr._zaxis[i] = zaxis[i];
   }
   irtkRealImage * out = new irtkRealImage(attr);
-//  irtkRealImage *out    = new irtkRealImage(xdim, ydim, zdim,
-//                              xspacing, yspacing, zspacing,
-//                              origin, xaxis, yaxis, zaxis);
-
-  //   // Testing:
-//   int i, j, k;
-//   for (k = 0; k < zdim; ++k){
-//     for (j = 0; j < ydim; ++j){
-//       for (i = 0; i < xdim; ++i){
-//         out->Put(i, j, k, in->Get(2*i, 2*j, 2*k));
-//       }
-//     }
-//   }
 
   return out;
 }
@@ -334,26 +315,26 @@ void subdivide(irtkRealImage *in, irtkRealImage *out)
   }
 
   for (k = 1; k < zdim-2; ++k){
-    for (j = 1; j < ydim-2; ++j){
-      for (i = 1; i < xdim-2; ++i){
+  	for (j = 1; j < ydim-2; ++j){
+  		for (i = 1; i < xdim-2; ++i){
 
-        for (k1 = 0; k1 < 2; ++k1){
-	  for (j1 = 0; j1 < 2; ++j1){
-            for (i1 = 0; i1 < 2; ++i1){
+  			for (k1 = 0; k1 < 2; ++k1){
+  				for (j1 = 0; j1 < 2; ++j1){
+  					for (i1 = 0; i1 < 2; ++i1){
 
-              val = 0;
+  						val = 0;
 
-              for (k2 = 0; k2 < 3; ++k2){
-                for (j2 = 0; j2 < 3; ++j2){
-                  for (i2 = 0; i2 < 3; ++i2){
-                    val += w[i1][i2] * w[j1][j2] * w[k1][k2] * in->Get(i+i2-1, j+j2-1, k+k2-1);
-                  }
-                }
-              }
-              out->Put(2*i+i1, 2*j+j1, 2*k+k1, val);
-	    }
-	  }
-	}
+  						for (k2 = 0; k2 < 3; ++k2){
+  							for (j2 = 0; j2 < 3; ++j2){
+  								for (i2 = 0; i2 < 3; ++i2){
+  									val += w[i1][i2] * w[j1][j2] * w[k1][k2] * in->Get(i+i2-1, j+j2-1, k+k2-1);
+  								}
+  							}
+  						}
+  						out->Put(2*i+i1, 2*j+j1, 2*k+k1, val);
+  					}
+  				}
+  			}
       }
     }
   }
@@ -818,15 +799,7 @@ int main(int argc, char **argv)
     cout << "Level " << i+1 << " done" << endl;
     cout << "-----" << endl;
 
-    // Real
-//     _temp = new irtkRealImage(*_evalTarget);
-//     clearRealImage(_temp);
-//     evaluateCoeffsOnImageLattice(_temp, _coeffs[i]);
-//     sprintf(buffer, "%s-level.%d.nii.gz", _output_name, i+1);
-//     _temp->Write(buffer);
-//     delete _temp;
-
-    // Grey
+    // Grey image
     _temp2 = new irtkGreyImage(*_evalTarget);
     clearGreyImage(_temp2);
     evaluateCoeffsOnImageLattice(_temp2, _coeffs[i]);
