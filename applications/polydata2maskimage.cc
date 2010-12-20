@@ -23,7 +23,7 @@ char *template_image_name = NULL;
 void usage()
 {
   cerr << "polydata2maskimage [polydata] [template image] [output image] <options>" << endl;
-  cerr << "-value val : value to put into the structure / background (default 1000)." << endl;
+  cerr << "-value val : value to put into the structure (default 1000)." << endl;
   cerr << "-reverse   : toggle whether the structure or the background gets the value." << endl;
   exit(1);
 }
@@ -99,12 +99,6 @@ int main(int argc, char **argv)
   polys = triFilter->GetOutput();
   polys->Update();
 
-  //////////////////////////////////////////////////////
-//vtkPolyDataWriter *tempWriter = vtkPolyDataWriter::New();
-//tempWriter->SetInput(polys);
-//tempWriter->SetFileName("temp.vtk");
-//tempWriter->Write();
-  //////////////////////////////////////////////////////
 
 
   // Read image
@@ -182,7 +176,6 @@ int main(int argc, char **argv)
   dataToStencil->SetInput(polys);
 
   dataToStencil->SetInformationInput(vtkimageIn);
-  //dataToStencil->SetOutputOrigin()
 
 
   vtkImageStencil *stencil = vtkImageStencil::New();
@@ -221,9 +214,6 @@ int main(int argc, char **argv)
   }
 
   // Paste the canonical data.
-//  image.PutRegion(i1, j1, k1, i2, j2, k2, imageCanonical);
-
-  // Copy region
     for (k = k1; k < k2; k++) {
       for (j = j1; j < j2; j++) {
         for (i = i1; i < i2; i++) {
