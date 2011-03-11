@@ -117,139 +117,139 @@ void write(char *file, vtkPointSet *pset)
 
 int main(int argc, char **argv)
 {
-  int i, j, k, m, iNoOfLandmarks, iNoOfDatasets;
-  irtkMatrix T, Eigenvector;
-  irtkVector Da, Db, MeanShape, Eigenvalues;
-  double p[3], v[3];
-  int maxModes = 10;
+	int i, j, k, m, iNoOfLandmarks, iNoOfDatasets;
+	irtkMatrix T, Eigenvector;
+	irtkVector Da, Db, MeanShape, Eigenvalues;
+	double p[3], v[3];
+	int maxModes = 10;
 
-  if ((argc < 5)){
-    cout << "usage: pcanalysis landmarks1 ... landmarks_N landmarks_mean "
-	 << "eigen_values eigen_vectors maxModes componentMatrix \n";
-    return 1;
-  }
+	if ((argc < 5)){
+		cout << "usage: pcanalysis landmarks1 ... landmarks_N landmarks_mean "
+				<< "eigen_values eigen_vectors maxModes componentMatrix \n";
+		return 1;
+	}
 
-  componentsFile = argv[argc-1];
-  maxModes = atoi(argv[argc-2]);
-  evecsFile = argv[argc-3];
-  evalsFile = argv[argc-4];
-  meanFile  = argv[argc-5];
+	componentsFile = argv[argc-1];
+	maxModes = atoi(argv[argc-2]);
+	evecsFile = argv[argc-3];
+	evalsFile = argv[argc-4];
+	meanFile  = argv[argc-5];
 
-  cout << "Using " << maxModes << " modes\n";
+	cout << "Using " << maxModes << " modes\n";
 
-  iNoOfDatasets  = argc-6;
-  iNoOfLandmarks = 0;
-  cerr << " There are " << iNoOfDatasets << " data sets for training"
-       << endl;
+	iNoOfDatasets  = argc-6;
+	iNoOfLandmarks = 0;
+	cerr << " There are " << iNoOfDatasets << " data sets for training"
+			<< endl;
 
-  // Read all landmarks in matrix M
-  for (i = 0; i < iNoOfDatasets; i++){
-    cerr << " Including landmarks in " << argv[i+1] << endl;
-    data    = read(argv[i+1]);
-    points  = data->GetPoints();
-    vectors = data->GetPointData()->GetVectors();
+	// Read all landmarks in matrix M
+	for (i = 0; i < iNoOfDatasets; i++){
+		cerr << " Including landmarks in " << argv[i+1] << endl;
+		data    = read(argv[i+1]);
+		points  = data->GetPoints();
+		vectors = data->GetPointData()->GetVectors();
 
-    if (i == 0){
-      iNoOfLandmarks = points->GetNumberOfPoints();
-//       M.Initialize(3*iNoOfLandmarks,iNoOfDatasets);
-      Da.Initialize(3*iNoOfLandmarks);
-      Db.Initialize(3*iNoOfLandmarks);
+		if (i == 0){
+			iNoOfLandmarks = points->GetNumberOfPoints();
+			//       M.Initialize(3*iNoOfLandmarks,iNoOfDatasets);
+			Da.Initialize(3*iNoOfLandmarks);
+			Db.Initialize(3*iNoOfLandmarks);
 
-      MeanShape.Initialize(3*iNoOfLandmarks);
-      for (j = 0; j < 3*iNoOfLandmarks; j++){
-        MeanShape(j) = 0.0;
-      }
-      cerr << " There are " << iNoOfDatasets 
-           << " datasets with "
-           << points->GetNumberOfPoints() 
-           << " landmarks." << endl;
-    } else {
-      if ((points->GetNumberOfPoints()) != iNoOfLandmarks){
-        cerr << "Datasets must contain the same number of landmarks" << endl;
-        exit(1);          
-      }
-    }
-    
-    for (j = 0; j < iNoOfLandmarks; j++){
-      if (vectors == NULL){
-	points->GetPoint(j,p);
-	MeanShape(3*j)   += p[0]; 
-	MeanShape(3*j+1) += p[1]; 
-	MeanShape(3*j+2) += p[2]; 
-      } else {
-	vectors->GetTuple(j,v);
-	MeanShape(3*j)   += v[0]; 
-	MeanShape(3*j+1) += v[1]; 
-	MeanShape(3*j+2) += v[2]; 
-      }
-    }
-  }
+			MeanShape.Initialize(3*iNoOfLandmarks);
+			for (j = 0; j < 3*iNoOfLandmarks; j++){
+				MeanShape(j) = 0.0;
+			}
+			cerr << " There are " << iNoOfDatasets
+					<< " datasets with "
+					<< points->GetNumberOfPoints()
+					<< " landmarks." << endl;
+		} else {
+			if ((points->GetNumberOfPoints()) != iNoOfLandmarks){
+				cerr << "Datasets must contain the same number of landmarks" << endl;
+				exit(1);
+			}
+		}
 
-  MeanShape = MeanShape*(1.0/iNoOfDatasets);
-  cout << "Calculated mean." << endl;
-  
-  // Form matrix T = (1/iNoOfDatasets) M^T * M which has
-  // dimensions iNoOfDatasets x iNoOfDatasets after subtracting
-  // the mean from each dataset.
+		for (j = 0; j < iNoOfLandmarks; j++){
+			if (vectors == NULL){
+				points->GetPoint(j,p);
+				MeanShape(3*j)   += p[0];
+				MeanShape(3*j+1) += p[1];
+				MeanShape(3*j+2) += p[2];
+			} else {
+				vectors->GetTuple(j,v);
+				MeanShape(3*j)   += v[0];
+				MeanShape(3*j+1) += v[1];
+				MeanShape(3*j+2) += v[2];
+			}
+		}
+	}
 
-  T.Initialize(iNoOfDatasets,iNoOfDatasets);
+	MeanShape = MeanShape*(1.0/iNoOfDatasets);
+	cout << "Calculated mean." << endl;
 
-  for (i = 0; i < iNoOfDatasets; ++i){
+	// Form matrix T = (1/iNoOfDatasets) M^T * M which has
+	// dimensions iNoOfDatasets x iNoOfDatasets after subtracting
+	// the mean from each dataset.
 
-    data    = read(argv[i+1]);
-    points  = data->GetPoints();
-    vectors = data->GetPointData()->GetVectors();
+	T.Initialize(iNoOfDatasets,iNoOfDatasets);
 
-    for (k = 0; k < iNoOfLandmarks; ++k){
-      if (vectors == NULL){
-	points->GetPoint(k,p);
- 	Da(3*k)   = p[0] - MeanShape(3*k); 
-	Da(3*k+1) = p[1] - MeanShape(3*k+1); 
-	Da(3*k+2) = p[2] - MeanShape(3*k+2); 
-      } else {
-	vectors->GetTuple(k,v);
- 	Da(3*k)   = v[0] - MeanShape(3*k); 
-	Da(3*k+1) = v[1] - MeanShape(3*k+1); 
-	Da(3*k+2) = v[2] - MeanShape(3*k+2); 
-      }
-    }
+	for (i = 0; i < iNoOfDatasets; ++i){
 
-    data->Delete();
+		data    = read(argv[i+1]);
+		points  = data->GetPoints();
+		vectors = data->GetPointData()->GetVectors();
 
-    for (j = i; j < iNoOfDatasets; ++j){
+		for (k = 0; k < iNoOfLandmarks; ++k){
+			if (vectors == NULL){
+				points->GetPoint(k,p);
+				Da(3*k)   = p[0] - MeanShape(3*k);
+				Da(3*k+1) = p[1] - MeanShape(3*k+1);
+				Da(3*k+2) = p[2] - MeanShape(3*k+2);
+			} else {
+				vectors->GetTuple(k,v);
+				Da(3*k)   = v[0] - MeanShape(3*k);
+				Da(3*k+1) = v[1] - MeanShape(3*k+1);
+				Da(3*k+2) = v[2] - MeanShape(3*k+2);
+			}
+		}
 
-      data    = read(argv[j + 1]);
-      points  = data->GetPoints();
-      vectors = data->GetPointData()->GetVectors();
+		data->Delete();
 
-      for (k = 0; k < iNoOfLandmarks; ++k){
-        if (vectors == NULL){
-          points->GetPoint(k,p);
-          Db(3*k)   = p[0] - MeanShape(3*k);
-          Db(3*k+1) = p[1] - MeanShape(3*k+1);
-          Db(3*k+2) = p[2] - MeanShape(3*k+2);
-        } else {
-          vectors->GetTuple(k,v);
-          Db(3*k)   = v[0] - MeanShape(3*k);
-          Db(3*k+1) = v[1] - MeanShape(3*k+1);
-          Db(3*k+2) = v[2] - MeanShape(3*k+2);
-        }
-      }
+		for (j = i; j < iNoOfDatasets; ++j){
 
-      data->Delete();
+			data    = read(argv[j + 1]);
+			points  = data->GetPoints();
+			vectors = data->GetPointData()->GetVectors();
 
-      // Covariance matrix entry
-      T(i, j) = 0.0;
-      for (k = 0; k < 3 * iNoOfLandmarks; k++){
-        T(i, j) += Da(k) * Db(k);
-      }
+			for (k = 0; k < iNoOfLandmarks; ++k){
+				if (vectors == NULL){
+					points->GetPoint(k,p);
+					Db(3*k)   = p[0] - MeanShape(3*k);
+					Db(3*k+1) = p[1] - MeanShape(3*k+1);
+					Db(3*k+2) = p[2] - MeanShape(3*k+2);
+				} else {
+					vectors->GetTuple(k,v);
+					Db(3*k)   = v[0] - MeanShape(3*k);
+					Db(3*k+1) = v[1] - MeanShape(3*k+1);
+					Db(3*k+2) = v[2] - MeanShape(3*k+2);
+				}
+			}
 
-      // Symmetric covariance matrix
-      T(j, i) = T(i, j);
+			data->Delete();
 
-    }
-    
-  }
+			// Covariance matrix entry
+			T(i, j) = 0.0;
+			for (k = 0; k < 3 * iNoOfLandmarks; k++){
+				T(i, j) += Da(k) * Db(k);
+			}
+
+			// Symmetric covariance matrix
+			T(j, i) = T(i, j);
+
+		}
+
+	}
 
   T /= iNoOfDatasets;
     
@@ -318,21 +318,21 @@ int main(int argc, char **argv)
 
   // Normalize eigenvectors
   for (i = 0; i < maxModes ; i++){
-    float fNorm = 0.0;
-    for (j = 0; j < 3*iNoOfLandmarks; j++){
-      fNorm += Eigenvector(j,i) * Eigenvector(j,i);
-    }
-    fNorm = sqrt(fNorm);
-    if (100 * ea.Eigenvalue(i) / fTotalVar > MIN_NORM){
-      for (j = 0; j < 3*iNoOfLandmarks; j++){
-	Eigenvector(j,i) /= fNorm;
-      }
-    } else {
-      for (j = 0; j < 3*iNoOfLandmarks; j++){
-	Eigenvector(j,i) = 0;
-      }
-      Eigenvalues(i) = 0;
-    }
+  	float fNorm = 0.0;
+  	for (j = 0; j < 3*iNoOfLandmarks; j++){
+  		fNorm += Eigenvector(j,i) * Eigenvector(j,i);
+  	}
+  	fNorm = sqrt(fNorm);
+  	if (100 * ea.Eigenvalue(i) / fTotalVar > MIN_NORM){
+  		for (j = 0; j < 3*iNoOfLandmarks; j++){
+  			Eigenvector(j,i) /= fNorm;
+  		}
+  	} else {
+  		for (j = 0; j < 3*iNoOfLandmarks; j++){
+  			Eigenvector(j,i) = 0;
+  		}
+  		Eigenvalues(i) = 0;
+  	}
   }
 
   cout << "Eigenvectors normalised" << endl;
