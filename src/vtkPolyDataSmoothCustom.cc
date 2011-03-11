@@ -1,3 +1,4 @@
+#ifdef HAS_VTK
 
 #include <vtkPolyDataSmoothCustom.h>
 
@@ -399,3 +400,7 @@ double vtkPolyDataSmoothCustom::GetRadius()
   return rSum / noOfPoints;
 
 }
+
+
+
+#endif
