@@ -17,15 +17,16 @@ void usage()
   cerr << "Writes out x, y and z displacements at the voxel locations of the template image" << endl;
   cerr << "as given by the ffd." << endl;
   cerr << "Options: " << endl;
-  cerr << "-mag : Magnitude only." << endl;
-  cerr << "-pad  : Padding value in template image." << endl;
+  cerr << "-mag       : Magnitude only." << endl;
+  cerr << "-t [val]   : Time value in the case of a 4D transformation (default 0)." << endl;
+  cerr << "-pad [val] : Padding value in template image." << endl;
   exit(1);
 }
 
 int main(int argc, char **argv)
 {
   int i, j, k;
-  double x, y, z;
+  double x, y, z, t;
   bool ok;
   bool magnitudeOnly = false;
   int xdim, ydim, zdim;
@@ -49,6 +50,8 @@ int main(int argc, char **argv)
   argc--;
   argv++;
 
+  t = 0;
+
   // Parse options.
   while (argc > 1){
     ok = false;
@@ -62,6 +65,14 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       pad = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
+    if ((ok == false) && (strcmp(argv[1], "-t") == 0)){
+      argc--;
+      argv++;
+      t = atof(argv[1]);
       argc--;
       argv++;
       ok = true;
@@ -102,7 +113,9 @@ int main(int argc, char **argv)
         y = j;
         z = k;
         templateImg->ImageToWorld(x, y, z);
-        mffd->LocalDisplacement(x, y, z);
+
+        mffd->LocalDisplacement(x, y, z, t);
+
         dispX->Put(i, j, k, x);
         dispY->Put(i, j, k, y);
         dispZ->Put(i, j, k, z);
