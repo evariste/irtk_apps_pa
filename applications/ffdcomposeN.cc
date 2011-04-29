@@ -8,6 +8,8 @@ char *dofOut_name = NULL;
 
 char **dof_name  = NULL;
 
+char *affine_dof_name = NULL;
+
 #define MAX_DOFS 50
 #define MAX_PTS_PAREG 10000
 
@@ -19,6 +21,9 @@ void usage()
   cerr << " <-dofin file>      Transformation file. Multiple transformations can be given by" << endl;
   cerr << "                    repeatedly using this flag. They are processed in order they passed." << endl;
   cerr << " <-dofin_i file>    A transformation whose inverse should be applied." << endl;
+  cerr << " <-affine> file     An affine transformation that should be included within the composed" << endl;
+  cerr << "                    FFD.  If not provided then one will be estimated." << endl;
+  cerr << " " << endl;
   cerr << " " << endl;
   cerr << " E.g." << endl;
   cerr << " " << endl;
@@ -49,8 +54,6 @@ int main(int argc, char **argv)
   argc--;
   argv++;
 
-
-
   // Fix number of dofs
   noOfDofs = 0;
 
@@ -75,6 +78,14 @@ int main(int argc, char **argv)
       dof_name[noOfDofs] = argv[1];
       invert[noOfDofs]   = true;
       noOfDofs++;
+      argc--;
+      argv++;
+      ok = true;
+    }
+    if ((ok == false) && (strcmp(argv[1], "-affine") == 0)){
+      argc--;
+      argv++;
+      affine_dof_name = argv[1];
       argc--;
       argv++;
       ok = true;
@@ -106,6 +117,7 @@ int main(int argc, char **argv)
   xdim = affd_out->GetX();
   ydim = affd_out->GetY();
   zdim = affd_out->GetZ();
+
   numberOfCPs = xdim * ydim * zdim;
 
   // Space to store the control point displacements.
@@ -116,15 +128,15 @@ int main(int argc, char **argv)
   count = 0;
 
   // Loop for each control point in the target
-  for (i = 0; i < xdim; i++){
+  for (k = 0; k < zdim; k++){
     for (j = 0; j < ydim; j++){
-      for (k = 0; k < zdim; k++){
+      for (i = 0; i < xdim; i++){
 
         affd_out->Put(i, j, k, 0, 0, 0);
 
-        x = i; // why? i not used later
-        y = j; // why? j not used later
-        z = k; // why? k not used later
+        x = i;
+        y = j;
+        z = k;
 
         // Transform point from lattice coordinates to target coordinates
         affd_out->LatticeToWorld(x, y, z);
@@ -141,7 +153,7 @@ int main(int argc, char **argv)
             transformation[m]->Transform(x, y, z);
         }
 
-        // New location of the control point.
+        // Displacement of the control point.
         xdata[count] = x - xStore;
         ydata[count] = y - yStore;
         zdata[count] = z - zStore;
@@ -152,86 +164,98 @@ int main(int argc, char **argv)
     }
   }
 
-
-  // Estimate an affine component for the collected displacements.
-
-  // Make an identity global transformation.
+	// Make an identity global transformation.
   irtkAffineTransformation *trAffine = new irtkAffineTransformation;
 
-  irtkPointSet targetPts;
-  irtkPointSet sourcePts;
+  // Read in affine transformation if provided, otherwise estimate it.
+  if (affine_dof_name != NULL){
 
-  // Collect point data.
+    trAffine->irtkTransformation::Read(affine_dof_name);
 
-  int noOfPoints;
-  noOfPoints = affd_out->NumberOfDOFs() / 3;
+  } else {
 
-  int incr = 1;
-  while ((noOfPoints / incr) > MAX_PTS_PAREG){
-    incr++;
+  	// Estimate an affine component for the collected displacements.
+  	// This will be a compromise, especially if there are lots of control points
+  	// outside the region of interest (e.g the brain) with a zero displacement.
+
+
+  	irtkPointSet targetPts;
+  	irtkPointSet sourcePts;
+
+  	// Collect point data.
+
+  	int noOfPoints;
+  	noOfPoints = affd_out->NumberOfDOFs() / 3;
+
+  	int incr = 1;
+  	while ((noOfPoints / incr) > MAX_PTS_PAREG){
+  		incr++;
+  	}
+
+  	// Subsample uniformly by increments of 'incr'
+
+  	count = -1;
+
+  	// Loop over all control points.
+  	for (k = 0; k < zdim; k++){
+  		for (j = 0; j < ydim; j++){
+  			for (i = 0; i < xdim; i++){
+
+  				count++;
+
+
+  				// Should we sample it or not?
+  				if ((count % incr) != 0)
+  					continue;
+
+  				// Get two copies of current image coordinates.
+  				x = i; y = j; z = k;
+  				irtkPoint p(x, y, z);
+  				irtkPoint q(x, y, z);
+
+  				// Transform points into target world coordinates.
+  				affd_out->LatticeToWorld(p);
+  				affd_out->LatticeToWorld(q);
+
+
+  				// The starting point
+  				targetPts.Add(p);
+
+  				// Where does p go to under all the compositions?
+  				q._x += xdata[count];
+  				q._y += ydata[count];
+  				q._z += zdata[count];
+
+  				sourcePts.Add(q);
+  			}
+  		}
+  	}
+
+  	// Estimate global affine component
+
+  	irtkPointAffineRegistration *pareg = new irtkPointAffineRegistration;
+  	// Set input and output for the registration filter
+  	irtkPointSet tmp1 = targetPts;
+  	irtkPointSet tmp2 = sourcePts;
+  	pareg->SetInput(&tmp1, &tmp2);
+  	pareg->SetOutput(trAffine);
+
+  	// Run registration filter
+  	pareg->Run();
+
+
+  	cout << "Estimated global affine component with following parameters:" << endl;
+  	trAffine->Print();
+
   }
 
-  // Subsample uniformly by increments of 'incr'
-
-  count = -1;
-
-  // Loop over all control points.
-  for (i = 0; i < xdim; i++){
-    for (j = 0; j < ydim; j++){
-      for (k = 0; k < zdim; k++){
-
-        count++;
-
-
-        // Should we sample it or not?
-        if ((count % incr) != 0)
-          continue;
-
-        // Get two copies of current image coordinates.
-        x = i; y = j; z = k;
-        irtkPoint p(x, y, z);
-        irtkPoint q(x, y, z);
-
-        // Transform points into target world coordinates.
-        affd_out->LatticeToWorld(p);
-        affd_out->LatticeToWorld(q);
-
-
-        // The starting point
-        targetPts.Add(p);
-
-        // Where does p go to under all the compositions?
-        q._x += xdata[count];
-        q._y += ydata[count];
-        q._z += zdata[count];
-
-        sourcePts.Add(q);
-      }
-    }
-  }
-
-  // Estimate global affine component
-
-  irtkPointAffineRegistration *pareg = new irtkPointAffineRegistration;
-  // Set input and output for the registration filter
-  irtkPointSet tmp1 = targetPts;
-  irtkPointSet tmp2 = sourcePts;
-  pareg->SetInput(&tmp1, &tmp2);
-  pareg->SetOutput(trAffine);
-
-  // Run registration filter
-  pareg->Run();
-
-
-  cout << "Estimated global affine component with following parameters:" << endl;
-  trAffine->Print();
 
 
   // Remove the global affine part from the estimated displacements
   count = 0;
-  for (i = 0; i < xdim; i++){
+  for (k = 0; k < zdim; k++){
     for (j = 0; j < ydim; j++){
-      for (k = 0; k < zdim; k++){
+      for (i = 0; i < xdim; i++){
 
         x = i;
         y = j;
@@ -247,7 +271,7 @@ int main(int argc, char **argv)
         trAffine->Transform(x, y, z);
 
 
-        // New location of the control point.
+        // Subtract displacement due to affine transformation of the control point location.
         xdata[count] -= (x - xStore);
         ydata[count] -= (y - yStore);
         zdata[count] -= (z - zStore);
@@ -260,13 +284,10 @@ int main(int argc, char **argv)
 
 
 
+  mffd_out->PutMatrix(trAffine->GetMatrix());
 
   // Interpolate the ffd and write dof
   affd_out->Interpolate(xdata, ydata, zdata);
-
-
-  mffd_out->PutMatrix(trAffine->GetMatrix());
-
 
   (void) mffd_out->PopLocalTransformation();
   mffd_out->PushLocalTransformation(affd_out);
