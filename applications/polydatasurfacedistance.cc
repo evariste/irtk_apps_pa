@@ -24,7 +24,7 @@ void usage()
   cerr << " polydatasurfacedistance [inputA] [inputB]" << endl;
   cerr << " " << endl;
   cerr << " Estimate the 'currents' type distance between a pair" << endl;
-  cerr << " of surfaces. See the Glaunes IPMI 2009 paper and " << endl;
+  cerr << " of surfaces. See the Glaunes IPMI 2005 paper and " << endl;
   cerr << " Linh Ha, MICCAI, 2010." << endl;
   cerr << " " << endl;
   cerr << " Options:" << endl;
@@ -41,7 +41,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, j;
+  int i, j, jj;
   bool ok, useMask;
   double searchRadius;
   double a[3], b[3], c[3];
@@ -201,7 +201,6 @@ int main(int argc, char **argv)
   maskOut->SetNumberOfComponents(1);
   maskOut->SetNumberOfTuples(noOfFacesA + noOfFacesB);
 
-
   vtkIdType nptsForFace = 0;
   vtkIdType *ptIdsForFace;
   vtkIdType ptIDa, ptIDb, ptIDc;
@@ -233,6 +232,7 @@ int main(int argc, char **argv)
   	vtkMath::Cross(e1, e2, e3);
   	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
 
+
   	// Get centroid and set masking.
   	for (j = 0; j < 3; ++j){
   		a[j] += (b[j] + c[j]);
@@ -252,9 +252,6 @@ int main(int argc, char **argv)
     }
 
   	maskOut->SetTuple1(i, (val > 1) ? 1 : 0);
-
-
-
 
   }
 
@@ -313,18 +310,12 @@ int main(int argc, char **argv)
   maskOut->SetName("maskOut");
 
   vtkPolyData *combined = vtkPolyData::New();
-
   combined->SetPoints(centres);
   combined->GetPointData()->AddArray(normals);
   combined->GetPointData()->AddArray(maskOut);
   combined->Update();
 
-  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(combined);
-  writer->SetFileTypeToBinary();
-  writer->SetFileName("temp.vtk");
-  writer->Write();
-//  exit(0);
+
 
   vtkPointLocator *point_locator = vtkPointLocator::New();
   point_locator->SetNumberOfPointsPerBucket(5);
@@ -385,11 +376,11 @@ int main(int argc, char **argv)
   	// Current normal.
   	normals->GetTuple(i, n1);
 
-
   	for (j = 0; j < nearestPtCount; ++j){
-  		combined->GetPoint(nearestPtIDs->GetId(j), b);
+  		jj = nearestPtIDs->GetId(j);
 
-  		normals->GetTuple(nearestPtIDs->GetId(j), n2);
+  		combined->GetPoint(jj, b);
+  		normals->GetTuple(jj, n2);
 
   		pt2ptDistSq = vtkMath::Distance2BetweenPoints(a, b);
 
@@ -402,9 +393,21 @@ int main(int argc, char **argv)
 
   }
 
+  cout << totalDist << endl;
+
   totalDist = sqrt(totalDist);
 
   cout << totalDist << endl;
+
+  ////////////////////////////////////////////////////////////////
+  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+  writer->SetInput(combined);
+  writer->SetFileTypeToBinary();
+  writer->SetFileName("temp.vtk");
+  writer->Write();
+  exit(0);
+  ////////////////////////////////////////////////////////////////
+
 
   return 0;
 }
