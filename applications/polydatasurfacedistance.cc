@@ -44,14 +44,14 @@ int main(int argc, char **argv)
   int i, j, jj;
   bool ok, useMask;
   double searchRadius;
-  double a[3], b[3], c[3];
+  double pt1[3], pt2[3], pt3[3];
   double e1[3], e2[3], e3[3];
   double n1[3], n2[3];
   double volA, volB, rA, rB, sigmaKer, kernelFraction;
   int nearestPtCount;
   int noOfFacesA, noOfFacesB;
   double boundsA[6], boundsB[6];
-  double constA, constB;
+  double gaussConst1, gaussConst2;
   double val;
 
   bool verbose = false;
@@ -190,16 +190,32 @@ int main(int argc, char **argv)
   noOfFacesB = facesB->GetNumberOfCells();
 
 
-  vtkPoints *centres = vtkPoints::New();
-  centres->SetNumberOfPoints(noOfFacesA + noOfFacesB);
+  vtkPoints *centresA = vtkPoints::New();
+  centresA->SetNumberOfPoints(noOfFacesA);
 
-  vtkFloatArray *normals = vtkFloatArray::New();
-  normals->SetNumberOfComponents(3);
-  normals->SetNumberOfTuples(noOfFacesA + noOfFacesB);
+  vtkPoints *centresB = vtkPoints::New();
+  centresB->SetNumberOfPoints(noOfFacesB);
 
-  vtkFloatArray *maskOut = vtkFloatArray::New();
-  maskOut->SetNumberOfComponents(1);
-  maskOut->SetNumberOfTuples(noOfFacesA + noOfFacesB);
+
+  vtkFloatArray *normalsA = vtkFloatArray::New();
+  normalsA->SetNumberOfComponents(3);
+  normalsA->SetNumberOfTuples(noOfFacesA);
+
+  vtkFloatArray *normalsB = vtkFloatArray::New();
+  normalsB->SetNumberOfComponents(3);
+  normalsB->SetNumberOfTuples(noOfFacesB);
+
+
+  vtkFloatArray *maskOutA = vtkFloatArray::New();
+  maskOutA->SetNumberOfComponents(1);
+  maskOutA->SetNumberOfTuples(noOfFacesA);
+
+  vtkFloatArray *maskOutB = vtkFloatArray::New();
+  maskOutB->SetNumberOfComponents(1);
+  maskOutB->SetNumberOfTuples(noOfFacesB);
+
+
+
 
   vtkIdType nptsForFace = 0;
   vtkIdType *ptIdsForFace;
@@ -220,26 +236,26 @@ int main(int argc, char **argv)
     ptIDb = ptIdsForFace[1];
     ptIDc = ptIdsForFace[2];
 
-  	triAout->GetPoint(ptIDa, a);
-  	triAout->GetPoint(ptIDb, b);
-  	triAout->GetPoint(ptIDc, c);
+  	triAout->GetPoint(ptIDa, pt1);
+  	triAout->GetPoint(ptIDb, pt2);
+  	triAout->GetPoint(ptIDc, pt3);
 
   	for (j = 0; j < 3; ++j){
-  		e1[j] = b[j] - a[j];
-  		e2[j] = c[j] - a[j];
+  		e1[j] = pt2[j] - pt1[j];
+  		e2[j] = pt3[j] - pt1[j];
   	}
 
   	vtkMath::Cross(e1, e2, e3);
-  	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
+  	normalsA->SetTuple3(i, e3[0], e3[1], e3[2]);
 
 
   	// Get centroid and set masking.
   	for (j = 0; j < 3; ++j){
-  		a[j] += (b[j] + c[j]);
-  		a[j] /= 3.0;
+  		pt1[j] += (pt2[j] + pt3[j]);
+  		pt1[j] /= 3.0;
   	}
 
-  	centres->SetPoint(i, a);
+  	centresA->SetPoint(i, pt1);
 
     val = 0;
     if (useMask){
@@ -251,7 +267,7 @@ int main(int argc, char **argv)
         val++;
     }
 
-  	maskOut->SetTuple1(i, (val > 1) ? 1 : 0);
+  	maskOutA->SetTuple1(i, (val > 1) ? 1 : 0);
 
   }
 
@@ -259,7 +275,7 @@ int main(int argc, char **argv)
   facesB->InitTraversal();
 
   // Note where this loop starts and ends.
-  for (i = noOfFacesA; i < noOfFacesA + noOfFacesB; ++i){
+  for (i = 0; i < noOfFacesB; ++i){
 
   	facesB->GetNextCell(nptsForFace, ptIdsForFace);
 
@@ -272,27 +288,27 @@ int main(int argc, char **argv)
     ptIDb = ptIdsForFace[1];
     ptIDc = ptIdsForFace[2];
 
-    triBout->GetPoint(ptIDa, a);
-    triBout->GetPoint(ptIDb, b);
-    triBout->GetPoint(ptIDc, c);
+    triBout->GetPoint(ptIDa, pt1);
+    triBout->GetPoint(ptIDb, pt2);
+    triBout->GetPoint(ptIDc, pt3);
 
   	for(j = 0; j < 3; ++j){
-  		e1[j] = b[j] - a[j];
-  		e2[j] = c[j] - a[j];
+  		e1[j] = pt2[j] - pt1[j];
+  		e2[j] = pt3[j] - pt1[j];
   	}
 
   	// Cross product is skew symmetric for the second surface, we do e2 x e1 while we did
   	// e1 x e2 for the first surface - i.e.  the sense is negated.
   	vtkMath::Cross(e2, e1, e3);
-  	normals->SetTuple3(i, e3[0], e3[1], e3[2]);
+  	normalsB->SetTuple3(i, e3[0], e3[1], e3[2]);
 
     // Get centroid and set masking.
   	for (j = 0; j < 3; ++j){
-  		a[j] += (b[j] + c[j]);
-  		a[j] /= 3.0;
+  		pt1[j] += (pt2[j] + pt3[j]);
+  		pt1[j] /= 3.0;
   	}
 
-  	centres->SetPoint(i, a);
+  	centresB->SetPoint(i, pt1);
 
     val = 0;
     if (useMask){
@@ -303,24 +319,39 @@ int main(int argc, char **argv)
       if( maskB->GetTuple1(ptIDc) > 0 )
         val++;
     }
-    maskOut->SetTuple1(i, (val > 1) ? 1 : 0);
+    maskOutB->SetTuple1(i, (val > 1) ? 1 : 0);
   }
 
-  normals->SetName("faceNormals");
-  maskOut->SetName("maskOut");
+  normalsA->SetName("faceNormals");
+  maskOutA->SetName("maskOut");
 
-  vtkPolyData *combined = vtkPolyData::New();
-  combined->SetPoints(centres);
-  combined->GetPointData()->AddArray(normals);
-  combined->GetPointData()->AddArray(maskOut);
-  combined->Update();
+  normalsB->SetName("faceNormals");
+  maskOutB->SetName("maskOut");
 
 
+  vtkPolyData *currentA = vtkPolyData::New();
+  currentA->SetPoints(centresA);
+  currentA->GetPointData()->AddArray(normalsA);
+  currentA->GetPointData()->AddArray(maskOutA);
+  currentA->Update();
 
-  vtkPointLocator *point_locator = vtkPointLocator::New();
-  point_locator->SetNumberOfPointsPerBucket(5);
-  point_locator->SetDataSet(combined);
-  point_locator->BuildLocator();
+  vtkPolyData *currentB = vtkPolyData::New();
+  currentB->SetPoints(centresB);
+  currentB->GetPointData()->AddArray(normalsB);
+  currentB->GetPointData()->AddArray(maskOutB);
+  currentB->Update();
+
+
+  vtkPointLocator *point_locatorA = vtkPointLocator::New();
+  point_locatorA->SetNumberOfPointsPerBucket(5);
+  point_locatorA->SetDataSet(currentA);
+  point_locatorA->BuildLocator();
+
+  vtkPointLocator *point_locatorB = vtkPointLocator::New();
+  point_locatorB->SetNumberOfPointsPerBucket(5);
+  point_locatorB->SetDataSet(currentB);
+  point_locatorB->BuildLocator();
+
 
 
   // Need to establish a suitable radius for the kernel on centre
@@ -347,8 +378,8 @@ int main(int argc, char **argv)
   }
 
   // Constants for kernel
-  constA = 1 / sigmaKer / sqrt(2 * M_PI);
-  constB = -1.0 / sigmaKer / sigmaKer;
+  gaussConst1 = 1 / sigmaKer / sqrt(2 * M_PI);
+  gaussConst2 = -1.0 / sigmaKer / sigmaKer;
 
   searchRadius = 2.5 * sigmaKer;
 
@@ -356,57 +387,166 @@ int main(int argc, char **argv)
   vtkIdList *nearestPtIDs = vtkIdList::New();
 
   double pt2ptDistSq, totalDist;
+  double minusADotB, minusBDotA, aDotA, bDotB;
 
   // The distance we seek to measure and return.
   totalDist = 0.0;
 
-  for (i = 0; i < noOfFacesA + noOfFacesB; ++i){
 
-    if (useMask){
-      if (maskOut->GetTuple1(i) <= 0){
-        continue;
-      }
+  // inter surface distance:
+  for (i = 0; i < noOfFacesA; ++i){
+
+    if (useMask && maskOutA->GetTuple1(i) <= 0){
+    	continue;
     }
 
-  	combined->GetPoint(i, a);
-  	point_locator->FindPointsWithinRadius(searchRadius, a, nearestPtIDs);
+  	currentA->GetPoint(i, pt1);
+
+  	point_locatorB->FindPointsWithinRadius(searchRadius, pt1, nearestPtIDs);
 
   	nearestPtCount = nearestPtIDs->GetNumberOfIds();
 
   	// Current normal.
-  	normals->GetTuple(i, n1);
+  	normalsA->GetTuple(i, n1);
 
   	for (j = 0; j < nearestPtCount; ++j){
   		jj = nearestPtIDs->GetId(j);
 
-  		combined->GetPoint(jj, b);
-  		normals->GetTuple(jj, n2);
+  		currentB->GetPoint(jj, pt2);
+  		normalsB->GetTuple(jj, n2);
 
-  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(a, b);
+  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(pt1, pt2);
 
-  		val = constA * exp(constB * pt2ptDistSq);
+  		val = gaussConst1 * exp(gaussConst2 * pt2ptDistSq);
   		val *= vtkMath::Dot(n1, n2);
 
   		totalDist += val;
 
   	}
-
   }
 
-  cout << totalDist << endl;
+  minusADotB = totalDist;
+  totalDist = 0.0;
 
-  totalDist = sqrt(totalDist);
+  for (i = 0; i < noOfFacesB; ++i){
 
-  cout << totalDist << endl;
+    if (useMask && maskOutB->GetTuple1(i) <= 0){
+    	continue;
+    }
 
-  ////////////////////////////////////////////////////////////////
-  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(combined);
-  writer->SetFileTypeToBinary();
-  writer->SetFileName("temp.vtk");
-  writer->Write();
-  exit(0);
-  ////////////////////////////////////////////////////////////////
+  	currentB->GetPoint(i, pt1);
+
+  	point_locatorA->FindPointsWithinRadius(searchRadius, pt1, nearestPtIDs);
+
+  	nearestPtCount = nearestPtIDs->GetNumberOfIds();
+
+  	// Current normal.
+  	normalsB->GetTuple(i, n1);
+
+  	for (j = 0; j < nearestPtCount; ++j){
+  		jj = nearestPtIDs->GetId(j);
+
+  		currentA->GetPoint(jj, pt2);
+  		normalsA->GetTuple(jj, n2);
+
+  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(pt1, pt2);
+
+  		val = gaussConst1 * exp(gaussConst2 * pt2ptDistSq);
+  		val *= vtkMath::Dot(n1, n2);
+
+  		totalDist += val;
+
+  	}
+  }
+
+  minusBDotA = totalDist;
+  totalDist = 0.0;
+
+// Within dists for checking : to drop
+
+//  for (i = 0; i < noOfFacesA; ++i){
+//
+//    if (useMask && maskOutA->GetTuple1(i) <= 0){
+//    	continue;
+//    }
+//
+//  	currentA->GetPoint(i, pt1);
+//
+//  	point_locatorA->FindPointsWithinRadius(searchRadius, pt1, nearestPtIDs);
+//
+//  	nearestPtCount = nearestPtIDs->GetNumberOfIds();
+//
+//  	// Current normal.
+//  	normalsA->GetTuple(i, n1);
+//
+//  	for (j = 0; j < nearestPtCount; ++j){
+//  		jj = nearestPtIDs->GetId(j);
+//
+//  		currentA->GetPoint(jj, pt2);
+//  		normalsA->GetTuple(jj, n2);
+//
+//  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(pt1, pt2);
+//
+//  		val = gaussConst1 * exp(gaussConst2 * pt2ptDistSq);
+//  		val *= vtkMath::Dot(n1, n2);
+//
+//  		totalDist += val;
+//
+//  	}
+//  }
+//
+//  aDotA = totalDist;
+//  totalDist = 0.0;
+//
+//  for (i = 0; i < noOfFacesB; ++i){
+//
+//    if (useMask && maskOutB->GetTuple1(i) <= 0){
+//    	continue;
+//    }
+//
+//  	currentB->GetPoint(i, pt1);
+//
+//  	point_locatorB->FindPointsWithinRadius(searchRadius, pt1, nearestPtIDs);
+//
+//  	nearestPtCount = nearestPtIDs->GetNumberOfIds();
+//
+//  	// Current normal.
+//  	normalsB->GetTuple(i, n1);
+//
+//  	for (j = 0; j < nearestPtCount; ++j){
+//  		jj = nearestPtIDs->GetId(j);
+//
+//  		currentB->GetPoint(jj, pt2);
+//  		normalsB->GetTuple(jj, n2);
+//
+//  		pt2ptDistSq = vtkMath::Distance2BetweenPoints(pt1, pt2);
+//
+//  		val = gaussConst1 * exp(gaussConst2 * pt2ptDistSq);
+//  		val *= vtkMath::Dot(n1, n2);
+//
+//  		totalDist += val;
+//
+//  	}
+//  }
+//
+//  bDotB = totalDist;
+
+
+  cout << minusADotB << " " << minusBDotA << " " << sqrt(fabs(minusADotB + minusBDotA)) << endl;
+
+
+//  ////////////////////////////////////////////////////////////////
+//  tempScalars->SetName("tempScalars");
+//  combined->GetPointData()->AddArray(tempScalars);
+//  combined->Update();
+//
+//  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+//  writer->SetInput(combined);
+//  writer->SetFileTypeToBinary();
+//  writer->SetFileName("temp.vtk");
+//  writer->Write();
+//  exit(0);
+//  ////////////////////////////////////////////////////////////////
 
 
   return 0;
