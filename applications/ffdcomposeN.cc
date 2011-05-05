@@ -113,7 +113,11 @@ int main(int argc, char **argv)
   mffd_out->irtkTransformation::Read(dof_name[0]);  // takes the first DOF
 
   // Extract FFD and get lattice dimensions
-  irtkFreeFormTransformation3D *affd_out = dynamic_cast<irtkFreeFormTransformation3D *>(mffd_out->GetLocalTransformation(0));
+  irtkFreeFormTransformation3D *affd_out = dynamic_cast<irtkFreeFormTransformation3D *>(mffd_out->PopLocalTransformation());
+
+  while (mffd_out->NumberOfLevels() > 0)
+  	(void) mffd_out->PopLocalTransformation();
+
   xdim = affd_out->GetX();
   ydim = affd_out->GetY();
   zdim = affd_out->GetZ();
@@ -289,7 +293,7 @@ int main(int argc, char **argv)
   // Interpolate the ffd and write dof
   affd_out->Interpolate(xdata, ydata, zdata);
 
-  (void) mffd_out->PopLocalTransformation();
+
   mffd_out->PushLocalTransformation(affd_out);
   mffd_out->irtkTransformation::Write(dofOut_name);
 
