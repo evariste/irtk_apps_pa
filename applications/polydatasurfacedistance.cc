@@ -1,6 +1,7 @@
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>
+#include <irtkTransformation.h>
 
 #include <vtkFloatArray.h>
 #include <vtkTriangle.h>
@@ -17,7 +18,7 @@
 char *input_nameA = NULL;
 char *input_nameB = NULL;
 char *maskName = NULL;
-
+char *dofinA_name = NULL;
 
 void usage()
 {
@@ -29,13 +30,13 @@ void usage()
   cerr << " " << endl;
   cerr << " Options:" << endl;
   cerr << " " << endl;
-  cerr << " -mask name  : Name of scalars mask. Restrict distance summation to faces with positive values of the mask." << endl;
-  cerr << "               Scalars with the same name must be present in both surfaces" << endl;
+  cerr << " -mask name          : Name of scalars mask. Restrict distance summation to faces with positive values" << endl;
+  cerr << "                       of the named mask. Scalars with the same name must be present in both surfaces" << endl;
+  cerr << " -sigma val          : Kernel width in mm." << endl;
+  cerr << " -kernelFraction val : Kernel width as a fraction of the estimated radii of the surfaces" << endl;
+  cerr << " -verbose            : A bit more output." << endl;
+  cerr << " -dofinA  transf     : Apply the given transformation to surface A before processing." << endl;
   cerr << " " << endl;
-  cerr << " " << endl;
-  cerr << " " << endl;
-  cerr << " " << endl;
-
   exit(1);
 }
 
@@ -106,7 +107,14 @@ int main(int argc, char **argv)
           verbose = true;
           ok = true;
     }
-
+    if ((!ok) && (strcmp(argv[1], "-dofinA") == 0)) {
+      argc--;
+      argv++;
+      dofinA_name = argv[1];
+      argc--;
+      argv++;
+      ok = true;
+    }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
@@ -138,6 +146,16 @@ int main(int argc, char **argv)
   readerBout->BuildCells();
   readerBout->BuildLinks();
 
+  if (dofinA_name != NULL){
+  	// Apply the transformation to the points of surface A.
+  	irtkTransformation *transformation = irtkTransformation::New(dofinA_name);
+    for (i = 0; i < readerAout->GetNumberOfPoints(); i++) {
+      (readerAout->GetPoints())->GetPoint(i, pt1);
+      transformation->Transform(pt1[0], pt1[1], pt1[2]);
+      readerAout->GetPoints()->SetPoint(i, pt1);
+    }
+    readerAout->Modified();
+  }
 
   // Derive a new polydata set with points equal to the
   // centers of the faces of the input surfaces and vectors
