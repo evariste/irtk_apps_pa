@@ -136,7 +136,7 @@ int main(int argc, char **argv)
     for (j = 0; j < ydim; j++){
       for (i = 0; i < xdim; i++){
 
-        affd_out->Put(i, j, k, 0, 0, 0);
+        affd_out->Put(i, j, k, 0.0, 0.0, 0.0);
 
         x = i;
         y = j;
