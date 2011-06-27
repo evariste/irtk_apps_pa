@@ -20,8 +20,7 @@ void usage()
   cerr << " " << endl;
   cerr << " Usage: polydatascalarsmooth [input] [output] [iterations] [kernel]" << endl; // <options>" << endl;
   cerr << "" << endl;
-  cerr << " Smooth the scalar data associated with a surface." << endl;
-  cerr << " Currently only smooths the active scalars." << endl;
+  cerr << " Smooth scalar data associated with the points of a surface." << endl;
   cerr << " " << endl;
   cerr << " Use Laplacian smoothing (local averaging) to find a smoothed estimate for" << endl;
   cerr << " the scalar data.  The average given to a point is obtained from the scalar" << endl;
