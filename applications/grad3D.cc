@@ -120,7 +120,9 @@ int main(int argc, char **argv)
 				// ---- = ----- ----- + ----- ----- + ----- -----
 				// d w1   d im1 d w1    d im2 d w1    d im3 d w1
 				//
-				// I.e. can obtain world gradient by multiplying image gradient by world to image matrix!
+				// I.e. can obtain world gradient by multiplying image gradient by world
+				// to image matrix which expresses image coordinates as a function of
+				// world coordinates.
 				tmp = w2i(0, 0) * dx + w2i(0, 1) * dy + w2i(0, 2) * dz;
 				gradX.Put(i, j, k, tmp);
 				ssq += tmp * tmp;
