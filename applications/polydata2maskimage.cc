@@ -195,7 +195,7 @@ int main(int argc, char **argv)
   vtkimageOut->Modified();
   vtkimageOut->Update();
 
-  // Retrieve the output in i(r)tk canonical format.
+  // Retrieve the output in irtk canonical format.
   n    = imageCanonical.GetNumberOfVoxels();
   ptr1 = imageCanonical.GetPointerToVoxels();
   ptr2 = (short *)vtkimageOut->GetScalarPointer();
