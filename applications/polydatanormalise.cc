@@ -1,4 +1,4 @@
-#if (defined HAS_VTK)
+#ifdef HAS_VTK
 
 #include <irtkImage.h>
 
