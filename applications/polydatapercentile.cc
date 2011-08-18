@@ -1,3 +1,5 @@
+#ifdef HAS_VTK
+
 #include <irtkImage.h>
 #include <nr.h>
 #include <vtkFloatArray.h>
@@ -128,3 +130,14 @@ int main(int argc, char **argv)
   }
 
 }
+
+
+#else
+
+#include <irtkImage.h>
+
+int main( int argc, char *argv[] ) {
+  cerr << argv[0] << " needs to be compiled with the VTK library " << endl;
+}
+#endif
+
