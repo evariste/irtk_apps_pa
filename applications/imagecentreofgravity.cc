@@ -73,10 +73,9 @@ int main(int argc, char **argv){
 
   }
 
-  cout << sumX / (double (count)) << " ";
-  cout << sumY / (double (count)) << " ";
-  cout << sumZ / (double (count)) << endl;
-
+  printf("%4.2f ", sumX / (double (count)));
+  printf("%4.2f ", sumY / (double (count)));
+  printf("%4.2f \n", sumZ / (double (count)));
 }
 
 
