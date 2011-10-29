@@ -1,3 +1,14 @@
+/*=========================================================================
+
+  Run Philipp Batchelor's VTK filter for getting curvature data from a
+  surface. The curvature values are stored as scalars on the input polydata
+	set.
+
+	Paul Aljabar, July 2010.
+
+=========================================================================*/
+
+
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>
@@ -335,7 +346,6 @@ int main(int argc, char **argv)
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
 
   writer->SetInput(output);
-//  writer->SetInput(output2);
 
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();

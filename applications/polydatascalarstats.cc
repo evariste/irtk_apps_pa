@@ -1,3 +1,10 @@
+/* ========================================================
+ * Get the statistics on scalars associated with a polydata
+ * object.
+ *
+ * Paul Aljabar, July 2010.
+======================================================== */
+
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>
@@ -224,9 +231,7 @@ int main(int argc, char **argv)
   // Normalisation based on the area of a sphere. Becomes an L2 norm if input stat is a squared measurement.
   double normedIntegral = sqrt(integral / 4.0 / M_PI);
 
-
   if (quiet){
-    //cout << ""  << scalars->GetName();
     cout << noOfPoints;
     cout << " " << count;
     cout << " " << mean;
