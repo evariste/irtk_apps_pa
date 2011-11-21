@@ -8,7 +8,12 @@ char **reflect_list = NULL;
 void usage()
 {
   cerr << "Usage: reflect [in] [out] [reflection_1] <reflection_2> .. <reflection_n>" << endl;
-  cerr << "Where the reflections are chosen from -x -y -z -xy -xz -yz" << endl;
+  cerr << "Where the reflections are chosen from:" << endl;
+  cerr << " " << endl;
+  cerr << "        -x -y -z -xy -xz -yz" << endl;
+  cerr << " " << endl;
+  cerr << "The reflections are processed in the order given." << endl;
+
   exit(1);
 }
 
@@ -55,17 +60,17 @@ int main(int argc, char **argv)
 
     if (strcmp("-xy", reflect_list[i]) == 0 || 
         strcmp("-yx", reflect_list[i]) == 0){
-      image->FlipXY();
+      image->FlipXY(0);
     }
 
     if (strcmp("-xz", reflect_list[i]) == 0 ||
         strcmp("-zx", reflect_list[i]) == 0){
-      image->FlipXZ();
+      image->FlipXZ(0);
     }
 
     if (strcmp("-yz", reflect_list[i]) == 0 ||
         strcmp("-zy", reflect_list[i]) == 0){
-      image->FlipYZ();
+      image->FlipYZ(0);
     }
   }
  
