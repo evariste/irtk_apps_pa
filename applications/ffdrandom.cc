@@ -11,14 +11,21 @@ char *dofout_name = NULL;
 void usage()
 {
   cerr << "Usage: ffdrandom [dofin] [dofout] <-sigma> <-blur> <-3d> <-nolimits>" << endl;
-  cerr << "Create a random ffd with sigma (default 1) at the same control points." << endl;
-  cerr << "Affine component is identity.  If blur specified then components are blurred first." << endl;
-  cerr << "Default is for a 2D image unless -3d specified, then z components also included." << endl;
-  cerr << "Default is to set min and max values for random control point components as 0.4 * half a spacing.*"  << endl;
-  cerr << "This is overridden if -nolimits is specified."  << endl;
+  cerr << "Create a random ffd with sigma (default 1) using the same control point " << endl;
+  cerr << "lattice as [dofin]. Write result to [dofout]" << endl;
+  cerr << "" << endl;
+  cerr << "Affine component is identity." << endl;
+  cerr << "" << endl;
+  cerr << "<sigma> value   Override default sigma (1)." << endl;
+  cerr << "" << endl;
+  cerr << "<-blur>         Components are blurred first." << endl;
   cerr << "" << endl;
   cerr << "" << endl;
+  cerr << "<-nolimits>     Override the default which sets minimum and maximum component" << endl;
+  cerr << "                values for control points to 0.4 * half a spacing.*"  << endl;
   cerr << "" << endl;
+  cerr << "<-zero_border>  Set all components within 4 lattice points of outer boundary to zero" << endl;
+  cerr << "                to allow a smooth transition at the edge." << endl;
   cerr << "" << endl;
   cerr << "*   Choi, Y., Lee, S.: Injectivity conditions of 2D and 3D uniform cubic b-spline functions." << endl;
   cerr << "    Graphical Models 62(6) (2000) 411427" << endl;
@@ -36,6 +43,7 @@ int main(int argc, char **argv)
   double blur_sigma = 0.0;
   bool threeD = false;
   bool setLimits = true;
+  bool zero_border = true;
 
   double fractionLimit = 0.4;
 
@@ -66,13 +74,13 @@ int main(int argc, char **argv)
       argc--;      argv++;
       ok = true;
     }
-    if ((ok == false) && (strcmp(argv[1], "-3d") == 0)){
-      threeD = true;
+    if ((ok == false) && (strcmp(argv[1], "-nolimits") == 0)){
+      setLimits = false;
       argc--;      argv++;
       ok = true;
     }
-    if ((ok == false) && (strcmp(argv[1], "-nolimits") == 0)){
-      setLimits = false;
+    if ((ok == false) && (strcmp(argv[1], "-zero_border") == 0)){
+      zero_border = false;
       argc--;      argv++;
       ok = true;
     }
@@ -130,12 +138,12 @@ int main(int argc, char **argv)
     ycomps = new irtkRealImage(attr);
     zcomps = new irtkRealImage(attr);
 
-//    xcomps = new irtkRealImage(xdim, ydim, zdim, xspacing, yspacing, zspacing);
-//    ycomps = new irtkRealImage(xdim, ydim, zdim, xspacing, yspacing, zspacing);
-//    zcomps = new irtkRealImage(xdim, ydim, zdim, xspacing, yspacing, zspacing);
+    if (zdim > 1)
+    	threeD = true;
+
 
     if (setLimits == true){
-      minspacing = xspacing;
+    	minspacing = xspacing;
       if (minspacing > yspacing)
         minspacing = yspacing;
       if (threeD == true && minspacing > zspacing)
@@ -150,10 +158,64 @@ int main(int argc, char **argv)
     noise->SetInput(ycomps);
     noise->SetOutput(ycomps);
     noise->Run();
-    if (threeD == true){
-      noise->SetInput(zcomps);
-      noise->SetOutput(zcomps);
-      noise->Run();
+    noise->SetInput(zcomps);
+    noise->SetOutput(zcomps);
+    noise->Run();
+
+    if (zero_border){
+
+    	if (zdim > 4){
+    		for (k = 0; k < 2   ; ++k){
+    			for (j = 0; j < ydim; ++j){
+    				for (i = 0; i < xdim; ++i){
+    					xcomps->Put(i, j, k, 0);
+    					xcomps->Put(i, j, zdim - 1 - k, 0);
+    					ycomps->Put(i, j, k, 0);
+    					ycomps->Put(i, j, zdim - 1 - k, 0);
+    					zcomps->Put(i, j, k, 0);
+    					zcomps->Put(i, j, zdim - 1 - k, 0);
+    				}
+    			}
+    		}
+    	} else {
+    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+    	}
+
+
+    	if (ydim > 4){
+    		for (k = 0; k < zdim; ++k){
+    			for (j = 0; j < 2   ; ++j){
+    				for (i = 0; i < xdim; ++i){
+    					xcomps->Put(i, j, k, 0);
+    					xcomps->Put(i, ydim - 1 - j, k, 0);
+    					ycomps->Put(i, j, k, 0);
+    					ycomps->Put(i, ydim - 1 - j, k, 0);
+    					zcomps->Put(i, j, k, 0);
+    					zcomps->Put(i, ydim - 1 - j, k, 0);
+    				}
+    			}
+    		}
+    	} else {
+    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+    	}
+
+
+    	if (xdim > 4){
+    		for (k = 0; k < zdim; ++k){
+    			for (j = 0; j < ydim; ++j){
+    				for (i = 0; i < 2   ; ++i){
+    					xcomps->Put(i, j, k, 0);
+    					xcomps->Put(xdim - 1 - i, j, k, 0);
+    					ycomps->Put(i, j, k, 0);
+    					ycomps->Put(xdim - 1 - i, j, k, 0);
+    					zcomps->Put(i, j, k, 0);
+    					zcomps->Put(xdim - 1 - i, j, k, 0);
+    				}
+    			}
+    		}
+    	} else {
+    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+    	}
     }
 
     if (blur_sigma > 0.0){
@@ -163,15 +225,10 @@ int main(int argc, char **argv)
       gaussianBlurring.SetInput (ycomps);
       gaussianBlurring.SetOutput(ycomps);
       gaussianBlurring.Run();
-      if (threeD == true){
-        gaussianBlurring.SetInput (zcomps);
-        gaussianBlurring.SetOutput(zcomps);
-        gaussianBlurring.Run();
-      }
+      gaussianBlurring.SetInput (zcomps);
+      gaussianBlurring.SetOutput(zcomps);
+      gaussianBlurring.Run();
     }
-//     xcomps->Write("xcomps.gipl");
-//     ycomps->Write("ycomps.gipl");
-//     zcomps->Write("zcomps.gipl");
 
     for (i = 0; i < xdim; i++){
       for (j = 0; j < ydim; j++){
@@ -181,7 +238,10 @@ int main(int argc, char **argv)
           y = ycomps->Get(i, j, k);
           z = zcomps->Get(i, j, k);
 
-          ffd->Put(i, j, k, x, y, z);
+          if (threeD)
+          	ffd->Put(i, j, k, x, y, z);
+          else
+          	ffd->Put(i, j, k, x, y, 0.0);
         }
       }
     }
