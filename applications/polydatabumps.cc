@@ -11,28 +11,21 @@
 #include <vtkCellArray.h>
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
-//#include <vtkSphereSource.h>
+
 #include <vtkPlatonicSolidSource.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 #include <vtkPolyDataNormals.h>
 
-#ifndef FLT_MAX
-#define FLT_MAX FLT_MAX
-#endif
-
-#ifndef M_PI
-# define M_PI		3.14159265358979323846	// pi
-#endif
+#include <abcdRandomRotationSource.h>
 
 #ifndef M_PI_2
 # define M_PI_2		1.57079632679489661923	// pi/2
 #endif
 
-#ifndef M_2_TIMES_PI
-# define M_2_TIMES_PI 6.28318530717958647692  // 2 * pi
-#endif
+#define M_2PI 6.28318530717958635953
+
 
 typedef struct {
     int id0, id1;
@@ -62,6 +55,12 @@ double re_ylm(int l, int m, double theta, double phi);
 double mag_ylm(int l, int m, double theta, double phi);
 double plgndr2(int l, int m, double x);
 
+void getPhiTheta(vtkPolyData* mesh, vtkFloatArray* phi, vtkFloatArray* theta);
+void getPhiThetaAfterRotation(vtkPolyData* mesh, irtkMatrix R, vtkFloatArray* phi, vtkFloatArray* theta);
+
+
+
+
 int getEdgeCount(vtkIdList** adj, int noOfVertices);
 void getAdjacency(vtkCellArray *faces, vtkIdList** adj);
 void addAdjacency(vtkIdList**adj, vtkIdType a, vtkIdType b);
@@ -72,9 +71,13 @@ void copyFaces(vtkCellArray *src, vtkCellArray *dest);
 void copyPoints(vtkPoints *src, vtkPoints*dest);
 void midpoint(double *x, double *y, double *m);
 
-void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm, int l, int m, double ranOffsetT, double ranOffsetP);// , double &min, double &max);
+void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm, int l, int m);
 
 vtkPolyData *getSphereApproximation();
+
+
+long ran2Seed;
+
 
 void usage()
 {
@@ -84,12 +87,18 @@ void usage()
   cerr << " spherical harmonics up to a chosen degree." << endl;
   cerr << " " << endl;
   cerr << " Options:" << endl;
-  cerr << " -l [val]  The maximum degree of spherical harmonics to be used." << endl;
-  cerr << "           Higher l gives more complex surfaces but takes longer"   << endl;
-  cerr << "           to compute." << endl;
-  cerr << " -uniform  Use this flag to give equal weights to the basis functions " << endl;
-  cerr << "           The default is to combine them with random weights. " << endl;
-  cerr << " -r        The size of the bumps." << endl;
+  cerr << " -l [val]         The maximum degree of spherical harmonics to be used." << endl;
+  cerr << "                  Higher l gives more complex surfaces but takes longer"   << endl;
+  cerr << "                  to compute." << endl;
+  cerr << " -uniform         Use this flag to give equal weights to the basis functions " << endl;
+  cerr << "                  The default is to combine them with random weights. " << endl;
+  cerr << " -r               The size of the bumps." << endl;
+  cerr << " -m               Restrict to one value of m" << endl;
+  cerr << " -mesh file.vtk   A VTK polydata file to apply values to." << endl;
+  cerr << " -randomRotation  Apply a random rotation to each harmonic basis function" << endl;
+  cerr << " -exponent [val]  Exponent to use for bump factors " << endl;
+
+
 
   exit(1);
 }
@@ -103,25 +112,17 @@ int main(int argc, char **argv)
   }
 
   int i;
-  bool ok, useRand;
+  bool ok, useRand, randRotation;
   int noOfPoints;
-  double x, y, z, r, pt[3];
-  double a, b, bump_r;
+  double a, b, r, bump_r, bump_exponent;
   double val;
   double min, max, maxabs;
-//  float t, p;
+
   time_t seconds;
-  long ran2Seed;
   long ran2initialSeed;
 
   float *weight;
   double weightSum;
-
-  int wIndex, wCount;
-  int l_min, m_min;
-
-  l_min = 0;
-  m_min = 0;
 
   seconds = time(NULL);
   ran2Seed = seconds;
@@ -130,19 +131,25 @@ int main(int argc, char **argv)
 
   useRand = true;
 
+  randRotation = false;
+
+
   a = 1.0f;
   b = 1.0f;
   bump_r = 0.5f;
+  bump_exponent = 0.5f;
   r = 1.0f;
+
 
   output_name  = argv[1];
   argc--;
   argv++;
 
-  int l, l_max, m;
+  int l, l_max, m, m_specific;
   l_max = 1;
   m = 1;
 
+  m_specific = -1;
 
   while (argc > 1){
     ok = false;
@@ -154,10 +161,10 @@ int main(int argc, char **argv)
       argv++;
       ok = true;
     }
-    if ((ok == false) && (strcmp(argv[1], "-lmin") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-m") == 0)){
       argc--;
       argv++;
-      l_min = atoi(argv[1]);
+      m_specific = atoi(argv[1]);
       argc--;
       argv++;
       ok = true;
@@ -166,7 +173,6 @@ int main(int argc, char **argv)
       argc--;
       argv++;
       useRand = false;
-      cout << "Using uniform weights" << endl;
       ok = true;
     }
     if ((ok == false) && (strcmp(argv[1], "-r") == 0)){
@@ -177,6 +183,31 @@ int main(int argc, char **argv)
       argv++;
       ok = true;
     }
+    if ((ok == false) && (strcmp(argv[1], "-exponent") == 0)){
+      argc--;
+      argv++;
+      bump_exponent = atof(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
+    if ((ok == false) && (strcmp(argv[1], "-mesh") == 0)){
+      argc--;
+      argv++;
+      input_name = argv[1];
+      argc--;
+      argv++;
+      ok = true;
+    }
+    if ((ok == false) && (strcmp(argv[1], "-randomRotation") == 0)){
+      argc--;
+      argv++;
+      randRotation = true;
+      ok = true;
+    }
+
+
+
 
     if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
@@ -186,15 +217,31 @@ int main(int argc, char **argv)
 
   ////////////////////
 
-  vtkPolyData *output = vtkPolyData::New();
+  vtkPolyData *mesh = vtkPolyData::New();
+  vtkPolyData *meshCopy = vtkPolyData::New();
 
-  output = getSphereApproximation();
-  output->Update();
+  if (input_name == NULL){
+  	// Approximate sphere
+  	mesh = getSphereApproximation();
+  	meshCopy = getSphereApproximation();
+  } else {
+  	// Read the polydata file
+  	vtkPolyDataReader* reader = vtkPolyDataReader::New();
+  	reader->SetFileName(input_name);
+  	reader->Update();
+  	mesh = reader->GetOutput();
+  	vtkPolyDataReader* reader2 = vtkPolyDataReader::New();
+  	reader2->SetFileName(input_name);
+  	reader2->Update();
+  	meshCopy = reader2->GetOutput();
+
+  }
 
   ////////////////////
 
-  noOfPoints = output->GetNumberOfPoints();
-  cout << "Vertices : " << noOfPoints << endl;
+  noOfPoints = mesh->GetNumberOfPoints();
+
+  cout << noOfPoints << endl;
 
   vtkFloatArray *phi = vtkFloatArray::New();
   phi->SetNumberOfComponents(1);
@@ -204,184 +251,195 @@ int main(int argc, char **argv)
   theta->SetNumberOfComponents(1);
   theta->SetNumberOfTuples(noOfPoints);
 
-  // Find azimuth (phi) and altitude (theta)
-  for (i = 0; i < noOfPoints; ++i){
-	  output->GetPoint(i, pt);
-	  x = pt[0];
-	  y = pt[1];
-	  z = pt[2];
+  vtkFloatArray *phi2 = vtkFloatArray::New();
+  phi2->SetNumberOfComponents(1);
+  phi2->SetNumberOfTuples(noOfPoints);
 
-	  // Add pi to ensure range is in 0->2 pi
-	  val = atan2f(y, x) + M_PI;
-	  phi->SetTuple1(i, val);
+  vtkFloatArray *theta2 = vtkFloatArray::New();
+  theta2->SetNumberOfComponents(1);
+  theta2->SetNumberOfTuples(noOfPoints);
 
-	  r = sqrt(x*x + y*y);
-	  // This should give a value in the range 0->pi as r>=0 -1<z<1 and tan theta = r/z
-    val = atan2f(r, z);
-    theta->SetTuple1(i, val);
-  }
+
+  // Get spherical angles.
+  getPhiTheta(mesh, phi, theta);
+  getPhiTheta(mesh, phi2, theta2);
 
 
   phi->SetName("phi");
-  output->GetPointData()->AddArray(phi);
+  mesh->GetPointData()->AddArray(phi);
   cout << "Added phi (azimuth) array." << endl;
 
   theta->SetName("theta");
-  output->GetPointData()->AddArray(theta);
+  mesh->GetPointData()->AddArray(theta);
   cout << "Added theta (altitude) array." << endl;
 
   ///////////////////////////////////////////////////
-  // Prepare data structures.
 
   vtkFloatArray *ylm = vtkFloatArray::New();
   ylm->SetNumberOfComponents(1);
   ylm->SetNumberOfTuples(noOfPoints);
 
-  vtkFloatArray *randFunc = vtkFloatArray::New();
-  randFunc->SetNumberOfComponents(1);
-  randFunc->SetNumberOfTuples(noOfPoints);
-  randFunc->FillComponent(0, 0.0);
+  vtkFloatArray *sphFunc = vtkFloatArray::New();
+  sphFunc->SetNumberOfComponents(1);
+  sphFunc->SetNumberOfTuples(noOfPoints);
+  sphFunc->FillComponent(0, 0.0);
 
-  wIndex = 0;
-  for (l = l_min; l <= l_max; ++l){
-    for (m = m_min; m <= l; ++m){
-      ++wIndex;
-    }
-  }
 
-  wCount = wIndex;
-  cout << "Max degree           : " << l_max << endl;
-  cout << "Basis function count : " << wCount << endl;
+  if (m_specific == -1){
+  	// Want the random version
 
-  ////////////////////////////////////////////////////
-  // Get the weights.
+  	irtkMatrix R(3,3);
 
-  weight = new float[wCount];
+  	int wIndex, wCount;
 
-  weightSum = 0.0;
-  wIndex = 0;
+  	wCount = (l_max + 1) * (l_max + 1);
 
-  for (l = l_min; l <= l_max; ++l){
-    for (m = m_min; m <= l; ++m){
-      if (useRand == true){
-        weight[wIndex] = ran2(&ran2Seed);
-      } else {
-        weight[wIndex] = 1.0;
-      }
+  	cout << "l_max  : " << l_max << endl;
+  	cout << "wCount : " << wCount << endl;
 
-      weightSum += weight[wIndex];
-      ++wIndex;
-    }
-  }
+  	weight = new float[wCount];
 
-  cerr << "Total weights : " << " " << weightSum << endl;
-  cerr << endl;
+  	weightSum = 0.0;
+  	wIndex = 0;
 
-  /////////////////////////////////////////////////
-  // Calculate the basis functions and add them up.
+  	for (l = 0; l <= l_max; ++l){
+  		for (m = -1*l; m <= l; ++m){
 
-  cerr << "Calculating basis functions ... ";
-  cerr.flush();
+  			if (useRand == true){
+  				weight[wIndex] = ran2(&ran2Seed);
+  			} else {
+  				weight[wIndex] = 1.0 / (wIndex+1);
+  			}
 
-  double ranOffsetT, ranOffsetP;
-  ranOffsetT = 0.0;
-  ranOffsetP = 0.0;
+  			weightSum += weight[wIndex];
+  			cerr << wIndex << " " << weight[wIndex] << " " << weightSum << endl;
+  			++wIndex;
+  		}
+  	}
 
-  wIndex = 0;
-  for (l = l_min; l <= l_max; ++l){
-    for (m = m_min; m <= l; ++m){
+  	wCount = wIndex;
 
-//      ranOffsetT = acos(2.0 * ran2(&ran2Seed) - 1) + M_PI_2;
-//      ranOffsetP = ran2(&ran2Seed) * M_PI * 2.0;
+  	cerr << endl;
 
-      get_ylm_values(theta, phi, ylm, l, m, ranOffsetT, ranOffsetP); // , min, max);
+  	abcdRandomRotationSource randRotationSource;
 
-      // Add a weighted ylm to the function being accumulated.
+  	wIndex = 0;
+  	for (l = 0; l <= l_max; ++l){
+  		for (m = -1*l; m <= l; ++m){
+
+
+  			if (randRotation){
+
+  				R = randRotationSource.Get();
+
+  				getPhiThetaAfterRotation(mesh, R, phi2, theta2);
+  				get_ylm_values(theta2, phi2, ylm, l, m);
+  			} else {
+  				get_ylm_values(theta, phi, ylm, l, m);
+  			}
+
+  			// Add a weighted ylm to the function being accumulated.
+  			for (i = 0; i < noOfPoints; ++i){
+  				val = sphFunc->GetTuple1(i);
+  				val += weight[wIndex] * ylm->GetTuple1(i);
+  				sphFunc->SetTuple1(i, val);
+  			}
+
+  			++wIndex;
+  		}
+  	}
+
+  	cerr << endl;
+
+
+  	/////////////////////////////////////
+  	// Statistics
+
+  	min = FLT_MAX;
+  	max = -1.0 * FLT_MAX;
+  	for (i = 0; i < noOfPoints; ++i){
+  		val = sphFunc->GetTuple1(i);
+  		val /= weightSum;
+
+  		if (val < min)
+  			min = val;
+  		if (val > max)
+  			max = val;
+
+  		sphFunc->SetTuple1(i, val);
+  	}
+  	cout << "randFunc : " << min << "   " << max << endl;
+
+  	if (fabs(min) > max){
+  		maxabs = fabs(min);
+  	} else {
+  		maxabs = fabs(max);
+  	}
+
+  	cout << "max abs : " << maxabs << endl;
+
+  	/////////////////////////////////////////////////
+  	// Adding bumps.
+
+  	double pt[3];
+  	for (i = 0; i < noOfPoints; ++i){
+
+  		mesh->GetPoint(i, pt);
+
+  		val = sphFunc->GetTuple1(i);
+			val = (fabs(val) / maxabs);
+			val = pow(val, bump_exponent);
+
+			val = 1 + bump_r * val;
+
+			mesh->GetPoints()->SetPoint(i, val*pt[0], val*pt[1], val*pt[2]);
+
+  	}
+
+  	delete [] weight;
+
+
+
+  } else { // if m_specific == -1
+
+  	if (fabs(m_specific) <= l_max){
+    	get_ylm_values(theta, phi, ylm, l_max, m_specific);
       for (i = 0; i < noOfPoints; ++i){
-        val = randFunc->GetTuple1(i);
-        val += weight[wIndex] * ylm->GetTuple1(i);
-        randFunc->SetTuple1(i, val);
+        sphFunc->SetTuple1(i, ylm->GetTuple1(i));
       }
 
-      ++wIndex;
-    }
+  	} else {
+  		cerr << "Chosen m must be less than l" << endl;
+  		exit(0);
+  	}
+
   }
 
-  cerr << "done" << endl;
+
+
+
+
 
   /////////////////////////////////////////////////
-  //  Normalisation and min max stuff.
 
-  min = FLT_MAX;
-  max = -1.0 * FLT_MAX;
+  sphFunc->SetName("randFunc");
+  mesh->GetPointData()->AddArray(sphFunc);
+  mesh->GetPointData()->SetActiveScalars("randFunc");
 
-  for (i = 0; i < noOfPoints; ++i){
-    val = randFunc->GetTuple1(i);
-    val /= weightSum;
-    randFunc->SetTuple1(i, val);
-
-    if (val < min)
-      min = val;
-    if (val > max)
-      max = val;
-  }
-
-  cout << "randFunc : " << min << "   " << max << endl;
-  if (fabs(min) > fabs(max)){
-    maxabs = fabs(min);
-  } else {
-    maxabs = fabs(max);
-  }
-  cout << "max abs : " << maxabs << endl;
-
-  /////////////////////////////////////////////////
-  // Adding bumps.
-
-  for (i = 0; i < noOfPoints; ++i){
-
-    output->GetPoint(i, pt);
-    x = pt[0];
-    y = pt[1];
-    z = pt[2];
-
-    val = randFunc->GetTuple1(i);
-    val = fabs(val) / maxabs;
-    val = sqrt(val);
-
-    val = 1 + bump_r * val;
-    // Update the function.
-    randFunc->SetTuple1(i, val);
-
-    x *= val;
-    y *= val;
-    z *= val;
-
-    output->GetPoints()->SetPoint(i, x, y, z);
-  }
-
-  /////////////////////////////////////////////////
-  // Append scalars.
-
-  randFunc->SetName("randFunc");
-  output->GetPointData()->AddArray(randFunc);
-  output->GetPointData()->SetActiveScalars("randFunc");
   cout << "Added randFunc array." << endl;
 
   /////////////////////////////////////////////////
-  // Recalculate normals.
 
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
+
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(output);
+  normalsFilter->SetInput(mesh);
   normalsFilter->Modified();
   normalsFilter->Update();
 
   /////////////////////////////////////////////////
-  // Write the result.
 
-  cerr << "Writing surface ... ";
-  cerr.flush();
-
+  cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetInput(normalsFilter->GetOutput());
   writer->SetFileName(output_name);
@@ -389,11 +447,14 @@ int main(int argc, char **argv)
   writer->Write();
 
   cerr << ".. done. " << endl;
-  delete [] weight;
+
+
 }
 
 
-void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm, int l, int m, double ranOffsetT, double ranOffsetP)
+
+
+void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm, int l, int m)
 {
   int i, noOfPoints;
   double t, p, val;
@@ -404,86 +465,44 @@ void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm
     p = phi->GetTuple1(i);
     t = theta->GetTuple1(i);
 
-//    t = t - ranOffsetT;
-//    p = p - ranOffsetP;
-//
-//    if (t < 0)
-//      t += M_PI;
-//    if (p < 0)
-//      t += M_2_TIMES_PI;
-
-    val = re_ylm(l, m, t , p);
+    val = re_ylm(l, m, t, p);
 
     ylm->SetTuple1(i, val);
   }
+
 
 }
 
 
 double re_ylm(int l, int m, double theta, double phi)
 {
-
-  // Find degree l, order m, Legendre polynomial value at cos theta: plm(cos theta)
+  // Find real part of degree l, order m, Legendre polynomial value
+	// evaluated at cos theta: plm(cos theta)
   int i;
-  double val;
+  double val, fac;
 
-  double costheta;
-  double plm_costheta;
-  double cos_m_phi;
-
-  val = 1;
-
-  if (m < 0){
-    // y_l_-m = -1^m conj(y_l_m)
-    // we only need the real part so can ignore the conjugation part and just
-    // start off our accumulated value with -1^m
-
-    // So flip the sign of m
-    m = -1 * m;
-
-    // -1^m
-    if (m % 2 == 0){
-      val = 1;
-    } else {
-      val = -1;
-    }
+  if (abs(m) > l){
+  	cerr << "re_ylm : m must be in the range [-l  l]" << endl;
+  	exit(1);
   }
 
-  if (m > l){
-    return 0;
+  val = plgndr2(l, abs(m), cos(theta));
+
+  val *= cos(double (m *  phi));
+
+  fac = 1.0;
+  for (i = l - abs(m) + 1; i <= l + abs(m); ++i){
+  	fac = fac / (double(i));
   }
 
-  // Now we are sure that 0 le m le l
+  val *= sqrt(fac);
 
-  costheta = cos(theta);
-//  plm_costheta = plgndr(l, m, costheta);
-  plm_costheta = plgndr2(l, m, costheta);
-
-//  if (plm_costheta > FLT_MAX){
-//    cerr << "BIG " << "" << endl;
-//    cerr << l << " " << m << " " << theta << " " << plm_costheta << endl;
-//  }
-
-
-  // Multiply by e^(i m phi) = cos(m phi) + i sin(m phi)
-  // but ylm is complex valued, we only return the real part.
-
-  cos_m_phi = cos(double (m *  phi));
-
-  val *= plm_costheta;
-  val *= cos_m_phi;
-
-  // Multiply by the appropriate constants.
-  val *= sqrt(double (2.0 * l + 1));
-  val /= sqrt(4.0 * M_PI);
-
-  int start, end;
-  start = l - m + 1;
-  end = l + m;
-
-  for (i = start; i < end; ++i){
-    val /= sqrt(double (i));
+  if (m > 0 && m % 2 == 1){
+  	val *= -1.0;
   }
+
+  // Final normalisation
+  val *= 0.5 * sqrt((2*l+1)/M_PI);
 
   return val;
 }
@@ -491,52 +510,19 @@ double re_ylm(int l, int m, double theta, double phi)
 
 double mag_ylm(int l, int m, double theta, double phi){
 
-  // Find degree l, order m, Legendre polynomial value at cos theta: plm(cos theta)
-  int i;
+  // Find magnitude of degree l, order m, Legendre polynomial value at cos theta: plm(cos theta)
+
   double val;
 
-  double plm_costheta;
-
-  val = 1;
-
-  if (m < 0){
-    // y_l_-m = -1^m conj(y_l_m)
-    // we only need the magnitude so can ignore the conjugation part and can even
-    // ignore the -1^m part
-
-    // So just flip the sign of m
-    m = -1 * m;
-  }
-
-  if (m > l){
-    return 0;
-  }
-
-  // Now we are sure that 0 le m le l
-
-//  plm_costheta = plgndr(l, m, cos(theta));
-  plm_costheta = plgndr2(l, m, cos(theta));
-  val *= plm_costheta;
-
-  // Multiply by |e^(i m phi)| = 1 , i.e. no need to do anything.
-
-  // Multiply by the appropriate constants.
-  val *= sqrt(double (2.0 * l + 1));
-  val /= sqrt(4.0 * M_PI);
-
-  int start, end;
-  start = l - m + 1;
-  end = l + m;
-
-  for (i = start; i < end; ++i){
-    val /= sqrt(double (i));
-  }
+  // Not implemented
+  val = 0;
 
   return val;
 }
 
 double plgndr2(int l, int m, double x)
 {
+	// Associated legendre polynomial degree l order m evaluated at x
   void nrerror(char error_text[]);
   double fact,pll,pmm,pmmp1,somx2;
   int i,ll;
@@ -547,7 +533,9 @@ double plgndr2(int l, int m, double x)
     cerr << "Bad arguments in routine plgndr2" << endl;
     exit(1);
   }
+
   pmm=1.0;
+
   if (m > 0) {
     somx2=sqrt((1.0-x)*(1.0+x));
     fact=1.0;
@@ -556,6 +544,7 @@ double plgndr2(int l, int m, double x)
       fact += 2.0;
     }
   }
+
   if (l == m)
     return pmm;
   else {
@@ -572,6 +561,70 @@ double plgndr2(int l, int m, double x)
     }
   }
 }
+
+
+void getPhiTheta(vtkPolyData* mesh, vtkFloatArray* phi, vtkFloatArray* theta){
+	int i, noOfPoints;
+	double pt[3];
+	double x, y, z, r, val;
+
+	noOfPoints = mesh->GetNumberOfPoints();
+
+	// Find azimuth (phi) and altitude (theta)
+	for (i = 0; i < noOfPoints; ++i){
+	  mesh->GetPoint(i, pt);
+	  x = pt[0];
+	  y = pt[1];
+	  z = pt[2];
+
+	  // Add pi to ensure range is in 0->2 pi
+	  val = atan2f(y, x);
+	  if (val < 0)
+	  	val += M_2PI;
+	  phi->SetTuple1(i, val);
+
+	  r = sqrt(x*x + y*y);
+	  val = atan2f(r, z);
+	  theta->SetTuple1(i, val);
+	}
+
+}
+
+void getPhiThetaAfterRotation(vtkPolyData* mesh, irtkMatrix R, vtkFloatArray* phi, vtkFloatArray* theta)
+{
+	int i, noOfPoints;
+	double pt[3];
+	double x, y, z, r, val;
+	double xx, yy, zz;
+
+	noOfPoints = mesh->GetNumberOfPoints();
+
+	// Find azimuth (phi) and altitude (theta)
+	for (i = 0; i < noOfPoints; ++i){
+	  mesh->GetPoint(i, pt);
+	  xx = pt[0];
+	  yy = pt[1];
+	  zz = pt[2];
+
+	  x = R(0,0)*xx + R(0,1)*yy + R(0,2)*zz;
+	  y = R(1,0)*xx + R(1,1)*yy + R(1,2)*zz;
+	  z = R(2,0)*xx + R(2,1)*yy + R(2,2)*zz;
+
+
+	  // Add pi to ensure range is in 0->2 pi
+	  val = atan2f(y, x);
+	  if (val < 0)
+	  	val += M_2PI;
+	  phi->SetTuple1(i, val);
+
+	  r = sqrt(x*x + y*y);
+	  val = atan2f(r, z);
+	  theta->SetTuple1(i, val);
+
+	}
+
+}
+
 
 
 vtkPolyData *getSphereApproximation(){
@@ -950,6 +1003,5 @@ int main( int argc, char *argv[] ){
   cerr << argv[0] << " needs to be compiled with the VTK library " << endl;
 }
 #endif
-
 
 
