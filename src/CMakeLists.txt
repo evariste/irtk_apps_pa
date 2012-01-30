@@ -1,7 +1,10 @@
 SET(PA_INCLUDES
-../include/vtkPolyDataSmoothCustom.h)
+../include/abcdRandomRotationSource.h
+../include/vtkPolyDataSmoothCustom.h
+)
 
 SET(PA_SRCS
+abcdRandomRotationSource.cc
 vtkPolyDataSmoothCustom.cc)
 
 ADD_LIBRARY(pa++ ${PA_SRCS} ${PA_INCLUDES})
