@@ -370,8 +370,16 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   float *er;
   float **ev;
 
-  er = vector(1, 4);
   ev = matrix(1, 4, 1, 4);
+
+
+  // Can no longer make a call to nrutil defined 'vector' without ambiguity
+  // with std::vector.
+  // er = vector(1, 4);
+	er = (float*) malloc((size_t) ((4 - 1 + 1 + 1/*NR_END*/)*sizeof(float)));
+	if (!er) nrerror("allocation failure in vector()");
+	// return v-nl+NR_END;
+	er = er - 1 + 1/*NR_END*/;
 
   jacobi(N, 4, er, ev,&nrot);
   // sort by descending eigenvalue
@@ -834,7 +842,7 @@ int main(int argc, char **argv)
 
   }
 
-  surface->GetPointData()->SetScalars(scalars);
+  surface->GetPointData()->AddArray(scalars);
 
   surface->Modified();
   surface->Update();
