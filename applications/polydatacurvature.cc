@@ -52,9 +52,6 @@ int main(int argc, char **argv)
   bool ok;
   int i;
   bool smoothOn = true;
-  bool decimateOn = false;
-  double decimateTarget = 0;
-  bool cleanOn = true;
   bool invert = false;
   int invertFlag;
   int smoothIterations = 200;
@@ -139,25 +136,10 @@ int main(int argc, char **argv)
       cType = Hplus;
       ok = true;
     }
-    if ((!ok) && (strcmp(argv[1], "-dec") == 0)) {
-      argc--;
-      argv++;
-      decimateOn = true;
-      decimateTarget = atof(argv[1]);
-      argc--;
-      argv++;
-      ok = true;
-    }
     if ((!ok) && (strcmp(argv[1], "-smoothOff") == 0)) {
       argc--;
       argv++;
       smoothOn = false;
-      ok = true;
-    }
-    if ((!ok) && (strcmp(argv[1], "-cleanOff") == 0)) {
-      argc--;
-      argv++;
-      cleanOn = false;
       ok = true;
     }
     if ((!ok) && (strcmp(argv[1], "-invert") == 0)) {
@@ -172,42 +154,28 @@ int main(int argc, char **argv)
     }
   }
 
-  vtkPolyData *surface;
+  vtkPolyData *input;
 
   // Read surface
-  vtkPolyDataReader *surface_reader = vtkPolyDataReader::New();
-  surface_reader->SetFileName(input_name);
-  surface_reader->Modified();
-  surface_reader->Update();
-  surface = surface_reader->GetOutput();
+  vtkPolyDataReader *reader1 = vtkPolyDataReader::New();
+  reader1->SetFileName(input_name);
+  reader1->Modified();
+  reader1->Update();
+  input = reader1->GetOutput();
 
-  if (1 == 0){ // Removed, cleaning makes bad things happen to the surface //  (cleanOn){
-    cout << "Cleaning ..." << endl;
-    vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-    cleaner->SetInput(surface);
-    cleaner->SetTolerance(0.005);
-    surface = cleaner->GetOutput();
-  }
+  vtkCurvatures *curve = vtkCurvatures::New();
 
-  if (decimateOn){
-    cout << "Decimating ..." << endl;
-    vtkDecimatePro *decimate = vtkDecimatePro::New();
-    decimate->SetInput(surface);
-    decimate->SetTargetReduction(decimateTarget);
-    surface = decimate->GetOutput();
-  }
 
   if (smoothOn){
     cout << "Smoothing ..." << endl;
     vtkSmoothPolyDataFilter *smooth = vtkSmoothPolyDataFilter::New();
     smooth->SetNumberOfIterations(smoothIterations);
     smooth->SetConvergence(smoothConvergence);
-    smooth->SetInput(surface);
-    surface = smooth->GetOutput();
+    smooth->SetInput(input);
+  	curve->SetInput(smooth->GetOutput());
+  } else {
+  	curve->SetInput(input);
   }
-
-  vtkCurvatures *curve = vtkCurvatures::New();
-  curve->SetInput(surface);
 
   switch (cType){
     case K:
@@ -246,15 +214,20 @@ int main(int argc, char **argv)
   // Retrieve the computed curvature values.
   curve->Update();
 
-  vtkPolyData *output = vtkPolyData::New();
-  output = curve->GetOutput();
+  vtkPolyData *output;
+  vtkPolyDataReader *reader2 = vtkPolyDataReader::New();
+  reader2->SetFileName(input_name);
+  reader2->Modified();
+  reader2->Update();
+  output = reader2->GetOutput();
 
-  vtkFloatArray *scalars = vtkFloatArray::New();
+  vtkFloatArray *scalars;
+
 
   // Any more work to be done?
   if (cType == K2 || cType == Kabs || cType == Kplus){
 
-    scalars = (vtkFloatArray *) output->GetPointData()->GetScalars("Gauss_Curvature");
+    scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Gauss_Curvature"));
     noOfPoints = scalars->GetNumberOfTuples();
 
     if (cType == K2){
@@ -299,7 +272,7 @@ int main(int argc, char **argv)
 
   } else if (cType == H2 || cType == Habs || cType == Hplus){
 
-    scalars = (vtkFloatArray *) output->GetPointData()->GetScalars("Mean_Curvature");
+    scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Mean_Curvature"));
     noOfPoints = scalars->GetNumberOfTuples();
 
     if (cType == H2){
@@ -332,7 +305,6 @@ int main(int argc, char **argv)
     output->GetPointData()->AddArray(scalars);
     output->Update();
     output->GetPointData()->RemoveArray("Mean_Curvature");
-    output->Update();
 
     if (cType == H2){
       output->GetPointData()->SetActiveScalars("H2");
@@ -341,7 +313,31 @@ int main(int argc, char **argv)
     } else if (cType == Hplus){
     	output->GetPointData()->SetActiveScalars("H_plus");
     }
+  } else {
+  	// Type requested is one of K, H, kmin or kmax.
+
+  	cout << "no of arrays : " << output->GetPointData()->GetNumberOfArrays() << endl;
+  	if (cType == kmin){
+    	scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Minimum_Curvature"));
+  		scalars->SetName("kmin");
+  	} else if (cType == kmax) {
+    	scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Maximum_Curvature"));
+  		scalars->SetName("kmax");
+  	} else if (cType == H) {
+    	scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Mean_Curvature"));
+  		scalars->SetName("H");
+  	} else if (cType == K) {
+    	scalars = static_cast<vtkFloatArray*>(curve->GetOutput()->GetPointData()->GetScalars("Gaussian_Curvature"));
+  		scalars->SetName("K");
+  	}
+
+    output->GetPointData()->AddArray(scalars);
+
   }
+
+
+  output->Update();
+
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
 
