@@ -103,7 +103,7 @@ int main(int argc, char **argv ){
 
   scalars->Modified();
 
-  polys->GetPointData()->SetScalars(scalars);
+  polys->GetPointData()->AddArray(scalars);
   polys->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();

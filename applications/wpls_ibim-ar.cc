@@ -971,7 +971,7 @@ main (int argc, char **argv)
     value=sqrt(value);
     scalars_wplserror->InsertTuple1(i, value);
  }
- surface->GetPointData()->SetScalars(scalars_wplserror);
+ surface->GetPointData()->AddArray(scalars_wplserror);
  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
  writer->SetInput(surface);
  writer->SetFileName(argv[2*TNoOfDatasets+4]);
@@ -992,7 +992,7 @@ main (int argc, char **argv)
     value=sqrt(value);
     scalars_meanerror->InsertTuple1(i, value);
  }
- surface->GetPointData()->SetScalars(scalars_meanerror);
+ surface->GetPointData()->AddArray(scalars_meanerror);
 
  vtkPolyDataWriter *writer2 = vtkPolyDataWriter::New();
  writer2->SetInput(surface);

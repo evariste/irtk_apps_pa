@@ -1,19 +1,11 @@
 #ifdef HAS_VTK
 
 #include <irtkImage.h>
-#include <vtkFloatArray.h>
-#include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
-#include <vtkAppendPolyData.h>
-#include <vtkPolyDataConnectivityFilter.h>
 #include <vtkCleanPolyData.h>
-#include <vtkPolyDataNormals.h>
-#include <iostream>
-#include <vector>
-#include <string.h>
-#include <fstream>
+#include <vtkTriangleFilter.h>
 
 void usage(){
   cerr << "polydataclean [input] [output] <-options>"<<endl;
@@ -72,10 +64,15 @@ int main(int argc, char **argv ){
   cleaner->Modified();
   cleaner->Update();
 
+  vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
+  triFilter->SetInput(cleaner->GetOutput());
+  triFilter->Update();
+
+
   // Write out.
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(output_name);
-  writer->SetInput(cleaner->GetOutput());
+  writer->SetInput(triFilter->GetOutput());
   writer->Write();
 
 }

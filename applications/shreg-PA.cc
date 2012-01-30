@@ -111,7 +111,7 @@ void MarkBoundary(vtkPolyData *polydata)
   }
 
   scalars->SetName("EDGEPOINTS");
-  polydata->GetPointData()->SetScalars(scalars);
+  polydata->GetPointData()->AddArray(scalars);
 }
 
 int main(int argc, char **argv)

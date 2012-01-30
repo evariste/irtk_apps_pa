@@ -9,7 +9,7 @@
 #include <vtkPolyDataWriter.h>
 
 void usage(){
-  cerr << "polydatadeletearray [input] [output] <-name arrayName | -all>" << endl;
+  cerr << "polydatadeletescalars [input] [output] <-name arrayName | -all>" << endl;
   cerr << "" << endl;
   exit(1);
 }

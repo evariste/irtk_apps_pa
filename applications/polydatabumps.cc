@@ -1,3 +1,10 @@
+/*
+ * polydatabumps.cc
+ *
+ *  Created on: Sep 12, 2011
+ *      Author: Paul Aljabar
+ */
+
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>

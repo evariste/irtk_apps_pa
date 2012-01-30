@@ -120,7 +120,7 @@ int main(int argc, char **argv ){
       for (j = 0; j < noOfPoints; j++){
         scalars->InsertTuple1(j, i);
       }
-      inputPolys[i]->GetPointData()->SetScalars(scalars);
+      inputPolys[i]->GetPointData()->AddArray(scalars);
     }
 
     if (lcc == true){

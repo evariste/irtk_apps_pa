@@ -118,7 +118,7 @@ int main(int argc, char **argv)
   int ind;
 
   if (scalar_name == NULL){
-    scalars = (vtkFloatArray*) input->GetPointData()->GetScalars();
+    scalars = (vtkFloatArray*) input->GetPointData()->GetArray(0);
     if (scalars == NULL){
       cerr << "No scalars available." << endl;
       exit(1);

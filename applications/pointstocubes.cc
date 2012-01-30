@@ -146,7 +146,7 @@ int main(int argc, char **argv){
 
   output->SetPoints(points);
   output->SetPolys(polys);
-  output->GetPointData()->SetScalars(scalars);
+  output->GetPointData()->AddArray(scalars);
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetInput(output);

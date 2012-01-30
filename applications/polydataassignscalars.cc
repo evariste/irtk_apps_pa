@@ -128,7 +128,7 @@ int main(int argc, char **argv)
 
   scalars->Modified();
   scalars->SetName(scalars_name);
-  surface->GetPointData()->SetScalars(scalars);
+  surface->GetPointData()->AddArray(scalars);
   surface->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();

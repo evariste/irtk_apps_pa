@@ -249,7 +249,7 @@ int main(int argc, char **argv)
   cerr << "Updating surface ... " << endl;
   scalars->Modified();
   scalars->SetName("Labels");
-  surface->GetPointData()->SetScalars(scalars);
+  surface->GetPointData()->AddArray(scalars);
   surface->Update();
 
   cerr << "Writing surface ... " << endl;

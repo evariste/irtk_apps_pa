@@ -101,8 +101,9 @@ int main(int argc, char **argv)
     }
   } else {
     scalars = (vtkFloatArray*) polys->GetPointData()->GetScalars();
-    cerr << "Using scalars :  " << scalars->GetName() << endl;
   }
+
+  cerr << "Using scalars :  " << scalars->GetName() << endl;
 
   float *data = new float[1 + noOfPoints];
 
@@ -137,7 +138,7 @@ int main(int argc, char **argv)
 
   scalars->Modified();
 
-  polys->GetPointData()->SetScalars(scalars);
+  polys->GetPointData()->AddArray(scalars);
   polys->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();

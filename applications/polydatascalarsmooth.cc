@@ -228,7 +228,7 @@ int main(int argc, char **argv)
     if (scalar_name != NULL){
       input->GetPointData()->AddArray(scalarsOut);
     } else {
-      input->GetPointData()->SetScalars(scalarsOut);
+      input->GetPointData()->AddArray(scalarsOut);
     }
       input->Update();
   }

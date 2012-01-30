@@ -65,8 +65,9 @@ int main(int argc, char **argv ){
 
   scalars->Modified();
 
-  polys->GetPointData()->SetScalars(scalars);
+  polys->GetPointData()->AddArray(scalars);
   polys->Modified();
+  polys->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(output_name);

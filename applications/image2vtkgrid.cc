@@ -148,7 +148,7 @@ int main(int argc, char **argv){
   }
 
   output->SetPoints(points);
-  //  output->GetPointData()->SetScalars(scalars);
+  //  output->GetPointData()->AddArray(scalars);
   output->Modified();
 
 
