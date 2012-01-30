@@ -35,7 +35,7 @@ void usage()
   exit(1);
 }
 
-double mean(vtkFloatArray *scalars){
+double mean(vtkDoubleArray *scalars){
 
   int n, i;
   double sum;
@@ -139,7 +139,9 @@ int main(int argc, char *argv[])
   numberOfPoints = cleaner->GetOutput()->GetNumberOfPoints();
 
   vtkPolyData *temp = vtkPolyData::New();
-  vtkFloatArray *dists = vtkFloatArray::New();
+  vtkDoubleArray *dists = vtkDoubleArray::New();
+  dists->SetNumberOfComponents(1);
+  dists->SetNumberOfTuples(numberOfPoints);
 
   vals = new double[reps];
 
@@ -153,11 +155,14 @@ int main(int argc, char *argv[])
     path->SetStartVertex(id1);
     path->SetEndVertex(0);
     // Calculate geodesics for whole surface.
-    path->SetStopWhenEndReached(0);
+    path->StopWhenEndReachedOff();
     path->Update();
 
     // Assign the scalars (distances) obtained from the shortest path filter.
-    dists = (vtkFloatArray*)path->Getd();
+//    dists = (vtkFloatArray*)path->GetGeodesicLength();
+
+//    path->GetAllLengths(dists);
+    path->GetCumulativeWeights(dists);
 
     runningTotal += mean(dists);
   }
@@ -166,7 +171,7 @@ int main(int argc, char *argv[])
 
   if (out_name != NULL){
     temp = cleaner->GetOutput();
-    temp->GetPointData()->SetScalars(dists);
+    temp->GetPointData()->AddArray(dists);
     temp->Update();
 
     // Write the output with the scalar.
