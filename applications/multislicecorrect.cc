@@ -590,14 +590,14 @@ void estimateCoeffs(int res)
 void usage()
 {
   cerr << "Usage: multislicecorrect [coefficientLattice] [outputPrefix] [N] ";
-  cerr << "[pack_1] .. [pack_N] [dof_1] .. [dof_N] <options>\n" << endl;
+  cerr << "[stack_1] .. [stack_N] [dof_1] .. [dof_N] <options>\n" << endl;
   cerr << endl;
 
   cerr << "\t[coefficientLattice] Image that defines the lattice on which the" << endl;
   cerr << "\t                     B-spline coefficients are estimated." << endl;
   cerr << "\t[outputPrefix]       Prefix to be used on the final reconstruction." << endl;
   cerr << "\t                     A '.nii.gz' suffix will be applied." << endl;
-  cerr << "\t[pack_1] .. [pack_N] The input packages." << endl;
+  cerr << "\t[stack_1]..[stack_N] The input stack." << endl;
   cerr << "\t[dof_1]  .. [dof_N]  The transformations between the input packages" << endl;
   cerr << "\t                     and the coefficient lattice.  In each case, the" << endl;
   cerr << "\t                     package should be the target of the transfomation." << endl;
