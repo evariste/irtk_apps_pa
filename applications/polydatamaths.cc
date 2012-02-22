@@ -7,6 +7,8 @@
 
 #ifdef HAS_VTK
 
+#include <sys/stat.h>
+
 #include <vtkIndent.h>
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
@@ -76,11 +78,21 @@ bool is_vtkPolyDataFile(const char* filename)
 {
 	// Rough and ready check to see if a file contains polydata.
 	char *c = NULL;
-	c = strstr(filename, ".vtk\0");
+	char buff[1000];
+	struct stat buf ;
+
+	sprintf(buff, "%s", filename);
+	c = strstr(buff, ".vtk\0");
 
 	if (c == NULL){
 		return false;
 	}
+
+  int i = stat( buff , &buf );
+  if( i != 0 ) {
+  	return false;
+  }
+
 
   vtkSmartPointer<vtkPolyDataReader> reader = vtkSmartPointer<vtkPolyDataReader>::New();
   reader->SetFileName(filename);
@@ -94,7 +106,8 @@ bool is_vtkPolyDataFile(const char* filename)
 bool is_numeric(const char *str)
 {
 	char *pEnd;
-  strtod(str, &pEnd);
+  double dummy;
+  dummy = strtod(str, &pEnd);
 
   if (*pEnd != '\0')
   	return false;
@@ -331,7 +344,7 @@ int main(int argc, char **argv ){
   }
 
   int i, arrayCount, arrayIndex, scalarCount, scalarIndex, operandIndex, opCount, opIndex;
-  double value, fVal, nanReplacement(0.0f);
+  double nanReplacement(0.0f);
   int iVal;
   bool ok;
   int noOfPoints;
