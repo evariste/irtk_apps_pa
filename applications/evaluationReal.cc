@@ -201,9 +201,9 @@ int main(int argc, char **argv)
   target.GetMinMax(&target_min, &target_max);
   source.GetMinMax(&source_min, &source_max);
   cout << "Min and max of X is " << target_min 
-       << " and " << target_max << endl;
+      << " and " << target_max << endl;
   cout << "Min and max of Y is " << source_min 
-       << " and " << source_max << endl;
+      << " and " << source_max << endl;
 
   // Calculate number of bins to use
   if (nbins_x == 0){
@@ -217,7 +217,7 @@ int main(int argc, char **argv)
   // Create default interpolator if necessary
   if (interpolator == NULL){
     interpolator = 
-      new irtkNearestNeighborInterpolateImageFunction;
+        new irtkNearestNeighborInterpolateImageFunction;
   }
   interpolator->SetInput(&source);
   interpolator->Initialize();
@@ -246,7 +246,7 @@ int main(int argc, char **argv)
   target_max = -1.0 * FLT_MAX;
   source_max = -1.0 * FLT_MAX;
 
-   
+
   for (t = 0; t < target.GetT(); t++) {
 
     cout << "Timepoint " << t+1 << endl;
@@ -254,69 +254,69 @@ int main(int argc, char **argv)
     histogram.Reset();
 
     // Fill histogram
-  for (z = 0; z < target.GetZ(); z++){
-    for (y = 0; y < target.GetY(); y++){
-      for (x = 0; x < target.GetX(); x++){
+    for (z = 0; z < target.GetZ(); z++){
+      for (y = 0; y < target.GetY(); y++){
+        for (x = 0; x < target.GetX(); x++){
 
-        val = target(x, y, z, t);
+          val = target(x, y, z, t);
 
-	if (val > Tp){
+          if (val > Tp){
 
-          if (val > target_max)
-            target_max = val;
-          if (val < target_min)
-            target_min = val;
+            if (val > target_max)
+              target_max = val;
+            if (val < target_min)
+              target_min = val;
 
-	  irtkPoint p(x, y, z);
-	  // Transform point into world coordinates
-	  target.ImageToWorld(p);
-	  // Transform point
-	  transformation->Transform(p);
-	  // Transform point into image coordinates
-	  source.WorldToImage(p);
-	  if ((p._x > x1) && (p._x < x2) &&
-	      (p._y > y1) && (p._y < y2) &&
-	      (p._z > z1) && (p._z < z2)){
+            irtkPoint p(x, y, z);
+            // Transform point into world coordinates
+            target.ImageToWorld(p);
+            // Transform point
+            transformation->Transform(p);
+            // Transform point into image coordinates
+            source.WorldToImage(p);
+            if ((p._x > x1) && (p._x < x2) &&
+                (p._y > y1) && (p._y < y2) &&
+                (p._z > z1) && (p._z < z2)){
 
-            val = interpolator->EvaluateInside(p._x, p._y, p._z, t);
+              val = interpolator->EvaluateInside(p._x, p._y, p._z, t);
 
-            histogram.AddSample(target(x, y, z, t), val);
-            if (val >  source_max)
-              source_max = val;
-            if (val < source_min)
-              source_min = val;
-	  }
-	} 
+              histogram.AddSample(target(x, y, z, t), val);
+              if (val >  source_max)
+                source_max = val;
+              if (val < source_min)
+                source_min = val;
+            }
+          }
+        }
       }
     }
-  }
 
-  cout << "ROI Min and max of X is " << target_min 
-       << " and " << target_max << endl;
-  cout << "ROI Min and max of Y is " << source_min 
-       << " and " << source_max << endl;
-  int binx, biny;
-  histogram.GetNumberOfBins(&binx, &biny);
-  cout << "Number of bins  X x Y : " << binx << " x " << biny << endl;
-  cout << "Number of Samples: "     << histogram.NumberOfSamples() << endl;
-  cout << "Mean of X: "             << histogram.MeanX() << endl;
-  cout << "Mean of Y: "             << histogram.MeanY() << endl;
-  cout << "Variance of X: "         << histogram.VarianceX() << endl;
-  cout << "Variance of Y: "         << histogram.VarianceY() << endl;
-  cout << "Covariance: "            << histogram.Covariance() << endl;
-  cout << "Crosscorrelation: "      << histogram.CrossCorrelation() << endl;
-  cout << "Sums of squared diff.: " << histogram.SumsOfSquaredDifferences() / (double)histogram.NumberOfSamples() << endl;
-  cout << "Marginal entropy of X: " << histogram.EntropyX() << endl;
-  cout << "Marginal entropy of Y: " << histogram.EntropyY() << endl;
-  cout << "Joint entropy: "         << histogram.JointEntropy() << endl;
-  cout << "Mutual Information: "    << histogram.MutualInformation() << endl;
-  cout << "Norm. Mutual Information: " << histogram.NormalizedMutualInformation() << endl;
-  cout << "Correlation ratio C(X|Y): " << histogram.CorrelationRatioXY() << endl;
-  cout << "Correlation ratio C(Y|X): " << histogram.CorrelationRatioYX() << endl;
-  if (nbins_x == nbins_y){
-    cout << "Label consistency: " << histogram.LabelConsistency() << endl;
-    cout << "Kappa statistic: " << histogram.Kappa() << endl;
-  }
+    cout << "ROI Min and max of X is " << target_min
+        << " and " << target_max << endl;
+    cout << "ROI Min and max of Y is " << source_min
+        << " and " << source_max << endl;
+    int binx, biny;
+    histogram.GetNumberOfBins(&binx, &biny);
+    cout << "Number of bins  X x Y : " << binx << " x " << biny << endl;
+    cout << "Number of Samples: "     << histogram.NumberOfSamples() << endl;
+    cout << "Mean of X: "             << histogram.MeanX() << endl;
+    cout << "Mean of Y: "             << histogram.MeanY() << endl;
+    cout << "Variance of X: "         << histogram.VarianceX() << endl;
+    cout << "Variance of Y: "         << histogram.VarianceY() << endl;
+    cout << "Covariance: "            << histogram.Covariance() << endl;
+    cout << "Crosscorrelation: "      << histogram.CrossCorrelation() << endl;
+    cout << "Sums of squared diff.: " << histogram.SumsOfSquaredDifferences() / (double)histogram.NumberOfSamples() << endl;
+    cout << "Marginal entropy of X: " << histogram.EntropyX() << endl;
+    cout << "Marginal entropy of Y: " << histogram.EntropyY() << endl;
+    cout << "Joint entropy: "         << histogram.JointEntropy() << endl;
+    cout << "Mutual Information: "    << histogram.MutualInformation() << endl;
+    cout << "Norm. Mutual Information: " << histogram.NormalizedMutualInformation() << endl;
+    cout << "Correlation ratio C(X|Y): " << histogram.CorrelationRatioXY() << endl;
+    cout << "Correlation ratio C(Y|X): " << histogram.CorrelationRatioYX() << endl;
+    if (nbins_x == nbins_y){
+      cout << "Label consistency: " << histogram.LabelConsistency() << endl;
+      cout << "Kappa statistic: " << histogram.Kappa() << endl;
+    }
   }
 
 }
