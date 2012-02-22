@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   irtkInterpolateImageFunction *interpolator = NULL;
   irtkRealPixel target_min, source_min, target_max, source_max;
   bool ok;
-  int x, y, z, i1, j1, k1, i2, j2, k2; 
+  int x, y, z, t, i1, j1, k1, i2, j2, k2;
   double x1, y1, z1, x2, y2, z2, Tp, widthx, widthy, val;
 
   // Check command line
@@ -247,12 +247,18 @@ int main(int argc, char **argv)
   source_max = -1.0 * FLT_MAX;
 
    
-  // Fill histogram
+  for (t = 0; t < target.GetT(); t++) {
+
+    cout << "Timepoint " << t+1 << endl;
+
+    histogram.Reset();
+
+    // Fill histogram
   for (z = 0; z < target.GetZ(); z++){
     for (y = 0; y < target.GetY(); y++){
       for (x = 0; x < target.GetX(); x++){
 
-        val = target(x, y, z);
+        val = target(x, y, z, t);
 
 	if (val > Tp){
 
@@ -272,9 +278,9 @@ int main(int argc, char **argv)
 	      (p._y > y1) && (p._y < y2) &&
 	      (p._z > z1) && (p._z < z2)){
 
-            val = interpolator->EvaluateInside(p._x, p._y, p._z);
+            val = interpolator->EvaluateInside(p._x, p._y, p._z, t);
 
-            histogram.AddSample(target(x, y, z), val);
+            histogram.AddSample(target(x, y, z, t), val);
             if (val >  source_max)
               source_max = val;
             if (val < source_min)
@@ -284,6 +290,7 @@ int main(int argc, char **argv)
       }
     }
   }
+
   cout << "ROI Min and max of X is " << target_min 
        << " and " << target_max << endl;
   cout << "ROI Min and max of Y is " << source_min 
@@ -310,5 +317,7 @@ int main(int argc, char **argv)
     cout << "Label consistency: " << histogram.LabelConsistency() << endl;
     cout << "Kappa statistic: " << histogram.Kappa() << endl;
   }
+  }
+
 }
 
