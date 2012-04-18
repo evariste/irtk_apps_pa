@@ -79,7 +79,7 @@ bool is_vtkPolyDataFile(const char* filename)
 	// Rough and ready check to see if a file contains polydata.
 	char *c = NULL;
 	char buff[1000];
-	struct stat buf ;
+	struct stat statStruct ;
 
 	sprintf(buff, "%s", filename);
 	c = strstr(buff, ".vtk\0");
@@ -88,7 +88,7 @@ bool is_vtkPolyDataFile(const char* filename)
 		return false;
 	}
 
-  int i = stat( buff , &buf );
+  int i = stat( buff , &statStruct );
   if( i != 0 ) {
   	return false;
   }
@@ -396,7 +396,7 @@ int main(int argc, char **argv ){
     arrays[i] = vtkFloatArray::New();
   }
 
-  // First input is a polydata file
+  // First input has to be a polydata file
   input_name = argv[1];
   argv++;
   argc--;
@@ -551,12 +551,11 @@ int main(int argc, char **argv ){
     }
   }
 
-  cout << "bla " << endl;
-
   ///////////////////////////////////////////////
 
   arrayIndex = -1;
   scalarIndex = -1;
+
   for (i = 0; i < scalarCount+arrayCount; i++){
   	switch (operandTypes[i]){
   	case ARRAY_OPERAND:
@@ -639,20 +638,16 @@ int main(int argc, char **argv ){
   		apply_operation(arrayOut, currOp, nanVals, nanReplacement);
 
   	} else {
-
   		cerr << "Operations may only be binary or unary." << endl;
   		exit(1);
   	}
 
-  	// TODO: decide what to do about nans
   	if (nanVals){
-  		cerr << "Nan values applying operation " << endl;
+  		cerr << "Nan values applying current operation " << endl;
   		cerr << "replaced with " << nanReplacement << endl;
   	}
 
   }
-
-
 
   ///////////////////////////////////////////////
 
@@ -662,18 +657,19 @@ int main(int argc, char **argv ){
 
   cout << "Output: " << output_name << endl;
 
-
   // Add the resulting array and write output
 	while(pds[0]->GetPointData()->GetNumberOfArrays() > 0){
 		vtkFloatArray *currArray;
 		currArray = (vtkFloatArray*) pds[0]->GetPointData()->GetArray(0);
 		pds[0]->GetPointData()->RemoveArray(currArray->GetName());
 	}
+
 	if (output_array_name == NULL){
 		arrayOut->SetName("result");
 	} else {
 		arrayOut->SetName(output_array_name);
 	}
+
 	pds[0]->GetPointData()->AddArray(arrayOut);
   pds[0]->Modified();
   pds[0]->Update();
@@ -682,7 +678,6 @@ int main(int argc, char **argv ){
   writer->SetFileName(output_name);
   writer->SetInput(pds[0]);
   writer->Write();
-
 
   ///////////////////////////////////////////////
 
