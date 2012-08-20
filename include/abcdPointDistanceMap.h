@@ -45,7 +45,7 @@ public:
 	/// Destructor
 	virtual ~abcdPointDistanceMap();
 
-	/// Run erosion
+	/// Run filter
 	virtual void Run();
 
 

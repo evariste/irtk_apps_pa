@@ -201,7 +201,8 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
 
   } while (modified);
 
-  this->_output->Write("bla.nii.gz");
+
+  this->Finalize();
 
 }
 

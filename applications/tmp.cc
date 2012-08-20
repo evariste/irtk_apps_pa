@@ -22,10 +22,9 @@ int main(int argc, char *argv[])
 
 	ptDmap.addSeedPointI(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
 
-	ptDmap.Run();
+  ptDmap.Run();
 
 	output->Write(argv[5]);
-
 
 
 }
