@@ -4,6 +4,7 @@ SET(PA_INCLUDES
 )
 
 SET(PA_SRCS
+abcdPointDistanceMap.cc
 abcdRandomRotationSource.cc
 vtkPolyDataSmoothCustom.cc)
 
