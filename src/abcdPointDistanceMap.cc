@@ -14,7 +14,7 @@
 template <class VoxelType> abcdPointDistanceMap<VoxelType>::abcdPointDistanceMap()
 {
 
-  this->_numberOfSeedPoints = 0;
+  this->_NumberOfSeedPoints = 0;
 
 }
 
@@ -41,7 +41,7 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Initialize()
 	this->irtkImageToImage<VoxelType>::Initialize();
 
   irtkConnectivityType conn = CONNECTIVITY_06;
-  this->_faceOffsets.Initialize(this->_input, conn);
+  this->_FaceOffsets.Initialize(this->_input, conn);
 
   if (this->_input->GetT() > 1){
 	  cerr << "Warning: abcdPointDistanceMap<VoxelType>::Initialize : Image is 4D, ignoring all volumes after first." << endl;
@@ -58,7 +58,7 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Finalize()
 /// Add a point in world coordinates
 template <class VoxelType> void abcdPointDistanceMap<VoxelType>::addSeedPointW(double x, double y, double z)
 {
-	if (this->_numberOfSeedPoints >= MAX_POINTS)
+	if (this->_NumberOfSeedPoints >= MAX_POINTS)
 	{
 		cerr << "abcdPointDistanceMap<VoxelType>::addSeedPointW : Point limit exceeded." << endl;
 		exit(1);
@@ -72,17 +72,17 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::addSeedPointW(d
 /// Add a point in image coordinates
 template <class VoxelType> void abcdPointDistanceMap<VoxelType>::addSeedPointI(int i, int j, int k)
 {
-	if (this->_numberOfSeedPoints >= MAX_POINTS)
+	if (this->_NumberOfSeedPoints >= MAX_POINTS)
 	{
 		cerr << "abcdPointDistanceMap<VoxelType>::addSeedPointI : Point limit exceeded." << endl;
 		exit(1);
 	}
 
-	_seedpoints_i[_numberOfSeedPoints] = (int) i;
-	_seedpoints_j[_numberOfSeedPoints] = (int) j;
-	_seedpoints_k[_numberOfSeedPoints] = (int) k;
+	_seedpoints_i[_NumberOfSeedPoints] = (int) i;
+	_seedpoints_j[_NumberOfSeedPoints] = (int) j;
+	_seedpoints_k[_NumberOfSeedPoints] = (int) k;
 
-	++_numberOfSeedPoints;
+	++_NumberOfSeedPoints;
 
 
 }
@@ -104,7 +104,7 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
     ++ptr2output;
   }
 
-  if (this->_numberOfSeedPoints == 0){
+  if (this->_NumberOfSeedPoints == 0){
 	  this->Finalize();
 		return;
 	}
@@ -134,17 +134,18 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
   }
 
 
-  vector<int> currVoxels(this->_numberOfSeedPoints, 0);
+  vector<int> currVoxels(this->_NumberOfSeedPoints, 0);
   vector<int> nextVoxels;
   vector<int>::iterator last;
 
   currVal = 1;
 
-  for (n = 0; n < this->_numberOfSeedPoints; ++n){
+  for (n = 0; n < this->_NumberOfSeedPoints; ++n){
     currVoxels[n] = this->_input->VoxelToIndex(_seedpoints_i[n], _seedpoints_j[n], _seedpoints_k[n]);
     this->_output->Put(_seedpoints_i[n], _seedpoints_j[n], _seedpoints_k[n], currVal);
 
   }
+
 
   ptr2output = this->_output->GetPointerToVoxels();
   ptr2input  = this->_input->GetPointerToVoxels();
@@ -170,8 +171,7 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
 
     for (n = 0; n < currBoundarySize; ++n){
       for (i = 0; i < 6; ++i){
-        faceNbrInd = currVoxels[n] + this->_faceOffsets(i);
-
+        faceNbrInd = currVoxels[n] + this->_FaceOffsets(i);
         if (( *(ptr2input  + faceNbrInd) > 0) &&
             ( *(ptr2output + faceNbrInd) < 1) ){
           modified = true;
@@ -184,7 +184,14 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
     std::sort(nextVoxels.begin(), nextVoxels.end());
     // Puts the unique values at the front of the vector, potential garbage in remaining positions.
     last = std::unique(nextVoxels.begin(), nextVoxels.end());
+
+    // Remove the stuff at the end after the unique values.
     nextVoxels.erase(last, nextVoxels.end());
+
+    // The smallest index value may be zero due to the way nextVoxels was initialised,
+    // remove this value.
+    if (nextVoxels[0] < 1)
+      nextVoxels.erase(nextVoxels.begin());
 
     if (modified){
 
@@ -201,8 +208,6 @@ template <class VoxelType> void abcdPointDistanceMap<VoxelType>::Run()
 
   } while (modified);
 
-
-  this->Finalize();
 
 }
 

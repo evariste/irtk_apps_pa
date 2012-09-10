@@ -22,9 +22,9 @@ protected:
 	int _seedpoints_j[MAX_POINTS];
 	int _seedpoints_k[MAX_POINTS];
 
-	int _numberOfSeedPoints;
+	int _NumberOfSeedPoints;
 
-	irtkNeighbourhoodOffsets _faceOffsets;
+	irtkNeighbourhoodOffsets _FaceOffsets;
 
 	/// Returns the name of the class
 	virtual const char *NameOfClass();
@@ -54,6 +54,12 @@ public:
 
 	/// Add a point in image coordinates
 	void addSeedPointI(int, int, int);
+
+  /// Set debugging flag
+  SetMacro(NumberOfSeedPoints, int);
+
+  /// Get debugging flag
+  GetMacro(NumberOfSeedPoints, int);
 
 
 };
