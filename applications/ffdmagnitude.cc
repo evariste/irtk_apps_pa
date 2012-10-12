@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 
     // Extract current transformation level
     irtkFreeFormTransformation3D *ffd =
-    	dynamic_cast<irtkFreeFormTransformation3D *>(mffd->GetLocalTransformation(level));
+        dynamic_cast<irtkFreeFormTransformation3D *>(mffd->GetLocalTransformation(level));
     sum = 0.0;
     count = 0;
 
@@ -84,17 +84,17 @@ int main(int argc, char **argv)
 
     for (i = 0; i < ffd->GetX(); i++){
       for (j = 0; j < ffd->GetY(); j++){
-	for (k = 0; k < ffd->GetZ(); k++){
+        for (k = 0; k < ffd->GetZ(); k++){
 
-          ffd->GetStatus(i, j, k, statusX, statusY, statusZ);
+          ffd->GetStatusCP(i, j, k, statusX, statusY, statusZ);
 
           if (useActiveOnly == true &&
               statusX == _Passive && statusY == _Passive && statusZ == _Passive){
             continue;
           }
 
-	  // Get control point value on first level
-	  ffd->Get(i, j, k, x, y, z);
+          // Get control point value on first level
+          ffd->Get(i, j, k, x, y, z);
           d = sqrt(x*x + y*y + z*z);
 
           if (max < d)
@@ -107,7 +107,7 @@ int main(int argc, char **argv)
           data[1 + count] = d;
 
           ++count;
-	}
+        }
       }
     }
 
