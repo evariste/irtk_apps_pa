@@ -18,7 +18,7 @@ char *scalar_name = NULL;
 void usage()
 {
   cerr << " " << endl;
-  cerr << " Usage: polydatascalarsmooth [input] [output] [iterations] [kernel]" << endl; // <options>" << endl;
+  cerr << " Usage: polydatascalarsmooth [input] [output] [iterations] [kernel_width]" << endl; // <options>" << endl;
   cerr << "" << endl;
   cerr << " Smooth scalar data associated with the points of a surface." << endl;
   cerr << " " << endl;
@@ -31,7 +31,10 @@ void usage()
   cerr << " This is carried out iteratively.  More iterations and / or a larger kernel" << endl;
   cerr << " result in smoother output." << endl;
   cerr << " " << endl;
-  cerr << " Options:" << endl;
+  cerr << " kernel_width is the sigma value for the gaussian where the unit used is the mean " << endl;
+  cerr << " distance over all mesh edges." << endl;
+  cerr << " " << endl;
+   cerr << " Options:" << endl;
   cerr << " -name Name    Name of scalars to smooth." << endl;
   cerr << " " << endl;
   exit(1);
@@ -42,12 +45,12 @@ int main(int argc, char **argv)
   vtkIdType i;
   long j, k, n;
   bool ok;
-  int noOfIterations, ind;
+  int noOfIterations;
   double kernel;
 	int noOfPoints, noOfCells;
 
 	double v1[3], v2[3];
-  vtkIdType cellType;
+
   vtkIdType *ptsInCell = NULL;
   vtkIdType noOfPointsInCell;
   int u, v;
@@ -55,7 +58,7 @@ int main(int argc, char **argv)
   int noOfEdgesAtPt;
   double sumDist, dist, meanDist;
   int count;
-  double val, sumVals, distSq;
+  double sumVals, distSq;
   double w, sumW;
 
   if (argc < 4){
@@ -101,7 +104,7 @@ int main(int argc, char **argv)
   if (scalar_name != NULL){
     cerr << "Scalars  : " << scalar_name << endl;
   } else {
-    cerr << "Scalars  : default" << endl;
+    cerr << "Scalars  : Unspecified" << endl;
   }
 
   // Read the polydata file
@@ -180,27 +183,45 @@ int main(int argc, char **argv)
   // Initialise the updated scalars' size by copying the current.
   if (scalar_name != NULL){
     scalarsOut = (vtkFloatArray *) input->GetPointData()->GetScalars(scalar_name);
-    if (ind == -1 || scalarsOut == NULL){
+    if (scalarsOut == NULL){
       cerr << "Scalars unavailable with name " << scalar_name << endl;
       exit(0);
     }
   } else {
-    scalarsOut = (vtkFloatArray *) input->GetPointData()->GetScalars();
+    int nScalars = input->GetPointData()->GetNumberOfArrays();
+
+    if (nScalars > 0){
+      scalarsOut = (vtkFloatArray *) input->GetPointData()->GetArray(0);
+    } else{
+      cerr << "No scalars available to use for unspecified output." << endl;
+      exit(1);
+    }
+    cerr << "Using scalars " << scalarsOut->GetName() << endl;
+
   }
 
-  cerr << "Iterating"; cerr.flush();
-
   double denom = 2 * kernel * kernel * meanDist * meanDist;
-  
+
+  cerr << "Iterating " << endl;
+
+
+  // Get the current scalars.
+  if (scalar_name != NULL){
+    scalarsIn = (vtkFloatArray *) input->GetPointData()->GetScalars(scalar_name);
+  } else {
+    int nScalars = input->GetPointData()->GetNumberOfArrays();
+    if (nScalars > 0){
+      scalarsIn = (vtkFloatArray *) input->GetPointData()->GetArray(0);
+    } else{
+      cerr << "No scalars available." << endl;
+      exit(1);
+    }
+    cerr << "Using scalars " << scalarsIn->GetName() << endl;
+  }
+
   for (n = 0; n < noOfIterations; ++n){
     cerr << "."; cerr.flush();
 
-    // Get the current scalars.
-    if (scalar_name != NULL){
-      scalarsIn = (vtkFloatArray *) input->GetPointData()->GetScalars(scalar_name);
-    } else {
-      scalarsIn = (vtkFloatArray *) input->GetPointData()->GetScalars();
-    }
 
     for (i = 0; i < noOfPoints; ++i){
       input->GetPoint(i, v1);
@@ -225,14 +246,17 @@ int main(int argc, char **argv)
       scalarsOut->SetTuple1(i, sumVals / sumW);
     }
 
-    if (scalar_name != NULL){
-      input->GetPointData()->AddArray(scalarsOut);
-    } else {
-      input->GetPointData()->AddArray(scalarsOut);
+    // Copy for next iteration.
+    for (i = 0; i < noOfPoints; ++i){
+      scalarsIn->SetTuple1(i, scalarsOut->GetTuple1(i));
     }
-      input->Update();
+
   }
-  
+
+  input->GetPointData()->AddArray(scalarsOut);
+
+  input->Update();
+
   cout << " done" << endl;
 
 	// Write the result.
