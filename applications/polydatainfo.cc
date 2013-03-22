@@ -252,6 +252,8 @@ int main(int argc, char **argv)
 
   cout << "Genus : " << genus << endl;
 
+  cout << "Number of Lines: " << input->GetNumberOfLines() << endl;
+
   deleteIdListArray(adj, noOfVerts);
 
 
