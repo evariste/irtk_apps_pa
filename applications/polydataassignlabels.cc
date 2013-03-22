@@ -18,6 +18,8 @@
 
 char *input_image_name = NULL, *output_name = NULL;
 char *input_surface_name = NULL;
+char *output_label_image_name = NULL;
+char *output_scalars_name = NULL;
 
 typedef map<short, long> countMap;
 
@@ -50,12 +52,14 @@ void usage()
 {
   cerr << "Usage:  polydataassignlabels [labelImage] [surfaceIn] [surfaceOut] <options>" << endl;
   cerr << "" << endl;
-  cerr << "Assign scalars to the vertices of surfaceIn.  The scalar assigned" << endl;
-  cerr << "is the label of the nearest voxel in labelImage to the vertex." << endl;
+  cerr << "Assign labels to the vertices of surfaceIn.  The value assigned" << endl;
+  cerr << "to a vertex is the label of the nearest voxel in labelImage." << endl;
   cerr << "" << endl;
   cerr << "Write the result to surfaceOut." << endl;
   cerr << "Options: " << endl;
   cerr << "" << endl;
+  cerr << "  name [name]                 : Name of output scalar array in surface." << endl;
+  cerr << "  -writeDilatedLabels [name]  : Write out image of dilated labels." << endl;
 
   exit(1);
 }
@@ -88,7 +92,19 @@ int main(int argc, char **argv)
   // Parse remaining arguments
   while (argc > 1){
     ok = false;
-    if ((ok == false) && (strcmp(argv[1], "-XXX") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-writeDilatedLabels") == 0)){
+      argc--;
+      argv++;
+      output_label_image_name  = argv[1];
+      argc--;
+      argv++;
+      // do stuff and maybe argv++ etc.
+      ok = true;
+    }
+    if ((ok == false) && (strcmp(argv[1], "-name") == 0)){
+      argc--;
+      argv++;
+      output_scalars_name  = argv[1];
       argc--;
       argv++;
       // do stuff and maybe argv++ etc.
@@ -105,8 +121,8 @@ int main(int argc, char **argv)
 
   vtkPolyData *surface = vtkPolyData::New();
 
-  cerr << "Reading surface ... " << endl;
   // Read surface
+  cerr << "Reading surface ... " << endl;
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
   reader->SetFileName(input_surface_name);
   reader->Update();
@@ -114,16 +130,10 @@ int main(int argc, char **argv)
 
   noOfPoints= surface->GetNumberOfPoints();
 
-  //cerr << "Making space for scalars ..., no. of points =  " << noOfPoints << endl;
-  vtkIntArray *scalars = vtkIntArray::New();
-  scalars->SetNumberOfComponents(1);
-  scalars->SetNumberOfTuples(noOfPoints);
+  vtkIntArray *labelsOut = vtkIntArray::New();
+  labelsOut->SetNumberOfComponents(1);
+  labelsOut->SetNumberOfTuples(noOfPoints);
 
-  //cerr << "Creating interpolator " << endl;
-  irtkImageFunction *interp = NULL;
-  interp = new irtkNearestNeighborInterpolateImageFunction;
-  interp->SetInput(labelImage);
-  interp->Initialize();
 
   //Check that surface does not go outside fov of label image.
   surface->ComputeBounds();
@@ -134,15 +144,18 @@ int main(int argc, char **argv)
   ymax = surfaceBounds[3];
   zmin = surfaceBounds[4];
   zmax = surfaceBounds[5];
+
   cerr << "Bounds of surface : ";
   cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
   cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
 
   labelImage->WorldToImage(xmin, ymin, zmin);
   labelImage->WorldToImage(xmax, ymax, zmax);
+
   cerr << "In image coords : ";
   cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
   cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
+
   if (xmin < -0.5 || xmax > labelImage->GetX()-0.5 ||
       ymin < -0.5 || ymax > labelImage->GetY()-0.5 ||
       zmin < -0.5 || zmax > labelImage->GetZ()-0.5){
@@ -155,7 +168,6 @@ int main(int argc, char **argv)
   irtkRealImage *minDmap;
   irtkRealImage *currDmap;
 
-  // Identify the number of distinct labels in the image.
   irtkRealPixel *ptr2dmap;
   irtkRealPixel *ptr2minDmap;
   irtkGreyPixel *ptr2label;
@@ -213,6 +225,8 @@ int main(int argc, char **argv)
     edt->SetOutput(currDmap);
     edt->Run();
 
+
+
     ptr2minDmap      = minDmap->GetPointerToVoxels();
     ptr2dmap         = currDmap->GetPointerToVoxels();
     ptr2label        = labelImage->GetPointerToVoxels();
@@ -229,7 +243,15 @@ int main(int argc, char **argv)
     delete currLabelMask;
   }
 
+
+  if (output_label_image_name != NULL){
+    dilatedLabels->Write(output_label_image_name);
+  }
+
+
   cerr << "Assigning scalars using dilated labels ... " << endl;
+  irtkImageFunction *interp = NULL;
+  interp = new irtkNearestNeighborInterpolateImageFunction;
   interp->SetInput(dilatedLabels);
   interp->Initialize();
   zeroCount = 0;
@@ -238,18 +260,26 @@ int main(int argc, char **argv)
     dilatedLabels->WorldToImage(pt[0], pt[1], pt[2]);
 
     val = (int) round(interp->Evaluate(pt[0], pt[1], pt[2]));
-    scalars->SetTuple1(i,val);
+    labelsOut->SetTuple1(i,val);
 
-    //if (val == 0){
-    //  ++zeroCount;
-    //}
   }
 
-  //cerr << "Zero count : " << zeroCount << " = " << 100.0 * zeroCount / ((double) noOfPoints) << "%" << endl;
+
   cerr << "Updating surface ... " << endl;
-  scalars->Modified();
-  scalars->SetName("Labels");
-  surface->GetPointData()->AddArray(scalars);
+  labelsOut->Modified();
+
+  if (output_scalars_name != NULL){
+    labelsOut->SetName(output_scalars_name);
+  } else {
+    labelsOut->SetName("Labels");
+  }
+
+  surface->GetPointData()->AddArray(labelsOut);
+  if (output_scalars_name != NULL){
+    surface->GetPointData()->SetActiveScalars(output_scalars_name);
+  } else {
+    surface->GetPointData()->SetActiveScalars("Labels");
+  }
   surface->Update();
 
   cerr << "Writing surface ... " << endl;
