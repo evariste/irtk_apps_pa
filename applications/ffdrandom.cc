@@ -10,22 +10,22 @@ char *dofout_name = NULL;
 
 void usage()
 {
-  cerr << "Usage: ffdrandom [dofin] [dofout] <-sigma> <-blur> <-3d> <-nolimits>" << endl;
+  cerr << "Usage: ffdrandom [dofin] [dofout] <-sigma> <-blur> <-nolimits>" << endl;
   cerr << "Create a random ffd with sigma (default 1) using the same control point " << endl;
   cerr << "lattice as [dofin]. Write result to [dofout]" << endl;
   cerr << "" << endl;
   cerr << "Affine component is identity." << endl;
   cerr << "" << endl;
-  cerr << "<sigma> value   Override default sigma (1)." << endl;
+  cerr << "<sigma> value      Override default sigma (1)." << endl;
   cerr << "" << endl;
-  cerr << "<-blur>         Components are blurred first." << endl;
+  cerr << "<-blur>            Components are blurred first." << endl;
   cerr << "" << endl;
   cerr << "" << endl;
-  cerr << "<-nolimits>     Override the default which sets minimum and maximum component" << endl;
-  cerr << "                values for control points to 0.4 * half a spacing.*"  << endl;
+  cerr << "<-nolimits>        Override the default which sets minimum and maximum component" << endl;
+  cerr << "                   values for control points to 0.4 * half a spacing.*"  << endl;
   cerr << "" << endl;
-  cerr << "<-zero_border>  Set all components within 4 lattice points of outer boundary to zero" << endl;
-  cerr << "                to allow a smooth transition at the edge." << endl;
+  cerr << "<-no_zero_border>  Do not set the components within 2 lattice points of outer boundary to zero" << endl;
+  cerr << "                   This is done by default to allow a smooth transition at the edge." << endl;
   cerr << "" << endl;
   cerr << "*   Choi, Y., Lee, S.: Injectivity conditions of 2D and 3D uniform cubic b-spline functions." << endl;
   cerr << "    Graphical Models 62(6) (2000) 411427" << endl;
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
       argc--;      argv++;
       ok = true;
     }
-    if ((ok == false) && (strcmp(argv[1], "-zero_border") == 0)){
+    if ((ok == false) && (strcmp(argv[1], "-no_zero_border") == 0)){
       zero_border = false;
       argc--;      argv++;
       ok = true;
@@ -163,6 +163,7 @@ int main(int argc, char **argv)
     noise->Run();
 
     if (zero_border){
+      cout << "Applying zeros at borders." << endl;
 
     	if (zdim > 4){
     		for (k = 0; k < 2   ; ++k){
@@ -219,6 +220,7 @@ int main(int argc, char **argv)
     }
 
     if (blur_sigma > 0.0){
+      cout << "Smoothing components with kernel width of " << gaussianBlurring.GetSigma() << endl;
       gaussianBlurring.SetInput (xcomps);
       gaussianBlurring.SetOutput(xcomps);
       gaussianBlurring.Run();

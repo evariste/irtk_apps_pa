@@ -24,17 +24,16 @@ void usage()
 {
   cerr << " polydatasurfacedistance [inputA] [inputB]" << endl;
   cerr << " " << endl;
-  cerr << " Estimate the 'currents' type distance between a pair" << endl;
-  cerr << " of surfaces. See the Glaunes IPMI 2005 paper and " << endl;
-  cerr << " Linh Ha, MICCAI, 2010." << endl;
+  cerr << " Estimate the 'currents' type distance between a pair of surfaces." << endl;
+  cerr << " See Glaunes, IPMI 2005 and Linh Ha, MICCAI 2010." << endl;
   cerr << " " << endl;
   cerr << " Options:" << endl;
   cerr << " " << endl;
   cerr << " -mask name          : Name of scalars mask. Restrict distance summation to faces with positive values" << endl;
   cerr << "                       of the named mask. Scalars with the same name must be present in both surfaces" << endl;
   cerr << " -sigma val          : Kernel width in mm." << endl;
-  cerr << " -kernelFraction val : Kernel width as a fraction of the estimated radii of the surfaces" << endl;
-  cerr << " -verbose            : A bit more output." << endl;
+  cerr << " -kernelFraction val : Kernel width as a fraction of the mean of the estimated radii of each of the surfaces" << endl;
+  cerr << " -verbose            : Give a bit more output." << endl;
   cerr << " -dofinA  transf     : Apply the given transformation to surface A before processing." << endl;
   cerr << " " << endl;
   exit(1);
@@ -42,7 +41,7 @@ void usage()
 
 int main(int argc, char **argv)
 {
-  int i, j, jj;
+  int i, j, jj, ind;
   bool ok, useMask;
   double searchRadius;
   double pt1[3], pt2[3], pt3[3], centroid[3];
@@ -57,6 +56,7 @@ int main(int argc, char **argv)
 
   bool verbose = false;
 
+  // Size of kernel as a fraction of the 'radius' of the surfaces
   kernelFraction = 0.05;
 
   sigmaKer = -1.0;
@@ -134,27 +134,27 @@ int main(int argc, char **argv)
   surface_readerB->Update();
 
 
-  vtkPolyData *readerAout;
-  readerAout = surface_readerA->GetOutput();
-  readerAout->Update();
-  readerAout->BuildCells();
-  readerAout->BuildLinks();
+  vtkPolyData *surfaceA;
+  surfaceA = surface_readerA->GetOutput();
+  surfaceA->Update();
+  surfaceA->BuildCells();
+  surfaceA->BuildLinks();
 
-  vtkPolyData *readerBout;
-  readerBout = surface_readerB->GetOutput();
-  readerBout->Update();
-  readerBout->BuildCells();
-  readerBout->BuildLinks();
+  vtkPolyData *surfaceB;
+  surfaceB = surface_readerB->GetOutput();
+  surfaceB->Update();
+  surfaceB->BuildCells();
+  surfaceB->BuildLinks();
 
   if (dofinA_name != NULL){
   	// Apply the transformation to the points of surface A.
   	irtkTransformation *transformation = irtkTransformation::New(dofinA_name);
-    for (i = 0; i < readerAout->GetNumberOfPoints(); i++) {
-      (readerAout->GetPoints())->GetPoint(i, pt1);
+    for (i = 0; i < surfaceA->GetNumberOfPoints(); i++) {
+      (surfaceA->GetPoints())->GetPoint(i, pt1);
       transformation->Transform(pt1[0], pt1[1], pt1[2]);
-      readerAout->GetPoints()->SetPoint(i, pt1);
+      surfaceA->GetPoints()->SetPoint(i, pt1);
     }
-    readerAout->Modified();
+    surfaceA->Modified();
   }
 
   // Derive a new polydata set with points equal to the
@@ -162,20 +162,20 @@ int main(int argc, char **argv)
   // associated with each point that are the normals of the faces.
 
   vtkTriangleFilter *triFilterA = vtkTriangleFilter::New();
-  triFilterA->SetInput(readerAout);
+  triFilterA->SetInput(surfaceA);
   triFilterA->Update();
-  vtkPolyData *triAout = vtkPolyData::New();
-  triAout = triFilterA->GetOutput();
-  triAout->BuildCells();
-  triAout->BuildLinks();
+  vtkPolyData *trianglesA = vtkPolyData::New();
+  trianglesA = triFilterA->GetOutput();
+  trianglesA->BuildCells();
+  trianglesA->BuildLinks();
 
   vtkTriangleFilter *triFilterB = vtkTriangleFilter::New();
-  triFilterB->SetInput(readerBout);
+  triFilterB->SetInput(surfaceB);
   triFilterB->Update();
-  vtkPolyData *triBout = vtkPolyData::New();
-  triBout = triFilterB->GetOutput();
-  triBout->BuildCells();
-  triBout->BuildLinks();
+  vtkPolyData *trianglesB = vtkPolyData::New();
+  trianglesB = triFilterB->GetOutput();
+  trianglesB->BuildCells();
+  trianglesB->BuildLinks();
 
 
 
@@ -185,15 +185,14 @@ int main(int argc, char **argv)
   vtkFloatArray *maskB = vtkFloatArray::New();
 
   useMask = false;
-  int ind;
 
   if (maskName != NULL){
-    maskA = (vtkFloatArray*) triAout->GetPointData()->GetArray(maskName, ind);
+    maskA = (vtkFloatArray*) trianglesA->GetPointData()->GetArray(maskName, ind);
     if (ind == -1 || maskA == NULL){
       cerr << "Scalars unavailable with name " << maskName << " in surface " << input_nameA << endl;
       exit(1);
     }
-    maskB = (vtkFloatArray*) triBout->GetPointData()->GetArray(maskName, ind);
+    maskB = (vtkFloatArray*) trianglesB->GetPointData()->GetArray(maskName, ind);
     if (ind == -1 || maskB == NULL){
       cerr << "Scalars unavailable with name " << maskName << " in surface " << input_nameB << endl;
       exit(1);
@@ -202,8 +201,10 @@ int main(int argc, char **argv)
     useMask =true;
   }
 
-  triAout->GetBounds(boundsA);
-  triBout->GetBounds(boundsB);
+
+
+  trianglesA->GetBounds(boundsA);
+  trianglesB->GetBounds(boundsB);
 
   if (boundsA[0] > boundsB[1] ||
   		boundsB[0] > boundsA[1] ||
@@ -215,10 +216,12 @@ int main(int argc, char **argv)
   	exit(1);
   }
 
-  vtkCellArray *facesA = triAout->GetPolys();
+
+
+  vtkCellArray *facesA = trianglesA->GetPolys();
   noOfFacesA = facesA->GetNumberOfCells();
 
-  vtkCellArray *facesB = triBout->GetPolys();
+  vtkCellArray *facesB = trianglesB->GetPolys();
   noOfFacesB = facesB->GetNumberOfCells();
 
 
@@ -255,6 +258,7 @@ int main(int argc, char **argv)
 
 
   facesA->InitTraversal();
+
   for (i = 0; i < noOfFacesA; ++i){
 
   	facesA->GetNextCell(nptsForFace, ptIdsForFace);
@@ -268,9 +272,9 @@ int main(int argc, char **argv)
     ptID2 = ptIdsForFace[1];
     ptID3 = ptIdsForFace[2];
 
-  	triAout->GetPoint(ptID1, pt1);
-  	triAout->GetPoint(ptID2, pt2);
-  	triAout->GetPoint(ptID3, pt3);
+  	trianglesA->GetPoint(ptID1, pt1);
+  	trianglesA->GetPoint(ptID2, pt2);
+  	trianglesA->GetPoint(ptID3, pt3);
 
   	for (j = 0; j < 3; ++j){
   		e1[j] = pt2[j] - pt1[j];
@@ -314,9 +318,9 @@ int main(int argc, char **argv)
     ptID2 = ptIdsForFace[1];
     ptID3 = ptIdsForFace[2];
 
-    triBout->GetPoint(ptID1, pt1);
-    triBout->GetPoint(ptID2, pt2);
-    triBout->GetPoint(ptID3, pt3);
+    trianglesB->GetPoint(ptID1, pt1);
+    trianglesB->GetPoint(ptID2, pt2);
+    trianglesB->GetPoint(ptID3, pt3);
 
   	for(j = 0; j < 3; ++j){
   		e1[j] = pt2[j] - pt1[j];
@@ -387,7 +391,7 @@ int main(int argc, char **argv)
         (boundsB[3] - boundsB[2]) *
         (boundsB[5] - boundsB[4]);
 
-    // Assume points distributed on spheres.
+    // Assume points distributed in a roughly spherical arrangement.
     rA = pow(volA * 3.0 / 4.0 / M_PI, (1.0/3.0));
     rB = pow(volB * 3.0 / 4.0 / M_PI, (1.0/3.0));
 
@@ -414,9 +418,9 @@ int main(int argc, char **argv)
   vtkIdList *nearestPtIDs = vtkIdList::New();
 
   double pt2ptDistSq, totalDist;
-  double minusADotB, minusBDotA, aDotA, bDotB;
+  double aDotB, bDotA, aDotA, bDotB;
 
-  // The distance we seek to measure and return.
+  // The currents distance that we seek to measure and return.
   totalDist = 0.0;
 
 
@@ -452,7 +456,7 @@ int main(int argc, char **argv)
   	}
   }
 
-  minusADotB = totalDist;
+  aDotB = totalDist;
   totalDist = 0.0;
 
   for (i = 0; i < noOfFacesB; ++i){
@@ -486,7 +490,7 @@ int main(int argc, char **argv)
   	}
   }
 
-  minusBDotA = totalDist;
+  bDotA = totalDist;
   totalDist = 0.0;
 
 // Within dists for checking : to drop
@@ -558,23 +562,11 @@ int main(int argc, char **argv)
 
   bDotB = totalDist;
 
-
-  cout << aDotA << " " << bDotB << " " << minusADotB << " " << minusBDotA << " ";
-  cout << aDotA + minusADotB + minusBDotA + bDotB << " " << sqrt(fabs(minusADotB + minusBDotA)) << endl;
-
-
-//  ////////////////////////////////////////////////////////////////
-//  tempScalars->SetName("tempScalars");
-//  combined->GetPointData()->AddArray(tempScalars);
-//  combined->Update();
-//
-//  vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-//  writer->SetInput(combined);
-//  writer->SetFileTypeToBinary();
-//  writer->SetFileName("temp.vtk");
-//  writer->Write();
-//  exit(0);
-//  ////////////////////////////////////////////////////////////////
+  // Various flavours of measures:
+  cout << aDotA << " " << bDotB << " " << aDotB << " " << bDotA << endl;
+  cout << aDotA - aDotB - bDotA + bDotB << endl;
+  cout << aDotA + aDotB + bDotA + bDotB << endl;
+  cout << sqrt(fabs(aDotB + bDotA)) << endl;
 
 
   return 0;
