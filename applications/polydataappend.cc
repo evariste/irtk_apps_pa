@@ -117,6 +117,11 @@ int main(int argc, char **argv ){
 
     if (newScalars == true){
       // Add a scalar value for current polydata set.
+      scalars->Initialize();
+      scalars->SetNumberOfComponents(1);
+      scalars->SetNumberOfTuples(noOfPoints);
+      scalars->SetName("label");
+
       for (j = 0; j < noOfPoints; j++){
         scalars->InsertTuple1(j, i);
       }
