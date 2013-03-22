@@ -239,7 +239,8 @@ int main(int argc, char **argv){
     irtkVector evals;
 
 
-    cov.Eigenvalues(evecs, evals);
+    irtkMatrix dummy(evecs);
+    cov.Eigenvalues(evecs, evals, dummy);
 
     cout << "Covariance matrix for all points:" << endl;
     cov.Print();
