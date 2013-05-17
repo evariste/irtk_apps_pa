@@ -25,6 +25,10 @@ void usage()
   cerr << "polydata2maskimage [polydata] [template image] [output image] <options>" << endl;
   cerr << "-value val : value to put into the structure (default 1000)." << endl;
   cerr << "-reverse   : toggle whether the structure or the background gets the value." << endl;
+  cerr << "" << endl;
+  cerr << "See also: http://www.cmake.org/Wiki/VTK/Examples/Cxx/PolyData/PolyDataToImageData" << endl;
+  cerr << "for similar code." << endl;
+
   exit(1);
 }
 
@@ -40,7 +44,7 @@ int main(int argc, char **argv)
   double bounds[6];
   int i1, j1, k1, i2, j2, k2;
   double value = 1000;
-  int reverse = false;
+  int reverse = true;
   double xspacing, yspacing, zspacing;
 
 
@@ -105,27 +109,32 @@ int main(int argc, char **argv)
   irtkGreyImage image, imageSubregion;
   image.Read(template_image_name);
 
-  // What are the extents of the polydata.
-  polys->GetBounds(bounds);
+  noOfPts = polys->GetNumberOfPoints();
 
-  // Convert to voxels:
-  image.WorldToImage(bounds[0], bounds[2], bounds[4]);
-  image.WorldToImage(bounds[1], bounds[3], bounds[5]);
+  // What are the extents of the polydata in image coordinates?
+  i1 = image.GetX() - 1;
+  i2 = 0;
+  j1 = image.GetY() - 1;
+  j2 = 0;
+  k1 = image.GetZ() - 1;
+  k2 = 0;
 
-  i1 = (int)floor(bounds[0]) - 1;
-  j1 = (int)floor(bounds[2]) - 1;
-  k1 = (int)floor(bounds[4]) - 1;
-  i2 = (int)floor(bounds[1]) + 2;
-  j2 = (int)floor(bounds[3]) + 2;
-  k2 = (int)floor(bounds[5]) + 2;
-
-  // One or more of the axes may point in a negative direction.
-  if (i1 > i2)
-    swap(i1, i2);
-  if (j1 > j2)
-    swap(j1, j2);
-  if (k1 > k2)
-    swap(k1, k2);
+  for (i = 0; i < noOfPts; ++i){
+    polys->GetPoints()->GetPoint (i, pt);
+    image.WorldToImage(pt[0], pt[1], pt[2]);
+    if (i1 > pt[0])
+      i1 = (int) floor(pt[0]) - 1;
+    if (j1 > pt[1])
+      j1 = (int) floor(pt[1]) - 1;
+    if (k1 > pt[2])
+      k1 = (int) floor(pt[2]) - 1;
+    if (i2 < pt[0])
+      i2 = (int) floor(pt[0]) + 2;
+    if (j2 < pt[1])
+      j2 = (int) floor(pt[1]) + 2;
+    if (k2 < pt[2])
+      k2 = (int) floor(pt[2]) + 2;
+  }
 
   // Clamp.
   i1 = max(i1, 0);
@@ -155,9 +164,8 @@ int main(int argc, char **argv)
   }
 
   // Convert the polydata points to canonical image coordinates.
-  noOfPts = polys->GetNumberOfPoints();
 
-  for (int i = 0; i < noOfPts; ++i){
+  for (i = 0; i < noOfPts; ++i){
     polys->GetPoints()->GetPoint (i, pt);
     newPt[0] = w2i(0, 0) * pt[0] + w2i(0, 1) * pt[1] + w2i(0, 2) * pt[2] + w2i(0, 3);
     newPt[1] = w2i(1, 0) * pt[0] + w2i(1, 1) * pt[1] + w2i(1, 2) * pt[2] + w2i(1, 3);
