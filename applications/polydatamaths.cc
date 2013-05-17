@@ -464,12 +464,14 @@ void apply_operation(vtkFloatArray* arr, abcdOperationType op, bool &nanVals, do
 
 void usage()
 {
-  cerr << "Usage:  polydatamaths [polydataIN] [op1] [arg1] <[op2] [arg2]> . <option> . .  [polydataOUT]" << endl;
+  cerr << "Usage:  polydatamaths [polydataIN] [op1] [arg1] <[op2] [arg2]> ... <option(s)> ...  [polydataOUT]" << endl;
   cerr << "" << endl;
   cerr << "Apply a set of arithmetic operations to scalars associated with a polydata." << endl;
   cerr << "" << endl;
   cerr << "First argument must be a polydata file." << endl;
-  cerr << "Last argument is the name of a polydata set to write the result to." << endl;
+  cerr << "Last argument is the name of a polydata file to write the result to." << endl;
+  cerr << "" << endl;
+  cerr << "Other flags:" << endl;
   cerr << "    -array_name [s]        Use the array with name 's'. Applies to the last polydata set read in." << endl;
   cerr << "    -output_array_name [s] Give the final output array the name 's'" << endl;
   cerr << "    -repForNan [value]     Replacement value to use if calculations result in NAN." << endl;
