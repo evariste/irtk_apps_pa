@@ -79,5 +79,7 @@ int main(int argc, char **argv){
   }
 
   // Convert mm^3 to cm^3
-  cout << 0.001 * totalVol * voxelVolume / max << endl;
+  //cout << 0.001 * totalVol * voxelVolume / max << endl;
+  printf("%.3f\n", 0.001 * totalVol * voxelVolume / max);
+
 }
