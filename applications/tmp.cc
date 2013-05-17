@@ -1,385 +1,225 @@
-#include <irtkImage.h>
 
-#include <abcdPointDistanceMap.h>
+#include <irtkGeometry.h>
+#include <irtkTransformation.h>
 
-#include <iostream>
-#include <stdio.h>
-using namespace std;
+// Default filenames
+char *rigid_in_name  = NULL;
+char *ffd_in_name  = NULL;
+char *ffd_out_name  = NULL;
 
-int main(int argc, char *argv[])
+void usage()
 {
+  cerr << " Usage: thisApp rigidIn mffdIn mffdOut" << endl;
+  cerr << "  " << endl;
+  cerr << " Input set up: " << endl;
+  cerr << "  imageA ---------> ImageB --------> ImageC" << endl;
+  cerr << "          rigidIn           mffdIn" << endl;
+  cerr << "  " << endl;
+  cerr << " I.e. imageB is the target for mffdIn and the source for rigidIn. " << endl;
+  cerr << "  " << endl;
+  cerr << " Output: " << endl;
+  cerr << "  " << endl;
+  cerr << "  imageA -------------------------> ImageC " << endl;
+  cerr << "                  mffdOut" << endl;
+  cerr << "  I.e. the rigid transformation is incorporated into the input MFFD to give the output MFFD." << endl;
+  cerr << "  " << endl;
+
+  exit(1);
+}
+
+int main(int argc, char **argv)
+{
+  int ok;
+
+  // Check command line
+  if (argc < 4) {
+    usage();
+  }
+
+  // Parse source and target images
+  rigid_in_name = argv[1];
+  argc--;
+  argv++;
+  ffd_in_name = argv[1];
+  argc--;
+  argv++;
+  ffd_out_name = argv[1];
+  argc--;
+  argv++;
 
 
-	abcdPointDistanceMap<irtkGreyPixel> ptDmap;
+
+  // Parse remaining parameters
+  while (argc > 1) {
+    ok = false;
+    if ((ok == false) && (strcmp(argv[1], "-something") == 0)) {
+      argc--;
+      argv++;
+//      some_variable = argv[1];
+//      // or
+//      some_variable = atoi(argv[1]);
+//      // or
+//      some_variable = atof(argv[1]);
+//      // And possibly
+//      argc--;
+//      argv++;
+      ok = true;
+    }
+
+    if (ok == false) {
+      cerr << "Can not parse argument " << argv[1] << endl;
+      usage();
+    }
+  }
 
 
-  irtkGreyImage *input = new irtkGreyImage(argv[1]);
-  irtkGreyImage *output = new irtkGreyImage(argv[1]);
+  // imageA -------------> imageB ---------------> imageC
+  //         x -> Rx = y           y-> Ay + u(y)
+  // Or
+  //         x -> Rx              Rx-> ARx + u(Rx)
+  // I.e.
+  //            x -> ARx + u(Rx)
+  // In imageA terms:
+  //            x -> Bx + uu(x)
+  // So
+  //       B = AR  , uu(x) = u(Rx)
 
-	ptDmap.SetInput(input);
-	ptDmap.SetOutput(output);
+  // R is a rigid transformation matrix.
+  // A is an affine global part of the MFFD and u(x) is the local displacement field represented by a FFD.
 
 
-	ptDmap.addSeedPointI(atoi(argv[2]), atoi(argv[3]), atoi(argv[4]));
+  // Read input rigid.
+  irtkRigidTransformation *rigidTransf = new irtkRigidTransformation;
 
-  ptDmap.Run();
+  rigidTransf->irtkTransformation::Read(rigid_in_name);
 
-	output->Write(argv[5]);
+  // Read input MFFD
+  irtkMultiLevelFreeFormTransformation *mffd_in = new irtkMultiLevelFreeFormTransformation;
+  mffd_in->irtkTransformation::Read(ffd_in_name);
+
+
+  irtkBSplineFreeFormTransformation3D *ffd_in = dynamic_cast<irtkBSplineFreeFormTransformation3D *>(mffd_in->GetLocalTransformation(0));
+
+  // Should probably check that mffd_in does not have more than one ffd in it!
+
+  irtkMatrix mffd_in_global, rigidMat, invRigidMat, mffd_out_global;
+
+  // Matrix A
+  mffd_in_global = mffd_in->irtkAffineTransformation::GetMatrix();
+
+  // Matrix R
+  rigidMat = rigidTransf->GetMatrix();
+
+  invRigidMat = rigidMat;
+  invRigidMat.Invert();
+
+  // A*R
+  mffd_out_global = mffd_in_global * rigidMat;
+
+  double x1, x2, y1, y2, z1, z2;
+  double xaxis[3], yaxis[3], zaxis[3];
+  double dx, dy, dz;
+
+  ffd_in->GetSpacing(dx, dy, dz);
+
+  ffd_in->GetOrientation(xaxis, yaxis, zaxis);
+
+  // Get bounding box of input FFD
+  x1 = 0.0;
+  y1 = 0.0;
+  z1 = 0.0;
+  x2 = ffd_in->GetX() - 1;
+  y2 = ffd_in->GetY() - 1;
+  z2 = ffd_in->GetZ() - 1;
+
+  ffd_in->LatticeToWorld(x1, y1, z1);
+  ffd_in->LatticeToWorld(x2, y2, z2);
+
+  // Transform to get the bounding box of the output FFD
+  irtkVector v_in(4);
+  irtkVector v_out(4);
+
+  v_in(0) = x1;
+  v_in(1) = y1;
+  v_in(2) = z1;
+  v_in(3) = 1;
+
+  v_out = invRigidMat * v_in;
+
+  x1 = v_out(0);
+  y1 = v_out(1);
+  z1 = v_out(2);
+
+  v_in(0) = x2;
+  v_in(1) = y2;
+  v_in(2) = z2;
+  v_in(3) = 1;
+
+  v_out = invRigidMat * v_in;
+
+  x2 = v_out(0);
+  y2 = v_out(1);
+  z2 = v_out(2);
+
+  // Transform the the input axes to get the axes of the output FFD. Only need to rotate.
+
+  irtkMatrix rotMat = invRigidMat;
+  // Zero out the translation parameters.
+  rotMat(0, 3) = 0;
+  rotMat(1, 3) = 0;
+  rotMat(2, 3) = 0;
+
+  // Transform each axis in turn.
+
+  v_in(0) = xaxis[0];
+  v_in(1) = xaxis[1];
+  v_in(2) = xaxis[2];
+
+  v_out = rotMat * v_in;
+
+  xaxis[0] = v_out(0);
+  xaxis[1] = v_out(1);
+  xaxis[2] = v_out(2);
+
+  v_in(0) = yaxis[0];
+  v_in(1) = yaxis[1];
+  v_in(2) = yaxis[2];
+
+  v_out = rotMat * v_in;
+
+  yaxis[0] = v_out(0);
+  yaxis[1] = v_out(1);
+  yaxis[2] = v_out(2);
+
+  v_in(0) = zaxis[0];
+  v_in(1) = zaxis[1];
+  v_in(2) = zaxis[2];
+
+  v_out = rotMat * v_in;
+
+  zaxis[0] = v_out(0);
+  zaxis[1] = v_out(1);
+  zaxis[2] = v_out(2);
+
+  // Create the output FFD with the transformed control point lattice.
+  irtkBSplineFreeFormTransformation3D *ffd_out = new irtkBSplineFreeFormTransformation3D(x1, y1, z1, x2, y2, z2, dx, dy, dz, xaxis, yaxis, zaxis);
+
+  // Copy the control point parameters to the new FFD.
+  int noOfDofs;
+  int i;
+
+  noOfDofs = ffd_in->NumberOfDOFs();
+  for (i = 0; i < noOfDofs; ++i){
+    ffd_out->Put(i, ffd_in->Get(i));
+  }
+
+  // Put the output FFD and global transformation into a new Multi Level FFD object.
+  irtkMultiLevelFreeFormTransformation *mffd_out = new irtkMultiLevelFreeFormTransformation;
+
+  mffd_out->PushLocalTransformation(ffd_out);
+  mffd_out->PutMatrix(mffd_out_global);
+
+  mffd_out->irtkTransformation::Write(ffd_out_name);
 
 
 }
-
-
-//#if (defined HAS_VTK)
-//
-//// Needs to have at least VTK 5.2
-//
-//#include <irtkImage.h>
-//
-//#include <nr.h>
-//#include <time.h>
-//
-//
-//#include <vtkIdList.h>
-//#include <vtkDataArray.h>
-//#include <vtkFloatArray.h>
-//#include <vtkPointData.h>
-//
-//#include <vtkPolyData.h>
-//#include <vtkPolyDataReader.h>
-//#include <vtkPolyDataWriter.h>
-//#include <vtkTriangleFilter.h>
-//#include <vtkCleanPolyData.h>
-//#include <vtkDijkstraGraphGeodesicPath2.h>
-//#include <vtkDecimatePro.h>
-//
-//
-//
-//char *in_name  = NULL, *out_name = NULL;
-//char *scalar_name = NULL;
-//
-//void usage()
-//{
-//  cerr << "Usage: polydatageodesic [input] <options>\n" << endl;
-//  cerr << "" << endl;
-//  cerr << "Options:" << endl;
-//  cerr << "-output [filename]" << endl;
-//  cerr << "-reps [N]" << endl;
-//  exit(1);
-//}
-//
-//double mean(vtkDoubleArray *scalars){
-//
-//  int n, i;
-//  double sum;
-//
-//  n = scalars->GetNumberOfTuples();
-//  sum = 0.0;
-//
-//  for (i = 0; i < n; ++i){
-//    sum += scalars->GetComponent(i,0);
-//  }
-//
-//  return sum / ((double) n);
-//
-//}
-//
-//int main(int argc, char *argv[])
-//{
-//	////////////////////////////////////////////// Log def stuff
-//	//	int i;
-//	//
-//	//	if (argc < 3){
-//	//		usage();
-//	//	}
-//	//
-//	//	// dof file with represents a velocity field.
-//	//  dofin_name  = argv[1];
-//	//  argc--;
-//	//  argv++;
-//	//  dofout_name  = argv[1];
-//	//  argc--;
-//	//  argv++;
-//	//
-//	//  irtkTransformation *transform = irtkTransformation::New(dofin_name);
-//	//
-//	//  irtkMultiLevelFreeFormTransformation *mffd =
-//	//  		new irtkMultiLevelFreeFormTransformation(*((irtkMultiLevelFreeFormTransformation *) transform));
-//	//
-//	//  irtkFreeFormTransformation3D *ffd =
-//	//  		dynamic_cast<irtkFreeFormTransformation3D *>(mffd->GetLocalTransformation(0));
-//	//
-//	//  irtkTransformation *transform2 = irtkTransformation::New(dofin_name);
-//	//
-//	//  irtkMultiLevelFreeFormTransformation *mffd2 =
-//	//  		new irtkMultiLevelFreeFormTransformation(*((irtkMultiLevelFreeFormTransformation *) transform2));
-//	//
-//	//  irtkFreeFormTransformation3D *ffd2 =
-//	//  		dynamic_cast<irtkFreeFormTransformation3D *>(mffd2->GetLocalTransformation(0));
-//	//
-//	//  ffd->Print();
-//	//  cout << ffd << endl << endl;
-//	//
-//	////  ffd2->Print();
-//	////  cout << ffd2 << endl << endl;
-//	//
-//	//  ffd->ExponentiateEuler();
-//	//
-//	//  for (i = 0; i < ffd2->NumberOfDOFs(); ++i)
-//	//  	ffd2->Put(i, -1 * ffd2->Get(i));
-//	//
-//	//
-//	////  ffd->Log();
-//	//  mffd->irtkTransformation::Write(dofout_name);
-//	//
-//	//  ffd2->ExponentiateEuler();
-//	//  mffd2->irtkTransformation::Write("inv.dof");
-//	//
-//	//
-//	//
-//	////  int a[3] = {23, 3, -2};
-//	////  for (i = 0; i < 3; ++i){
-//	////  	f(a[i]);
-//	////  }
-//	////
-//	////  for (i = 0; i < 3; ++i){
-//	////  	cout << a[i] << endl;
-//	////
-//	////  }
-//
-//
-//
-//  bool ok;
-//  int i;
-//  int numberOfPoints;
-//  int id1, id2;
-//  time_t seconds;
-//  long ran2Seed;
-//  long ran2initialSeed;
-//  double val;
-//  double range[2];
-//  int reps = 100;
-//  double *vals;
-//  double alpha;
-//
-//  id1 = -1;
-//  id2 = -1;
-//  alpha = 0.0;
-//
-//  if (argc < 2){
-//    usage();
-//  }
-//
-//  // Parse source and target point lists
-//  in_name  = argv[1];
-//  argc--;
-//  argv++;
-//
-//
-//  while (argc > 1){
-//    ok = false;
-//    if ((ok == false) && (strcmp(argv[1], "-XX") == 0)){
-//      argc--;
-//      argv++;
-//      // Do stuff and possible increment argv etc
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//    if ((ok == false) && (strcmp(argv[1], "-reps") == 0)){
-//      argc--;
-//      argv++;
-//      reps = atoi(argv[1]);
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//    if ((ok == false) && (strcmp(argv[1], "-ids") == 0)){
-//      argc--;
-//      argv++;
-//      id1 = atoi(argv[1]);
-//      argc--;
-//      argv++;
-//      id2 = atoi(argv[1]);
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//
-//    if ((ok == false) && (strcmp(argv[1], "-alpha") == 0)){
-//      argc--;
-//      argv++;
-//      alpha = atof(argv[1]);
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//    if ((ok == false) && (strcmp(argv[1], "-scalars") == 0)){
-//      argc--;
-//      argv++;
-//      scalar_name = argv[1];
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//
-//    if ((ok == false) && (strcmp(argv[1], "-output") == 0)){
-//      argc--;
-//      argv++;
-//      out_name = argv[1];
-//      argc--;
-//      argv++;
-//      ok = true;
-//    }
-//
-//    if (ok == false){
-//      cerr << "Can not parse argument " << argv[1] << endl;
-//      usage();
-//    }
-//  }
-//
-//  // Prepare for random stuff.
-//  seconds = time(NULL);
-//  ran2Seed = seconds;
-//  ran2initialSeed = -1 * ran2Seed;
-//  (void) ran2(&ran2initialSeed);
-//
-//  // Read the input surface.
-//  vtkPolyDataReader *reader = vtkPolyDataReader::New();
-//  reader->SetFileName(in_name);
-//
-//  vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-//  triFilter->SetInput(reader->GetOutput());
-//
-//  vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-//  cleaner->SetInput(reader->GetOutput());
-//  // Setting tolerance to 0 means that vtkMergePoints is used instead.
-//  cleaner->SetTolerance(0.0);//(0.005);
-//  cleaner->PointMergingOn();
-//  cleaner->Update();
-//
-//
-//  vtkTriangleFilter *triFilter2 = vtkTriangleFilter::New();
-//  triFilter2->SetInput(cleaner->GetOutput());
-//  triFilter2->Update();
-//
-//  vtkPolyData *cleanedPolys = vtkPolyData::New();
-//  cleanedPolys = triFilter2->GetOutput();
-//  cleanedPolys->Update();
-//
-//
-//  if (scalar_name != NULL){
-//    vtkFloatArray *scalars;// = vtkFloatArray::New();
-//    int ind;
-//    scalars = (vtkFloatArray*) cleanedPolys->GetPointData()->GetArray(scalar_name, ind);
-//    cleanedPolys->GetPointData()->SetActiveScalars(scalar_name);
-//    cleanedPolys->Update();
-//
-//    if (ind == -1 || scalars == NULL){
-//      cerr << "Scalars unavailable with name " << scalar_name << endl;
-//      exit(1);
-//    }
-//  }
-//
-//  vtkDijkstraGraphGeodesicPath2 *path = vtkDijkstraGraphGeodesicPath2::New();
-//  path->SetInput(cleanedPolys);
-//
-//  if (scalar_name != NULL){
-//  	path->SetEdgeWeightsFromScalars(1);
-//  }
-//
-//  path->SetAlpha(alpha);
-//
-//  vtkIndent indent = vtkIndent(1);
-//
-//
-//
-//  numberOfPoints = cleaner->GetOutput()->GetNumberOfPoints();
-//
-//  vtkPolyData *temp = vtkPolyData::New();
-//  vtkDoubleArray *dists = vtkDoubleArray::New();
-//  dists->SetNumberOfComponents(1);
-//  dists->SetNumberOfTuples(numberOfPoints);
-//
-//  vals = new double[reps];
-//
-//  double runningTotal = 0.0;
-//
-//  if (id1 > -1 && id2 > -1 and id1 < numberOfPoints and id2 < numberOfPoints){
-//    path->SetStartVertex(id1);
-//    path->SetEndVertex(id2);
-//    // Calculate geodesics for whole surface.
-//    path->StopWhenEndReachedOn();
-//
-//    path->PrintSelf(cout, indent);
-//
-//    path->Update();
-//
-//  } else {
-//
-//  	for (i = 0; i < reps; ++i){
-//
-//  		id1 = (int) floor(numberOfPoints * ran2(&ran2Seed));
-//
-//  		// Give the chosen vertex to the shortest path filter.
-//  		path->SetStartVertex(id1);
-//  		path->SetEndVertex(0);
-//  		// Calculate geodesics for whole surface.
-//  		path->StopWhenEndReachedOff();
-//  		path->Update();
-//
-//  		// Assign the scalars (distances) obtained from the shortest path filter.
-//  		//    dists = (vtkFloatArray*)path->GetGeodesicLength();
-//
-//  		//    path->GetAllLengths(dists);
-//  		path->GetCumulativeWeights(dists);
-//
-//  		//    vtkSmartPointer<vtkPolyData> pd = vtkSmartPointer<vtkPolyData>::New();
-//  		//    pd = path->GetOutput();
-//  		//    pd->Update();
-//  		//
-//  		//    vtkSmartPointer<vtkPolyDataWriter> wr = vtkSmartPointer<vtkPolyDataWriter>::New();
-//  		//    wr->SetInput(pd);
-//  		//    wr->SetFileName("bla.vtk");
-//  		//    wr->Update();
-//  		//    wr->Write();
-//  		//    exit(0);
-//  		//
-//
-//
-//  		runningTotal += mean(dists);
-//  	}
-//
-//  	cout << runningTotal / ((double) reps) << endl;
-//
-//  }
-//
-//  if (out_name != NULL){
-////    temp = cleaner->GetOutput();
-////    temp->GetPointData()->AddArray(dists);
-////    temp->Update();
-//
-//    // Write the output with the scalar.
-//    vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-//    writer->SetFileName(out_name);
-//    // writer->SetInput(temp);
-//    writer->SetInput(path->GetOutput());
-//    writer->Update();
-//    writer->Write();
-//  }
-//
-//  delete [] vals;
-//
-//}
-//
-//#else
-//
-//#include <irtkImage.h>
-//
-//int main( int argc, char *argv[] ){
-//  cerr << argv[0] << " needs to be compiled with the VTK library " << endl;
-//}
-//#endif
-//
-//
-//
