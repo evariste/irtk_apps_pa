@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
   bool reportOverlap = true;
   double x1, y1, z1, x2, y2, z2;
   double errx, erry, errz;
-  float min1, max1, min2, max2;
+  irtkRealPixel min1, max1, min2, max2;
   int fuzzy = false;
   double sigmaMin = 0.0;
   double sigmaMax = 0.0;
