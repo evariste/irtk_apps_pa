@@ -8,7 +8,7 @@ void usage()
 {
   cerr << "\tclamp [input] [output] <options>" << endl;
   cerr << "\tClamp the values in [input] according to percentages specified." << endl;
-  cerr << "\tE.g if 2 (%) is specified for both upper and lower ranges, the values" << endl;
+  cerr << "\tE.g if 2 (%) is required for both upper and lower ranges, the values" << endl;
   cerr << "\tare clamped to the 2nd and 98th percentiles in the image." << endl;
   cerr << "\tOptions:" << endl;
   cerr << "\t-p val : percentage to be applied to both upper and lower ends of range." << endl;
