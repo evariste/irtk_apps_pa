@@ -19,7 +19,7 @@ char *output_name = NULL;
 void usage()
 {
   cerr << "Usage: " << endl;
-  cerr << "NAME_OF_EXE_HERE [output] <options>" << endl;
+  cerr << "concatenate_stacks [output] <options>" << endl;
   cerr << "" << endl;
   cerr << "Options:" << endl;
   cerr << "" << endl;
