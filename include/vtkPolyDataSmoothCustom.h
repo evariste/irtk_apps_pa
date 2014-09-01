@@ -19,7 +19,9 @@
 
 #include <irtkImage.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h> /*For Vectors*/
+#include <gsl/gsl_sort_vector.h>
 
 class vtkPolyDataSmoothCustom : public irtkObject
 {

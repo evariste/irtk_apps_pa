@@ -1,5 +1,8 @@
 #include <irtkImage.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h> /*For Vectors*/
+#include <gsl/gsl_sort_vector.h>
+
 
 
 char *input_name = NULL, *output_name = NULL;
@@ -34,7 +37,7 @@ int main(int argc, char **argv)
 
   int count, voxels, i;
   bool ok;
-  float *values;
+  //float *values;
   int minIndex, maxIndex;
   double minVal, maxVal;
 
@@ -95,26 +98,31 @@ int main(int argc, char **argv)
     ++ptr;
   }
 
-  values = new float[count + 1];
-
+  //values = new float[count + 1];
+  gsl_vector * values = gsl_vector_alloc (count);
 
   ptr = input->GetPointerToVoxels();
   count = 0;
   for (i = 0; i < voxels; ++i){
     if (*ptr > pad){
+      //++count;
+      //values[count] = *ptr;
+	  gsl_vector_set(values, count, *ptr);
       ++count;
-      values[count] = *ptr;
     }
     ++ptr;
   }
 
-  sort(count, values);
+  //sort(count, values);
+  gsl_sort_vector(values);
 
-  minIndex = (int) round (count * lowerPercentage / 100.0);
-  maxIndex = (int) round (count * upperPercentage / 100.0);
+  minIndex = (int) round (count * lowerPercentage / 100.0) - 1;
+  maxIndex = (int) round (count * upperPercentage / 100.0) - 1;
 
-  minVal = values[minIndex];
-  maxVal = values[maxIndex];
+  //minVal = values[minIndex];
+  //maxVal = values[maxIndex];
+  minVal = gsl_vector_get(values, minIndex);
+  maxVal = gsl_vector_get(values, maxIndex);
 
   cout << "Using min and max : " << minVal << " " << maxVal << " for clamping" << endl;
 

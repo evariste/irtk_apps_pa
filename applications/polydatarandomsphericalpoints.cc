@@ -1,14 +1,25 @@
 #ifdef HAS_VTK
 
+#ifdef _WIN32
+#define _USE_MATH_DEFINES
+#include <math.h>
+#endif
 
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_rng.h>
+
 #include <time.h>
-#include <unistd.h>
+
+//#ifdef _WIN32
+//#include <process.h>
+//#else
+//#include <unistd.h>
+//#endif
 
 
 
@@ -35,18 +46,27 @@ int main(int argc, char **argv)
   long ran2initialSeed;
 
   // Prepare for random stuff.
-  pid_t procId = getpid();
+//#ifdef _WIN32
+//  int procId;
+//#else
+//  pid_t procId;
+//#endif
+//  procId = getpid();
 
-  seconds = time(NULL);
-  ran2Seed = seconds * procId;
-  if (ran2Seed < 1)
-  	ran2Seed = -1 * ran2Seed;
+  //seconds = time(NULL);
+  //ran2Seed = seconds * procId;
+  //if (ran2Seed < 1)
+  //	ran2Seed = -1 * ran2Seed;
 
-  ran2initialSeed = -1 * ran2Seed;
-  (void) ran2(&ran2initialSeed);
+  //ran2initialSeed = -1 * ran2Seed;
+  //(void) ran2(&ran2initialSeed);
 
+  gsl_rng * r; 
+  const gsl_rng_type * T;
+  gsl_rng_env_setup();
 
-
+  T = gsl_rng_default;
+  r = gsl_rng_alloc (T);
 
   // Check command line
   if (argc < 2) {
@@ -87,9 +107,15 @@ int main(int argc, char **argv)
 
 
   for (i = 0; i < nPts; i++) {
-  	theta = 2 * M_PI * ran2(&ran2Seed);
-  	phi   = acos((2 * ran2(&ran2Seed)) -  1.0);
-  	pt[0] = cos(theta) * sin(phi);
+
+
+  	//theta = 2 * M_PI * ran2(&ran2Seed);
+  	//phi   = acos((2 * ran2(&ran2Seed)) -  1.0);
+  	
+	theta = 2 * M_PI * gsl_rng_uniform(r);
+  	phi   = acos((2 * gsl_rng_uniform(r)) -  1.0);
+
+	pt[0] = cos(theta) * sin(phi);
   	pt[1] = sin(theta) * sin(phi);
   	pt[2] = cos(phi);
 

@@ -273,20 +273,28 @@ double vtkPolyDataSmoothCustom::HSquareRobustMean()
   double minVal, maxVal;
   double lo = 5.0;
   double hi = 95.0;
-  float *data = new float[1 + noOfPoints];
+  //float *data = new float[1 + noOfPoints];
   int count;
+  gsl_vector * v = gsl_vector_alloc (noOfPoints);
 
   for (i = 0; i < noOfPoints; ++i){
     val = scalars->GetTuple1(i);
-    data[1 + i] = val;
+    //data[1 + i] = val;
+	gsl_vector_set(v, i, val);
   }
 
-  sort(noOfPoints, data);
+  //sort(noOfPoints, data);
+  gsl_sort_vector(v);
 
-  i = 1 + (int) round( (double) lo * (noOfPoints - 1) / 100.0);
-  minVal = data[i];
-  i = 1 + (int) round( (double) hi * (noOfPoints - 1) / 100.0);
-  maxVal = data[i];
+  //i = 1 + (int) round( (double) lo * (noOfPoints - 1) / 100.0);
+  //minVal = data[i];
+  //i = 1 + (int) round( (double) hi * (noOfPoints - 1) / 100.0);
+  //maxVal = data[i];
+
+  i = (int) round( (double) lo * (noOfPoints - 1) / 100.0);
+  minVal = gsl_vector_get(v, i);
+  i = (int) round( (double) hi * (noOfPoints - 1) / 100.0);
+  maxVal = gsl_vector_get(v, i);
 
   count = 0;
   for (i = 0; i < noOfPoints; ++i){
@@ -298,7 +306,7 @@ double vtkPolyDataSmoothCustom::HSquareRobustMean()
     ++count;
   }
 
-  delete [] data;
+  //delete [] data;
 //  scalars->Delete();
 //  curveOut->Delete();
 //  curve->Delete();

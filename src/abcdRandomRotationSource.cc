@@ -27,7 +27,10 @@ abcdRandomRotationSource::abcdRandomRotationSource()
   cerr << "abcdRandomRotationSource::abcdRandomRotationSource: Not implemented yet for Windows" << endl;
   exit(1);
 #endif
+  gsl_rng_env_setup();
 
+  this->_T = gsl_rng_default;
+  this->_r = gsl_rng_alloc (this->_T);
 }
 
 
@@ -46,9 +49,11 @@ irtkMatrix abcdRandomRotationSource::Get()
 
 	// Spherical coordinates for u2 random point on unit sphere's surface.
 	// Angle from x-axis within x-y plane
-	phi = 2.0f * M_PI * ran2(& this->_randInit);
+	//phi = 2.0f * M_PI * ran2(& this->_randInit);
+	phi = 2.0f * M_PI * gsl_rng_uniform (this->_r);
 	// Angle from north pole (z=1)
-	costheta = 2 * ran2(& this->_randInit) - 1.0;
+	//costheta = 2 * ran2(& this->_randInit) - 1.0;
+	costheta = 2 * gsl_rng_uniform (this->_r) - 1.0;
 	sintheta = sqrt(1 - costheta*costheta);
 
 	// Cartesian coordinates of u2
@@ -70,7 +75,8 @@ irtkMatrix abcdRandomRotationSource::Get()
 	}
 
 	// Randomly chosen angle of a rotation around u2 to apply to w
-	theta_w = 2.0f * M_PI * ran2(& this->_randInit);
+	//theta_w = 2.0f * M_PI * ran2(& this->_randInit);
+	theta_w = 2.0f * M_PI * gsl_rng_uniform(this->_r);
 
 	irtkMatrix outerProduct(3,3);
 	irtkMatrix skewSym(3,3);

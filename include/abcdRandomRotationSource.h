@@ -22,8 +22,8 @@
 #include <irtkVector.h>
 #include <irtkMatrix.h>
 
-
-#include <nr.h>
+#include <gsl/gsl_rng.h>
+//#include <nr.h>
 
 
 class abcdRandomRotationSource : public irtkObject
@@ -31,6 +31,9 @@ class abcdRandomRotationSource : public irtkObject
 
 	// Seed for random number generator.
 	long int _randInit;
+	
+	gsl_rng * _r; 
+	const gsl_rng_type * _T;
 
 	// Require a 4 by 4 homogeneous matrix if true
 	bool _homogeneous;

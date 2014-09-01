@@ -6,8 +6,9 @@
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>
-#include <nr.h>
-
+//#include <nr.h>
+#include <gsl/gsl_vector.h> /*For Vectors*/
+#include <gsl/gsl_sort_vector.h>
 
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
@@ -76,20 +77,28 @@ double hSquareRobustMean(vtkPolyData* surface){
   double minVal, maxVal;
   double lo = 5.0;
   double hi = 95.0;
-  float *data = new float[1 + noOfPoints];
+  gsl_vector * data = gsl_vector_alloc (noOfPoints);
+  //float *data = new float[1 + noOfPoints];
   int count;
 
   for (i = 0; i < noOfPoints; ++i){
     val = scalars->GetTuple1(i);
-    data[1 + i] = val;
+    //data[1 + i] = val;
+	gsl_vector_set(data, i, val);
   }
 
-  sort(noOfPoints, data);
+  //sort(noOfPoints, data);
+  gsl_sort_vector(data);
 
-  i = 1 + (int) round( (double) lo * (noOfPoints - 1) / 100.0);
-  minVal = data[i];
-  i = 1 + (int) round( (double) hi * (noOfPoints - 1) / 100.0);
-  maxVal = data[i];
+  //i = 1 + (int) round( (double) lo * (noOfPoints - 1) / 100.0);
+  //minVal = data[i];
+  //i = 1 + (int) round( (double) hi * (noOfPoints - 1) / 100.0);
+  //maxVal = data[i];
+
+  i = (int) round( (double) lo * (noOfPoints - 1) / 100.0);
+  minVal = gsl_vector_get(data, i);
+  i = (int) round( (double) hi * (noOfPoints - 1) / 100.0);
+  maxVal = gsl_vector_get(data, i);
 
   count = 0;
   for (i = 0; i < noOfPoints; ++i){
