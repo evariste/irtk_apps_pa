@@ -4,15 +4,19 @@
 // Find a Hausdorff type distance betweeen a pair of surfaces.
 // 
 
+#include <irtkCommon.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 #include <irtkLocator.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 char *surface_1_name = NULL;
 char *surface_2_name = NULL;
+
 
 void usage(){
   cerr << "\n   hausdorff [surface_1] [surface_2] <-options>\n" << endl; 
@@ -112,9 +116,14 @@ int main(int argc, char **argv){
   int n_2 = surface_2->GetNumberOfPoints();
 
   double pt_a[3], pt_b[3];
+  double val_1;
+  double val_2;
 
-  float *dist_1 = new float[1 + n_1];
-  float *dist_2 = new float[1 + n_2];
+//  float *dist_1 = new float[1 + n_1];
+//  float *dist_2 = new float[1 + n_2];
+
+  gsl_vector *dist_1 = gsl_vector_alloc(n_1);
+  gsl_vector *dist_2 = gsl_vector_alloc(n_2);
 
   for (i = 0; i < n_1; i++){
     surface_1->GetPoints()->GetPoint (i, pt_a);
@@ -125,9 +134,15 @@ int main(int argc, char **argv){
 
     (void) locator_2->FindClosestPoint (pt_b);
 
-    dist_1[1 + i] = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
-                         (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
-                         (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+//    dist_1[1 + i] = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
+//                         (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
+//                         (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+
+    val_1 = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
+        (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
+        (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+    gsl_vector_set(dist_1, i, val_1);
+
 
   }
 
@@ -140,28 +155,42 @@ int main(int argc, char **argv){
 
     (void) locator_1->FindClosestPoint (pt_b);
 
-    dist_2[1 + i] = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
-                         (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
-                         (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+//    dist_2[1 + i] = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
+//                         (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
+//                         (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+    val_2 = sqrt((pt_a[0] - pt_b[0]) * (pt_a[0] - pt_b[0]) +
+        (pt_a[1] - pt_b[1]) * (pt_a[1] - pt_b[1]) +
+        (pt_a[2] - pt_b[2]) * (pt_a[2] - pt_b[2]));
+    gsl_vector_set(dist_2, i, val_2);
 
   }
 
-  sort(n_1, dist_1);
-  sort(n_2, dist_2);
+//  sort(n_1, dist_1);
+//  sort(n_2, dist_2);
 
-  int index_1 = 1 + (int) round( (double) percentile * (n_1 - 1) / 100.0);
-  int index_2 = 1 + (int) round( (double) percentile * (n_2 - 1)/ 100.0);
+  gsl_sort_vector(dist_1);
+  gsl_sort_vector(dist_2);
 
-  double val_1 = dist_1[index_1];
-  double val_2 = dist_2[index_2];
+
+//  int index_1 = 1 + (int) round( (double) percentile * (n_1 - 1) / 100.0);
+//  int index_2 = 1 + (int) round( (double) percentile * (n_2 - 1)/ 100.0);
+  int index_1 = (int) round( (double) percentile * (n_1 - 1) / 100.0);
+  int index_2 = (int) round( (double) percentile * (n_2 - 1)/ 100.0);
+
+//  val_1 = dist_1[index_1];
+//  val_2 = dist_2[index_2];
+  val_1 = gsl_vector_get(dist_1, index_1);
+  val_2 = gsl_vector_get(dist_2, index_2);
 
   cout << "  percentile " << percentile << endl;
   cout << "     H(1, 2) " << val_1 << endl;
   cout << "     H(2, 1) " << val_2 << endl;
   cout << "     Average " << 0.5 * (val_1 + val_2) << endl;
 
-  delete [] dist_1;
-  delete [] dist_2;
+//  delete [] dist_1;
+//  delete [] dist_2;
+  gsl_vector_free(dist_1);
+  gsl_vector_free(dist_2);
 
 }
 

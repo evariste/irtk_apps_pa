@@ -1,7 +1,7 @@
 #if (defined HAS_VTK)
 
 #include <irtkImage.h>
-#include <nr.h>
+//#include <nr.h>
 
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>

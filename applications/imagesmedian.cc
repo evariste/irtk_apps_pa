@@ -1,6 +1,9 @@
 #include <irtkImage.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
+
 
 // Default filenames
 char *output_name = NULL, **input_name = NULL;
@@ -51,9 +54,11 @@ int main(int argc, char **argv)
     input[i].Read(input_name[i]);
   }
 
-  float *data;
-  data = new float[1 + no];
-  data[0] = 0;
+//  float *data;
+//  data = new float[1 + no];
+//  data[0] = 0;
+  gsl_vector *data = gsl_vector_alloc(no);
+
 
   xdim = input[0].GetX();
   ydim = input[0].GetY();
@@ -64,11 +69,16 @@ int main(int argc, char **argv)
       for (i = 0; i < xdim; ++i){
 
         for (n = 0; n < no; ++n){
-          data[1 + n] = input[n].Get(i, j, k);
-        }
-        sort(no, data);
+//          data[1 + n] = input[n].Get(i, j, k);
+          gsl_vector_set(data, n, input[n].Get(i, j, k));
 
-        output.Put(i, j, k, (int) data[(1 + no)/2]);
+        }
+
+//        sort(no, data);
+        gsl_sort_vector(data);
+
+//        output.Put(i, j, k, (int) data[(1 + no)/2]);
+        output.Put(i, j, k, (int) gsl_vector_get(data, no/2));
 
       }
     }

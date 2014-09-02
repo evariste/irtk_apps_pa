@@ -1,7 +1,11 @@
 #ifdef HAS_VTK
 
 #include <irtkImage.h>
-#include <nr.h>
+
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
+
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
@@ -107,25 +111,34 @@ int main(int argc, char **argv)
   }
 
   // NR subroutines use 1-indexing.
-  float *data = new float[1 + count];
+//  float *data = new float[1 + count];
+  gsl_vector *data = gsl_vector_alloc(count);
 
   for (i = 0; i < count; ++i){
-    data[1 + i] = scalars->GetTuple1(i);
+//    data[1 + i] = scalars->GetTuple1(i);
+    gsl_vector_set(data, i, scalars->GetTuple1(i));
   }
 
-  sort(count, data);
+//  sort(count, data);
+  gsl_sort_vector(data);
 
   if (quiet == true){
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
-      cout << data[index];
+
+//      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
+//      cout << data[index];
+      index = (int) round( (double) percentile[i] * (count - 1) / 100.0);
+      cout << gsl_vector_get(data, index);
+
       if (i < numberOfPercentiles-1)
         cout << " ";
     }
   } else {
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
-      cout << "  Percentile " << percentile[i] << " = " << data[index] << endl;
+//      index = 1 + (int) round( (double) percentile[i] * (count - 1) / 100.0);
+//      cout << "  Percentile " << percentile[i] << " = " << data[index] << endl;
+      index = (int) round( (double) percentile[i] * (count - 1) / 100.0);
+      cout << "  Percentile " << percentile[i] << " = " << gsl_vector_get(data, index) << endl;
     }
   }
 

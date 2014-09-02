@@ -139,9 +139,11 @@ ELSE(BUILD_CONDOR_EXE)
     ADD_EXECUTABLE(polydatasphere polydatasphere.cc)
     ADD_EXECUTABLE(polydatasurfacearea polydatasurfacearea.cc)
     ADD_EXECUTABLE(polydatasurfacedistance polydatasurfacedistance.cc)
-    ADD_EXECUTABLE(polydatasymmetry polydatasymmetry.cc)
+# TODO : convert this to GSL
+#    ADD_EXECUTABLE(polydatasymmetry polydatasymmetry.cc)
     ADD_EXECUTABLE(polydatatransformscalars polydatatransformscalars.cc)
-    ADD_EXECUTABLE(procrustes_align procrustes_align.cc)
+# TODO : convert this to GSL
+#    ADD_EXECUTABLE(procrustes_align procrustes_align.cc)
     ADD_EXECUTABLE(reflect2 reflect2.cc)
     ADD_EXECUTABLE(region_real region_real.cc)
     ADD_EXECUTABLE(regress regress.cc)

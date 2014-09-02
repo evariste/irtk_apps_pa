@@ -2,7 +2,7 @@
 //#include <nr.h>
 #include <gsl/gsl_rng.h>
 
-#include <sys/types.h>
+//#include <sys/types.h>
 
 
 //#ifdef WIN32

@@ -1,6 +1,8 @@
 #include <irtkImage.h>
 #include <irtkTransformation.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 // Input transformation
 char *dofin_name = NULL;
@@ -29,7 +31,8 @@ int main(int argc, char **argv)
   _Status statusX, statusY, statusZ;
   int quiet = false;
   int numberOfValues;
-  float *data;
+//  float *data;
+  gsl_vector *data;
 
   // Check command line
   if (argc < 2){
@@ -79,8 +82,10 @@ int main(int argc, char **argv)
     count = 0;
 
     numberOfValues = ffd->NumberOfDOFs() / 3;
-    data = new float[1 + numberOfValues];
-    data[0] = 0;
+
+//    data = new float[1 + numberOfValues];
+//    data[0] = 0;
+    data = gsl_vector_alloc(numberOfValues);
 
     for (i = 0; i < ffd->GetX(); i++){
       for (j = 0; j < ffd->GetY(); j++){
@@ -104,14 +109,16 @@ int main(int argc, char **argv)
 
           sum += d;
 
-          data[1 + count] = d;
+//          data[1 + count] = d;
+          gsl_vector_set(data, count, d);
 
           ++count;
         }
       }
     }
 
-    sort(count, data);
+//    sort(count, data);
+    gsl_sort_vector(data);
 
     if (count > 0){
       if (quiet){
@@ -119,23 +126,30 @@ int main(int argc, char **argv)
         cout << "," << min;
         cout << "," << max;
         cout << "," << sum / ((double) count);
-        cout << "," << data[(1 + count) / 4];
-        cout << "," << data[(1 + count) / 2];
-        cout << "," << data[3 * (1 + count) / 4];
+//        cout << "," << data[(1 + count) / 4];
+//        cout << "," << data[(1 + count) / 2];
+//        cout << "," << data[3 * (1 + count) / 4];
+        cout << "," << gsl_vector_get(data, count/4);
+        cout << "," << gsl_vector_get(data, count/2);
+        cout << "," << gsl_vector_get(data, 3*count/4);
         cout << "," << count << endl;
       } else {
         cout << "Level " << level;
         cout << "\tmin " << min ;
         cout << "\tmax " << max;
         cout << "\tmean: " << sum / ((double) count);
-        cout << "\tQ1 " << data[(1 + count) / 4];
-        cout << "\tmedian " << data[(1 + count) / 2];
-        cout << "\tQ3 " << data[3 * (1 + count) / 4];
+//        cout << "\tQ1 " << data[(1 + count) / 4];
+//        cout << "\tmedian " << data[(1 + count) / 2];
+//        cout << "\tQ3 " << data[3 * (1 + count) / 4];
+        cout << "\tQ1 " << gsl_vector_get(data, count/4);
+        cout << "\tmedian " << gsl_vector_get(data, count/2);
+        cout << "\tQ3 " << gsl_vector_get(data, 3*count/4);
         cout << "\tn " << count << endl;
       }
     }
 
-    delete [] data;
+//    delete [] data;
+    gsl_vector_free(data);
 
   }
 

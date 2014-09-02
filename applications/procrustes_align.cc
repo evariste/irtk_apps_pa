@@ -297,7 +297,7 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   centroid_1.Initialize(3, 1);
   centroid_2.Initialize(3, 1);
 
-  int j;
+  int i, j;
 
   for (j = 0; j < iNoOfLandmarks; j++){
     centroid_1(0, 0) += M_1(3 * j, 0);
@@ -365,6 +365,18 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   N[1][4] = N[4][1] = sxy - syx;
   N[2][4] = N[4][2] = szx + sxz;
   N[3][4] = N[4][3] = syz + szy;
+
+
+  gsl_matrix *GSL_N = gsl_matrix_alloc(4, 4);
+  for (j = 1; j <= 4; j++){
+    for (i = 1; i <= 4; i++){
+      gsl_matrix_set(GSL_N, i-1, j-1, N[i][j]);
+
+    }
+  }
+
+
+
 
   int nrot;
   float *er;

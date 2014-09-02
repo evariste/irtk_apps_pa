@@ -11,8 +11,10 @@
 
 #include <map>
 
-#include <nr.h>
-#include <time.h>
+//#include <nr.h>
+#include <gsl/gsl_rng.h>
+
+//#include <time.h>
 
 #include <vtkMath.h>
 #include <vtkCellArray.h>
@@ -83,7 +85,7 @@ void get_ylm_values(vtkFloatArray* theta, vtkFloatArray* phi, vtkFloatArray* ylm
 vtkPolyData *getSphereApproximation();
 
 
-long ran2Seed;
+//long ran2Seed;
 
 
 void usage()
@@ -125,16 +127,22 @@ int main(int argc, char **argv)
   double val;
   double min, max, maxabs;
 
-  time_t seconds;
-  long ran2initialSeed;
+//  time_t seconds;
+//  long ran2initialSeed;
 
   float *weight;
   double weightSum;
 
-  seconds = time(NULL);
-  ran2Seed = seconds;
-  ran2initialSeed = -1 * ran2Seed;
-  (void) ran2(&ran2initialSeed);
+//  seconds = time(NULL);
+//  ran2Seed = seconds;
+//  ran2initialSeed = -1 * ran2Seed;
+//  (void) ran2(&ran2initialSeed);
+
+  gsl_rng * ranGen;
+  const gsl_rng_type * ranGenType;
+  gsl_rng_env_setup();
+  ranGenType = gsl_rng_default;
+  ranGen = gsl_rng_alloc (ranGenType);
 
   useRand = true;
 
@@ -313,7 +321,9 @@ int main(int argc, char **argv)
   		for (m = -1*l; m <= l; ++m){
 
   			if (useRand == true){
-  				weight[wIndex] = ran2(&ran2Seed);
+//  				weight[wIndex] = ran2(&ran2Seed);
+  				weight[wIndex] =  gsl_rng_uniform(ranGen);
+
   			} else {
   				weight[wIndex] = 1.0 / (wIndex+1);
   			}

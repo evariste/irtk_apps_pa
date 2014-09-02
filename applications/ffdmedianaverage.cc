@@ -1,5 +1,7 @@
 #include <irtkTransformation.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 char **dofin_names = NULL, *dofout = NULL;
 
@@ -250,12 +252,17 @@ int main(int argc, char **argv) {
 		}
 	}
 
-	float *xs = new float[1 + inputCount];
-	float *ys = new float[1 + inputCount];
-	float *zs = new float[1 + inputCount];
+//	float *xs = new float[1 + inputCount];
+//	float *ys = new float[1 + inputCount];
+//	float *zs = new float[1 + inputCount];
+
+  gsl_vector *xs = gsl_vector_alloc(inputCount);
+  gsl_vector *ys = gsl_vector_alloc(inputCount);
+  gsl_vector *zs = gsl_vector_alloc(inputCount);
 
 	bool even = (inputCount % 2 == 0);
-	int index1 = 1 + inputCount / 2;
+//  int index1 = 1 + inputCount / 2;
+  int index1 = inputCount / 2;
 	int index2 = index1 - 1;
 
 	// Now can average the displacement fields.
@@ -270,26 +277,45 @@ int main(int argc, char **argv) {
 						dynamic_cast<irtkFreeFormTransformation3D *> (mffds[n]->GetLocalTransformation(0));
 
 					ffdCurr->Get(i, j, k, x, y, z);
-					xs[n + 1] = x;
-					ys[n + 1] = y;
-					zs[n + 1] = z;
+
+//					xs[n + 1] = x;
+//					ys[n + 1] = y;
+//					zs[n + 1] = z;
+          gsl_vector_set(xs, n, x);
+          gsl_vector_set(ys, n, y);
+          gsl_vector_set(zs, n, z);
+
 				}
 
-				sort(inputCount, xs);
-				sort(inputCount, ys);
-				sort(inputCount, zs);
+//				sort(inputCount, xs);
+//				sort(inputCount, ys);
+//				sort(inputCount, zs);
+        gsl_sort_vector(xs);
+        gsl_sort_vector(ys);
+        gsl_sort_vector(zs);
 
-				if (even) {
-					xAv = 0.5 * (xs[index1] + xs[index2]);
-					yAv = 0.5 * (ys[index1] + ys[index2]);
-					zAv = 0.5 * (zs[index1] + zs[index2]);
-				} else {
-					xAv = xs[index1];
-					yAv = ys[index1];
-					zAv = zs[index1];
-				}
 
-				if (combineaffine == true) {
+//				if (even) {
+//					xAv = 0.5 * (xs[index1] + xs[index2]);
+//					yAv = 0.5 * (ys[index1] + ys[index2]);
+//					zAv = 0.5 * (zs[index1] + zs[index2]);
+//				} else {
+//					xAv = xs[index1];
+//					yAv = ys[index1];
+//					zAv = zs[index1];
+//				}
+
+        if (even) {
+          xAv = 0.5 * (gsl_vector_get(xs, index1) + gsl_vector_get(xs, index2));
+          yAv = 0.5 * (gsl_vector_get(ys, index1) + gsl_vector_get(ys, index2));
+          zAv = 0.5 * (gsl_vector_get(zs, index1) + gsl_vector_get(zs, index2));
+        } else {
+          xAv = gsl_vector_get(xs, index1);
+          yAv = gsl_vector_get(ys, index1);
+          zAv = gsl_vector_get(zs, index1);
+        }
+
+        if (combineaffine == true) {
 					// Now introduce the affine component.
 					xFinal = globalAvJac(0, 0) * xAv + globalAvJac(0, 1) * yAv
 							+ globalAvJac(0, 2) * zAv;

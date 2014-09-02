@@ -3,8 +3,9 @@
 // Needs to have at least VTK 5.2
 
 #include <irtkImage.h>
-#include <nr.h>
-#include <time.h>
+//#include <nr.h>
+//#include <time.h>
+#include <gsl/gsl_rng.h>
 
 #include <vtkMath.h>
 #include <vtkIdList.h>
@@ -51,9 +52,9 @@ int main(int argc, char *argv[])
   int numberOfPoints;
   int id1, id2;
   time_t seconds;
-  long ran2Seed;
+//  long ran2Seed;
 
-  long ran2initialSeed;
+//  long ran2initialSeed;
   int reps = 100;
   double p1[3], p2[3];
 
@@ -101,10 +102,18 @@ int main(int argc, char *argv[])
   }
 
   // Prepare for random stuff.
-  seconds = time(NULL);
-  ran2Seed = seconds;
-  ran2initialSeed = -1 * ran2Seed;
-  (void) ran2(&ran2initialSeed);
+//  seconds = time(NULL);
+//  ran2Seed = seconds;
+//  ran2initialSeed = -1 * ran2Seed;
+//  (void) ran2(&ran2initialSeed);
+
+  gsl_rng * ranGen;
+  const gsl_rng_type * ranGenType;
+  gsl_rng_env_setup();
+  ranGenType = gsl_rng_default;
+  ranGen = gsl_rng_alloc (ranGenType);
+
+
 
   // Read the input surface.
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
@@ -133,7 +142,8 @@ int main(int argc, char *argv[])
   double runningTotal = 0.0;
 
   for (i = 0; i < reps; ++i){
-	  id1 = (int) floor(numberOfPoints * ran2(&ran2Seed));
+//    id1 = (int) floor(numberOfPoints * ran2(&ran2Seed));
+    id1 = (int) floor(numberOfPoints * gsl_rng_uniform(ranGen));
 
 	  temp->GetPoint(id1, p1);
 

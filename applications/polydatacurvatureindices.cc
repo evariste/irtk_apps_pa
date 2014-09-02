@@ -2,7 +2,9 @@
 
 #include <irtkImage.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 
 #include <vtkFloatArray.h>
@@ -224,8 +226,10 @@ int main(int argc, char **argv)
   }
 
   // Outlier control.
-  float *kCentileData = new float[1 + unmaskedCount];
-  float *hCentileData = new float[1 + unmaskedCount];
+//  float *kCentileData = new float[1 + unmaskedCount];
+//  float *hCentileData = new float[1 + unmaskedCount];
+  gsl_vector *kCentileData = gsl_vector_alloc(unmaskedCount);
+  gsl_vector *hCentileData = gsl_vector_alloc(unmaskedCount);
 
   unmaskedCount = 0;
   for (i = 0; i < noOfPoints; ++i){
@@ -233,21 +237,32 @@ int main(int argc, char **argv)
   	if (mask[i] <= 0)
   		continue;
 
-  	kCentileData[unmaskedCount + 1] = scalars_K->GetTuple1(i);
-  	hCentileData[unmaskedCount + 1] = scalars_H->GetTuple1(i);
-  	++unmaskedCount;
+//    kCentileData[unmaskedCount + 1] = scalars_K->GetTuple1(i);
+//    hCentileData[unmaskedCount + 1] = scalars_H->GetTuple1(i);
+    gsl_vector_set(kCentileData, unmaskedCount, scalars_K->GetTuple1(i));
+    gsl_vector_set(hCentileData, unmaskedCount, scalars_H->GetTuple1(i));
+
+    ++unmaskedCount;
   }
 
-  sort(unmaskedCount, kCentileData);
-  sort(unmaskedCount, hCentileData);
+//  sort(unmaskedCount, kCentileData);
+//  sort(unmaskedCount, hCentileData);
+  gsl_sort_vector(kCentileData);
+  gsl_sort_vector(hCentileData);
 
-  ind = 1 + (int) round((double) pMin * (unmaskedCount-1) / 100.0);
-  kLo = kCentileData[ind];
-  hLo = hCentileData[ind];
+//  ind = 1 + (int) round((double) pMin * (unmaskedCount-1) / 100.0);
+//  kLo = kCentileData[ind];
+//  hLo = hCentileData[ind];
+  ind = (int) round((double) pMin * (unmaskedCount-1) / 100.0);
+  kLo = gsl_vector_get(kCentileData, ind);
+  hLo = gsl_vector_get(hCentileData, ind);
 
-  ind = 1 + (int) round((double) pMax * (unmaskedCount-1) / 100.0);
-  kHi = kCentileData[ind];
-  hHi = hCentileData[ind];
+//  ind = 1 + (int) round((double) pMax * (unmaskedCount-1) / 100.0);
+//  kHi = kCentileData[ind];
+//  hHi = hCentileData[ind];
+  ind = (int) round((double) pMax * (unmaskedCount-1) / 100.0);
+  kHi = gsl_vector_get(kCentileData, ind);
+  hHi = gsl_vector_get(hCentileData, ind);
 
 
 
@@ -314,8 +329,10 @@ int main(int argc, char **argv)
 
 
   delete [] area;
-  delete [] kCentileData;
-  delete [] hCentileData;
+//  delete [] kCentileData;
+//  delete [] hCentileData;
+  gsl_vector_free(kCentileData);
+  gsl_vector_free(hCentileData);
 
   return 0;
 }

@@ -1,8 +1,9 @@
 #include <irtkImage.h>
 
 #include <irtkTransformation.h>
-#include <nr.h>
-
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 // Default filenames
 char *target_name = NULL, *dof_name  = NULL, *mask_name = NULL;
@@ -25,7 +26,9 @@ int main(int argc, char **argv)
 //   double jac, sumJac, bend, sumBend, absLogJac, sumAbsLogJac, topPen, sumTopPen;
   double Lnorm, sumLnorm, sumLnormSq;
 //   float *jacs, *bends, *absLogJacs, *topPens;
-  float *Lnorms, *LnormsSq;
+//  float *Lnorms, *LnormsSq;
+  float *LnormsSq;
+  gsl_vector *Lnorms;
 
   double alpha = 1;
   double beta = 1;
@@ -142,7 +145,10 @@ int main(int argc, char **argv)
 //  bends = new float[1 + count];
 //  absLogJacs = new float[1 + count];
 //  topPens = new float[1 + count];
-  Lnorms = new float[1 + count];
+
+//  Lnorms = new float[1 + count];
+  Lnorms = gsl_vector_alloc(count);
+
   LnormsSq = new float[1 + count];
 
 //   sumBend = 0.0;
@@ -205,7 +211,10 @@ int main(int argc, char **argv)
           Lnorm = sqrt(Lnorm);
 
           sumLnorm += Lnorm;
-          Lnorms[1 + count] = Lnorm;
+
+//          Lnorms[1 + count] = Lnorm;
+          gsl_vector_set(Lnorms, count, Lnorm);
+
           ++count;
 
 
@@ -218,9 +227,12 @@ int main(int argc, char **argv)
 //  sort(count, jacs);
 //  sort(count, absLogJacs);
 //  sort(count, topPens);
-  sort(count, Lnorms);
 
-  i = 1 + (int) round(0.5 * (count - 1));
+//  sort(count, Lnorms);
+  gsl_sort_vector(Lnorms);
+
+//  i = 1 + (int) round(0.5 * (count - 1));
+  i = (int) round(0.5 * (count - 1));
 
 //  cout << sumBend / (double(count)) << " ";
 //  cout << sumJac / (double(count)) << " ";
@@ -233,8 +245,8 @@ int main(int argc, char **argv)
 //  cout << jacs[i] << " ";
 //  cout << absLogJacs[i] << " ";
 //  cout << topPens[i] << " ";
-  cout << Lnorms[i] << " ";
-  cout << LnormsSq[i] << " ";
+  cout << gsl_vector_get(Lnorms, i) << " ";
+//  cout << LnormsSq[i] << " ";
 
 
 //   cout << count << endl;

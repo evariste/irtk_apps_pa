@@ -1,6 +1,8 @@
 #include <irtkImage.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 #define MAXVALS 100
 
@@ -128,7 +130,8 @@ int main(int argc, char **argv)
   }
 
   // NR subroutines use 1-indexing.
-  float *data = new float[1 + count];
+//  float *data = new float[1 + count];
+  gsl_vector *data = gsl_vector_alloc(count);
 
   pMask = mask.GetPointerToVoxels();
   pPix = input.GetPointerToVoxels();
@@ -137,24 +140,30 @@ int main(int argc, char **argv)
 
   for (i = 0; i < voxels; ++i){
     if (*pMask > 0){
-      data[1 + count] = *pPix;
+//      data[1 + count] = *pPix;
+      gsl_vector_set(data, count, *pPix);
       ++count;
     }
     ++pPix;
     ++pMask;
   }
 
-  sort(count, data);
+//  sort(count, data);
+  gsl_sort_vector(data);
 
   if (quiet == true){
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
-      cout << data[index] << " ";
+//      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
+//      cout << data[index] << " ";
+      index = (int) round( percentile[i] * (count - 1) / 100.0);
+      cout << gsl_vector_get(data, index) << " ";
     }
   } else {
     for (i = 0; i < numberOfPercentiles; i++){
-      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
-      cout << "  Percentile " << percentile[i] << " = " << data[index] << endl;
+//      index = 1 + (int) round( percentile[i] * (count - 1) / 100.0);
+//      cout << "  Percentile " << percentile[i] << " = " << data[index] << endl;
+      index = (int) round( percentile[i] * (count - 1) / 100.0);
+      cout << "  Percentile " << percentile[i] << " = " << gsl_vector_get(data, index) << endl;
     }
   }
 

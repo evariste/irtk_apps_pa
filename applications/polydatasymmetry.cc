@@ -6,7 +6,11 @@
 #include <irtkImage.h>
 #include <irtkLocator.h>
 
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
+
+#include <gsl/gsl_multiroots.h>
 
 #include <vtkPointData.h>
 #include <vtkPolyData.h>
@@ -268,28 +272,51 @@ int main(int argc, char **argv){
       boundsMeasures[j] = directionalBounds(normal, centre);
     }
 
-    float a[4], b[4];
+//    float a[4], b[4];
+    gsl_vector *a = gsl_vector_alloc(3);
+    gsl_vector *b = gsl_vector_alloc(3);
 
-    for (i = 1; i <= 3; ++i){
-      a[i] = symmMeasures[i-1];
-      b[i] = i - 1;
+//    for (i = 1; i <= 3; ++i){
+//      a[i] = symmMeasures[i-1];
+//      b[i] = i - 1;
+//    }
+
+    for (i = 0; i < 3; ++i){
+      gsl_vector_set(a, i, symmMeasures[i]);
+      gsl_vector_set(b, i, i);
     }
 
-    sort2(3, a, b);
-    for (i = 1; i <= 3; ++i){
-      //    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
-      symmRank[(int)(round(b[i]))] = i;
+//    sort2(3, a, b);
+    gsl_sort_vector2(a, b);
+
+//    for (i = 1; i <= 3; ++i){
+//      symmRank[(int)(round(b[i]))] = i;
+//    }
+    for (i = 0; i < 3; ++i){
+      symmRank[(int)(round( gsl_vector_get(b, i) ))] = i;
     }
+
     cout << endl;
 
-    for (i = 1; i <= 3; ++i){
-      a[i] = boundsMeasures[i-1];
-      b[i] = i - 1;
+//    for (i = 1; i <= 3; ++i){
+//      a[i] = boundsMeasures[i-1];
+//      b[i] = i - 1;
+//    }
+    for (i = 0; i < 3; ++i){
+      gsl_vector_set(a, i, boundsMeasures[i]);
+      gsl_vector_set(b, i,  i);
     }
-    sort2(3, a, b);
-    for (i = 1; i <= 3; ++i){
-      //    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
-      boundsRank[(int)(round(b[i]))] = i;
+
+
+//    sort2(3, a, b);
+    gsl_sort_vector2(a, b);
+
+//    for (i = 1; i <= 3; ++i){
+//      //    printf("%d\t %2.2f \t %f \n", i, a[i], b[i]);
+//      boundsRank[(int)(round(b[i]))] = i;
+//    }
+    for (i = 0; i < 3; ++i){
+      boundsRank[(int)(round( gsl_vector_get(b, i) ))] = i;
     }
 
     cout << endl;
@@ -378,6 +405,7 @@ int main(int argc, char **argv){
   powell(params, initDirs, 5, ftol, &iters, &fReturned, objectiveFuncForNR);
   cout << ". done." << endl;
 
+  gsl_multimin_fdfminimizer_conjugate_fr
   phi = params[1];
   theta = params[2];
   centre[0] = params[3];

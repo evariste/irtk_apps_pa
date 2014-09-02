@@ -1,6 +1,8 @@
 #include <irtkImage.h>
 #include <irtkGaussianBlurring.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 char *input_name  = NULL;
 char *output_name = NULL;
@@ -32,7 +34,9 @@ int main(int argc, char **argv)
 
   int voxels, i, j, unpaddedCount = 0;
   bool ok;
-  float *intensities, *offsets, *ranks;
+//  float *intensities, *offsets, *ranks;
+  float *ranks;
+  gsl_vector *intensities, *offsets;
   irtkRealPixel maxVal, minVal;
   int offset, intervalStart, intervalEnd;
 
@@ -97,8 +101,12 @@ int main(int argc, char **argv)
   // Put all valid voxel intensities into an array.
   // Numerical recipes arrays are 1-indexed, so need an extra element at
   // the end.
-  intensities = new float[unpaddedCount + 1];
-  offsets     = new float[unpaddedCount + 1];
+
+//  intensities = new float[unpaddedCount + 1];
+//  offsets     = new float[unpaddedCount + 1];
+  intensities = gsl_vector_alloc(unpaddedCount);
+  offsets     = gsl_vector_alloc(unpaddedCount);
+
   ranks       = new float[unpaddedCount + 1];
 
   pMask = mask.GetPointerToVoxels();
@@ -108,8 +116,10 @@ int main(int argc, char **argv)
 
   for (i = 0; i < voxels; ++i){
     if (*pMask > pad){
-      intensities[unpaddedCount] = *pIn;
-      offsets[unpaddedCount]     = offset;
+//      intensities[unpaddedCount] = *pIn;
+//      offsets[unpaddedCount]     = offset;
+      gsl_vector_set(intensities, unpaddedCount, *pIn);
+      gsl_vector_set(offsets, unpaddedCount, offset);
       ++unpaddedCount;
     }
     ++pMask;
@@ -117,25 +127,28 @@ int main(int argc, char **argv)
     offset++;
   }
 
-  // Prepare for nr 1-indexing
-  for (i = unpaddedCount; i > 0; i--){
-    intensities[i] = intensities[i - 1];
-    offsets[i] = offsets[i - 1];
-  }
+//  // Prepare for nr 1-indexing
+//  for (i = unpaddedCount; i > 0; i--){
+//    intensities[i] = intensities[i - 1];
+//    offsets[i] = offsets[i - 1];
+//  }
+
   // This call sorts the intensities array, and re-orders indices in the
   // same way.
-  sort2(unpaddedCount, intensities, offsets);
-  // Undo the 1-indexing shift
-  for(i = 0; i < unpaddedCount; i++){
-    intensities[i] = intensities[i + 1];
-    offsets[i] = offsets[i + 1];
-  }
+//  sort2(unpaddedCount, intensities, offsets);
+  gsl_sort_vector2(intensities, offsets);
+
+//  // Undo the 1-indexing shift
+//  for(i = 0; i < unpaddedCount; i++){
+//    intensities[i] = intensities[i + 1];
+//    offsets[i] = offsets[i + 1];
+//  }
 
   // Work out the rank of each voxel from the shuffled indices.
   intervalStart =  0;
   for (i = 1; i < unpaddedCount; ++i){
 
-    if (round(intensities[i]) > round(intensities[i - 1])){
+    if (round(gsl_vector_get(intensities, i)) > round(gsl_vector_get(intensities, i - 1))){
       intervalEnd = i - 1;
       for (j = intervalStart; j <= intervalEnd; j++){
         ranks[j] = 0.5 * (intervalStart + intervalEnd);
@@ -152,7 +165,7 @@ int main(int argc, char **argv)
   pIn = input.GetPointerToVoxels();
 
   for (i = 0; i < unpaddedCount; ++i){
-    offset = (int) offsets[i];
+    offset = (int) gsl_vector_get(offsets, i);
     *(pIn + offset) = round(maxVal * ranks[i] / ((double) unpaddedCount));
   }
 

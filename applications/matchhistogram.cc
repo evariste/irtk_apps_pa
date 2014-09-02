@@ -1,6 +1,8 @@
 #include <irtkImage.h>
 #include <irtkGaussianBlurring.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 char *ref_name    = NULL;
 char *input_name  = NULL;
@@ -38,9 +40,12 @@ int main(int argc, char **argv)
 
   int voxels, i, unpaddedCountIn = 0, unpaddedCountRef = 0;
   bool ok;
-  float *intsRef;
-  float *intsIn;
-  float *offsetsIn;
+//  float *intsRef;
+//  float *intsIn;
+//  float *offsetsIn;
+  gsl_vector *intsRef;
+  gsl_vector *intsIn;
+  gsl_vector *offsetsIn;
   int offset;
 
   double temp, scale;
@@ -104,22 +109,31 @@ int main(int argc, char **argv)
   // Put all valid voxel intensities into an array.
   // Numerical recipes arrays are 1-indexed, so need an extra element at
   // the end.
-  intsIn  = new float[unpaddedCountIn];
-  offsetsIn = new float[unpaddedCountIn];
+
+//  intsIn  = new float[unpaddedCountIn];
+//  offsetsIn = new float[unpaddedCountIn];
+
+  intsIn = gsl_vector_alloc(unpaddedCountIn);
+  offsetsIn = gsl_vector_alloc(unpaddedCountIn);
+
 
   pIn   = input->GetPointerToVoxels();
   unpaddedCountIn = 0;
 
   for (offset = 0; offset < voxels; ++offset){
     if (*pIn > pad){
-      intsIn[unpaddedCountIn] = *pIn;
-      offsetsIn[unpaddedCountIn] = offset;
+//      intsIn[unpaddedCountIn] = *pIn;
+//      offsetsIn[unpaddedCountIn] = offset;
+      gsl_vector_set(intsIn, unpaddedCountIn, *pIn);
+      gsl_vector_set(offsetsIn, unpaddedCountIn, offset);
+
       ++unpaddedCountIn;
     }
     ++pIn;
   }
 
-  sort2(unpaddedCountIn, intsIn - 1, offsetsIn - 1);
+//  sort2(unpaddedCountIn, intsIn - 1, offsetsIn - 1);
+  gsl_sort_vector2(intsIn, offsetsIn);
 
   ////////////////
 
@@ -135,20 +149,23 @@ int main(int argc, char **argv)
     ++pRef;
   }
 
-  intsRef  = new float[unpaddedCountRef];
+//  intsRef  = new float[unpaddedCountRef];
+  intsRef = gsl_vector_alloc(unpaddedCountRef);
 
   pRef  = ref->GetPointerToVoxels();
   unpaddedCountRef = 0;
 
   for (i = 0; i < voxels; ++i){
     if (*pRef > pad){
-      intsRef[unpaddedCountRef] = *pRef;
+//      intsRef[unpaddedCountRef] = *pRef;
+      gsl_vector_set(intsRef, unpaddedCountRef, *pRef);
       ++unpaddedCountRef;
     }
     ++pRef;
   }
 
-  sort(unpaddedCountRef, intsRef - 1);
+//  sort(unpaddedCountRef, intsRef - 1);
+  gsl_sort_vector(intsRef);
 
   ////////////////////////////////
 
@@ -158,8 +175,12 @@ int main(int argc, char **argv)
 
   for (i = 0; i < unpaddedCountIn; ++i){
     temp = floor (i * scale);
-    offset = (int) offsetsIn[i];
-    *(pIn + offset) = (int) round(intsRef[(int) temp]);
+
+//    offset = (int) offsetsIn[i];
+    offset = (int) gsl_vector_get(offsetsIn, i);
+
+//    *(pIn + offset) = (int) round(intsRef[(int) temp]);
+    *(pIn + offset) = (int) round( gsl_vector_get(intsRef, (int) temp) );
   }
 
   input->Write(output_name);

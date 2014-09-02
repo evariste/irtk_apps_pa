@@ -2,7 +2,9 @@
 #ifdef HAS_VTK
 
 #include <irtkRegistration.h>
-#include <nr.h>
+//#include <nr.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
 
 // Default filenames
 char *target_name = NULL, *output_name = NULL, *mask_name = NULL;
@@ -45,7 +47,8 @@ int main(int argc, char **argv)
   double x, y, z, dx, dy, dz;
 
   int xdim, ydim, zdim;
-  float *vals, *vals2, *L, *L2, sumL, sumL2;
+//  float *vals, *vals2, *L, *L2, sumL, sumL2;
+  float sumL, sumL2;
   double alpha = 1;
 
 
@@ -280,10 +283,15 @@ int main(int argc, char **argv)
   }
 
 
-  vals  = new float[1 + noOfPoints];
-  vals2 = new float[1 + noOfPoints];
-  L  = new float[1 + noOfPoints];
-  L2 = new float[1 + noOfPoints];
+//  vals  = new float[1 + noOfPoints];
+//  vals2 = new float[1 + noOfPoints];
+//  L  = new float[1 + noOfPoints];
+//  L2 = new float[1 + noOfPoints];
+
+  gsl_vector *vals   = gsl_vector_alloc (noOfPoints);
+  gsl_vector *vals2  = gsl_vector_alloc (noOfPoints);
+  gsl_vector *L   = gsl_vector_alloc (noOfPoints);
+  gsl_vector *L2  = gsl_vector_alloc (noOfPoints);
 
   sumD = sumD2 = sumL = sumL2 = 0.0;
 
@@ -302,12 +310,14 @@ int main(int argc, char **argv)
           val = x*x + y*y + z*z;
 
           sumD2 += val;
-          vals2[1 + noOfPoints] = val;
+//          vals2[1 + noOfPoints] = val;
+          gsl_vector_set(vals2, noOfPoints, val);
 
           val = sqrt(val);
 
           sumD += val;
-          vals[1 + noOfPoints]  = val;
+//          vals[1 + noOfPoints]  = val;
+          gsl_vector_set(vals, noOfPoints, val);
 
           dx = xdisp(i+1, j, k) - xdisp(i-1, j, k);
           dy = ydisp(i, j+1, k) - ydisp(i, j-1, k);
@@ -316,12 +326,14 @@ int main(int argc, char **argv)
           val = x*x + y*y + z*z + alpha*alpha*(dx*dx + dy*dy + dz*dz);
 
           sumL2 += val;
-          L2[1 + noOfPoints] = val;
+//          L2[1 + noOfPoints] = val;
+          gsl_vector_set(L2, noOfPoints, val);
 
           val = sqrt(val);
 
           sumL += val;
-          L[1 + noOfPoints] = val;
+//          L[1 + noOfPoints] = val;
+          gsl_vector_set(L, noOfPoints, val);
 
 
           noOfPoints++;
@@ -333,22 +345,29 @@ int main(int argc, char **argv)
 
 
 
-  sort(noOfPoints, vals);
-  sort(noOfPoints, vals2);
-  sort(noOfPoints, L);
-  sort(noOfPoints, L2);
+//  sort(noOfPoints, vals);
+//  sort(noOfPoints, vals2);
+//  sort(noOfPoints, L);
+//  sort(noOfPoints, L2);
+  gsl_sort_vector(vals);
+  gsl_sort_vector(vals2);
+  gsl_sort_vector(L);
+  gsl_sort_vector(L2);
 
-  m = 1 + (int) round(0.5 * (noOfPoints - 1));
+//  m = 1 + (int) round(0.5 * (noOfPoints - 1));
+  m = (int) round(0.5 * (noOfPoints - 1));
 
   // Means.
   cout << sumD / (double (noOfPoints));
   cout << " " << sumD2 / (double (noOfPoints)) << " ";
   // Medians and point count.
-  cout << vals[m] << " " << vals2[m] << " " << noOfPoints << " ";
+//  cout << vals[m] << " " << vals2[m] << " " << noOfPoints << " ";
+  cout << gsl_vector_get(vals, m) << " " << gsl_vector_get(vals2, m) << " " << noOfPoints << " ";
 
   cout << sumL / (double (noOfPoints));
   cout << " " << sumL2 / (double (noOfPoints)) << " ";
-  cout << L[m] << " " << L2[m];
+//  cout << L[m] << " " << L2[m];
+  cout << gsl_vector_get(L, m) << " " << gsl_vector_get(L2, m);
   cout << endl;
 
 }
