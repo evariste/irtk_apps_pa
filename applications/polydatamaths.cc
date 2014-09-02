@@ -17,6 +17,9 @@
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 
+#ifdef WIN32
+#define isnan(x) _isnan(x)
+#endif
 
 // Functions can only be binary or unary.
 typedef double (*binaryFunc)(double, double);

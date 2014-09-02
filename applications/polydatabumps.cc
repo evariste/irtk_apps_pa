@@ -419,7 +419,7 @@ int main(int argc, char **argv)
 
   } else { // if m_specific == -1
 
-  	if (fabs(m_specific) <= l_max){
+  	if (fabs((double)m_specific) <= l_max){
     	get_ylm_values(theta, phi, ylm, l_max, m_specific);
       for (i = 0; i < noOfPoints; ++i){
         sphFunc->SetTuple1(i, ylm->GetTuple1(i));
