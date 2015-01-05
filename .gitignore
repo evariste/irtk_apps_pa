@@ -1,1 +1,7 @@
 build/
+.cproject
+.project
+.settings/
+IRTKInclude.cmake
+IRTKInclude.cmake.bak
+build.bak/
