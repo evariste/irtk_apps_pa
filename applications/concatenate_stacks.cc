@@ -28,6 +28,17 @@ void usage()
   cerr << "                                      where val is chosen from 1 ... N. Default is " << endl;
   cerr << "                                      the central stack (odd N), N/2th stack (even N)." << endl;
   cerr << "" << endl;
+  cerr << "Assumptions are" << endl;
+  cerr << "" << endl;
+  cerr << " -  That the orientation of the axes of the input images are all the same." << endl;
+  cerr << " -  That the centres of the image grids all form a straight line in the patients coordinate system." << endl;
+  cerr << " -  That the line is parallel to the z axis of each of the image grids" << endl;
+  cerr << " -  That we can use the one of the image grids as a coordinate system for the combined data" << endl;
+  cerr << " -  That the origin of the new grid coincides with the origin of the chosen stack." << endl;
+  cerr << " -  The axes also coincide and we take as many z-slices as needed 'up' and 'down' to encompass all the data." << endl;
+  cerr << " -  That as we loop over the data in memory for each stack, where one ends, the next one begins." << endl;
+  cerr << "" << endl;
+  cerr << "NB There may be differences in contrast across different stacks." << endl;
   cerr << "" << endl;
   exit(1);
 }
@@ -68,11 +79,15 @@ int main(int argc, char **argv)
 
       input_names = new char*[noOfInputs];
 
+      cout << "Input files are: " << endl;
       for (i = 0; i < noOfInputs; i++){
         input_names[i] = argv[1];
+        cout << "      " << input_names[i] << endl;
         argc--;
         argv++;
       }
+      cout << endl << endl;
+
       ok = true;
     }
 
@@ -126,19 +141,7 @@ int main(int argc, char **argv)
 
   frameStackAttributes = targetImg->GetImageAttributes();
 
-  /*
-   * Assumptions are that the orientation of the axes of the input images are all the same.
-   * That the centres of the image grids all form a straight line in the patients coordinate system.
-   * That the line is parallel
-   * to the z axis of each of the image grids.
-   * That we can use the one of the image grids as a coordinate system for the
-   * combined data
-   * That the origin of the new grid coincides with the origin of the chosen stack.
-   * The axes also coincide and we take as many z-slices as needed 'up' and 'down' to encompass all the data.
-   * That as we loop over the data in memory for each stack, where one ends, the next one begins.
-   *
-   * There may be differences in contrast across different stacks.
-   */
+
 
   int slicesBefore, slicesAfter;
 
@@ -241,8 +244,7 @@ int main(int argc, char **argv)
   int currZoffset = 0;
 
   for (n = 0; n < noOfInputs; n++){
-    irtkFileToImage *reader = irtkFileToImage::New(input_names[n]);
-    irtkBaseImage *image = reader->GetOutput();
+    irtkBaseImage *image = irtkBaseImage::New(input_names[n]);
 
     for (k = 0; k < image->GetZ(); ++k){
       for (j = 0; j < image->GetY(); ++j){
@@ -254,6 +256,8 @@ int main(int argc, char **argv)
     }
 
     currZoffset += image->GetZ();
+
+    delete image;
   }
 
 
