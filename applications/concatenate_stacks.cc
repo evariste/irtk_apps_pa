@@ -128,14 +128,20 @@ int main(int argc, char **argv)
   cout << "Using frame from stack number " << frameStackIndex + 1 << ": " << input_names[frameStackIndex] << endl;
 
 
+  irtkImage ** stackImage = new irtkImage*[noOfInputs];
+
+
   cout << "Combining following stacks: " << endl;
   for (i = 0; i < noOfInputs; i++)
+  {
     cout << input_names[i] << endl;
+    stackImage[i] = irtkImage::New(input_names[i]);
+  }
   cout << endl;
 
-  irtkFileToImage *frameStackReader = irtkFileToImage::New(input_names[frameStackIndex]);
-  irtkBaseImage *targetImg;
-  targetImg = frameStackReader->GetOutput();
+
+
+  irtkImage *targetImg = stackImage[frameStackIndex];
 
   irtkImageAttributes frameStackAttributes;
 
@@ -149,16 +155,13 @@ int main(int argc, char **argv)
   slicesAfter  = 0;
   for (n = 0; n < noOfInputs; n++){
 
-    irtkFileToImage *reader = irtkFileToImage::New(input_names[n]);
-    irtkBaseImage *image = reader->GetOutput();
-
     // Some checking.
-    if (image->GetX() != targetImg->GetX() || image->GetY() != targetImg->GetY()){
+    if (stackImage[n]->GetX() != targetImg->GetX() || stackImage[n]->GetY() != targetImg->GetY()){
       cerr << "All stacks must have the same in-plane dimensions." << endl;
       exit(1);
     }
 
-    if (image->GetT() > 1){
+    if (stackImage[n]->GetT() > 1){
       cerr << "Only implemented for 3D volumes. Given volume has at least 4 dimensions: " << input_names[n] << endl;
       exit(1);
     }
@@ -166,21 +169,21 @@ int main(int argc, char **argv)
     // Main purpose of loop:
 
     if (n < frameStackIndex){
-      slicesBefore += image->GetZ();
+      slicesBefore += stackImage[n]->GetZ();
     }
 
     if (n > frameStackIndex){
-      slicesAfter += image->GetZ();
+      slicesAfter += stackImage[n]->GetZ();
     }
 
     // Collect the origins for the first pair of inputs to see if the direction of the stacks matches
     // the direction of the main z axis. See below.
     if (n == 0){
-      image->GetOrigin(x1, y1, z1);
+      stackImage[n]->GetOrigin(x1, y1, z1);
     }
 
     if (n == 1){
-      image->GetOrigin(x2, y2, z2);
+      stackImage[n]->GetOrigin(x2, y2, z2);
     }
 
   }
@@ -238,32 +241,65 @@ int main(int argc, char **argv)
   irtkImageAttributes targetAttributes = frameStackAttributes;
 
   targetAttributes._z = zdimTotal;
-  targetImg->Initialize(targetAttributes);
+
+  switch (targetImg->GetScalarType()) {
+  case IRTK_VOXEL_CHAR: {
+    targetImg  = new irtkGenericImage<char> (targetAttributes);
+  }
+  break;
+  case IRTK_VOXEL_UNSIGNED_CHAR: {
+    targetImg = new irtkGenericImage<unsigned char> (targetAttributes);
+  }
+  break;
+  case IRTK_VOXEL_SHORT: {
+    targetImg = new irtkGenericImage<short> (targetAttributes);
+  }
+  break;
+  case IRTK_VOXEL_UNSIGNED_SHORT: {
+    targetImg = new irtkGenericImage<unsigned short> (targetAttributes);
+  }
+  break;
+  case IRTK_VOXEL_FLOAT: {
+    targetImg = new irtkGenericImage<float> (targetAttributes);
+    break;
+  }
+  case IRTK_VOXEL_DOUBLE: {
+    targetImg = new irtkGenericImage<double> (targetAttributes);
+    break;
+  }
+  default:
+    cerr << "Unknown voxel type for output format" << endl;
+    exit(1);
+  }
+
   targetImg->Print();
 
   int currZoffset = 0;
 
   for (n = 0; n < noOfInputs; n++){
-    irtkBaseImage *image = irtkBaseImage::New(input_names[n]);
 
-    for (k = 0; k < image->GetZ(); ++k){
-      for (j = 0; j < image->GetY(); ++j){
-        for (i = 0; i < image->GetX(); ++i){
-          val = image->GetAsDouble(i,j,k);
+    for (k = 0; k < stackImage[n]->GetZ(); ++k){
+      for (j = 0; j < stackImage[n]->GetY(); ++j){
+        for (i = 0; i < stackImage[n]->GetX(); ++i){
+          val = stackImage[n]->GetAsDouble(i,j,k);
           targetImg->PutAsDouble(i, j, k + currZoffset, val);
         }
       }
     }
 
-    currZoffset += image->GetZ();
-
-    delete image;
+    currZoffset += stackImage[n]->GetZ();
   }
-
 
 
   targetImg->Write(output_name);
 
+
+  for (n = 0; n < noOfInputs; n++)
+    delete stackImage[n];
+
+  delete targetImg;
+  delete [] stackImage;
+  delete [] input_names;
 }
 
 
