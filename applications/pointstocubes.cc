@@ -18,7 +18,7 @@
 #include <irtkImage.h>
 
 
-char *input_landmarks_name = NULL;
+char *input_points_name = NULL;
 char *output_name = NULL;
 
 int faces[6][4] = {{0, 4, 6, 2}, {1, 3, 7, 5}, {4, 5, 7, 6}, {0, 2, 3, 1}, {2, 6, 7, 3}, {0, 1, 5, 4}};
@@ -35,7 +35,7 @@ void usage(){
 
 void putCube(vtkPoints* points, vtkCellArray *polys, int count, double *p, double r){
 
-  int modifiedFaces[6][4];
+  long long int modifiedFaces[6][4];
   double x[8][3];
   int i, j, k, n;
 
@@ -75,7 +75,7 @@ int main(int argc, char **argv){
     usage();
 
 
-  input_landmarks_name = argv[1];
+  input_points_name = argv[1];
   argv++;
   argc--;
   output_name = argv[1];
@@ -114,7 +114,7 @@ int main(int argc, char **argv){
 
   cout << "Reading target landmarks ... "; cout.flush();
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
-  reader->SetFileName(input_landmarks_name);
+  reader->SetFileName(input_points_name);
   reader->Update();
   vtkPolyData* targetLandmarks = vtkPolyData::New();
   targetLandmarks = reader->GetOutput();
