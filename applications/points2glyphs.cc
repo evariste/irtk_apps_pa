@@ -26,14 +26,14 @@ void usage(char* name){
    cout << name <<  " [inputPoints.vtk] [outputPolys.vtk] <-r> <-scalar>" << endl;
   cout << "" << endl;
   cout << "Place a glyph centered at each of the input points. By default the glyph is a sphere." << endl;
-  cout << "default radius is 1, can assign a scalar value if wanted." << endl;
+  cout << "default radius is 1, can assign the radius value if wanted." << endl;
 
 
   cout << " " << endl;
   cout << " Options:" << endl;
 
   cout << " -r [value]       : Use the given value as the radius." << endl;
-  cout << " -auto_radius     : Automatically estimate radius using minimum pairwise distance." << endl;
+  cout << " -auto_radius     : Automatically estimate radius as one tenth of the minimum pairwise distance." << endl;
   cout << " -cube            : Use a cube as the glyph instead of a (default) sphere." << endl;
   cout << " " << endl;
   cout << "" << endl;
