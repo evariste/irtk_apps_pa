@@ -6,12 +6,14 @@
 #include <vtkPolyDataWriter.h>
 #include <vtkGeometryFilter.h>
 #include <vtkDelaunay3D.h>
+#include <vtkCleanPolyData.h>
+
 
 char *in_name  = NULL, *out_name = NULL;
 
-void usage()
+void usage(char* name)
 {
-  cerr << "Usage: delaunay [input points] [output polys]\n" << endl;
+  cerr << "Usage: " << name << "  [input points] [output polys]\n" << endl;
   cerr << "Uses delaunay3D, specifically aimed for landmarks around a cortex .." << endl;
   cerr << "i.e. the points are arranged on the surface of a roughly spherical shape." << endl;
   cerr << "Points internal will not end up connected with the surface." << endl;
@@ -22,7 +24,7 @@ int main(int argc, char **argv)
 {
 
   if (argc < 3){
-    usage();
+    usage(argv[0]);
   }
 
   // Parse source and target point lists
@@ -54,15 +56,19 @@ int main(int argc, char **argv)
   gem->Modified();
   gem->Update();
 
+  vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
+  cleaner->SetInput(gem->GetOutput() );
+  cleaner->Update();
+
   // Write the output of the geometry filter.
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(out_name);
-  writer->SetInput( gem->GetOutput() );
+  writer->SetInput( cleaner->GetOutput() );
   writer->Update();
 
   // Check that no points were lost due to being internal.
   cout << "Number of input points  : " << input->GetNumberOfPoints() << endl;
-  cout << "Number of output points : " << gem->GetOutput()->GetNumberOfPoints() << endl;
+  cout << "Number of output points : " << cleaner->GetOutput()->GetNumberOfPoints() << endl;
 
 }
 
@@ -74,109 +80,5 @@ int main( int argc, char *argv[] ){
   cerr << argv[0] << " needs to be compiled with the VTK library " << endl;
 }
 #endif
-
-//   int nPoints = input->GetNumberOfPoints();
-
-//   cout << "nPoints " << nPoints << endl;
-
-//   double meanZ = 0.0;
-//   double xyz[3];
-
-//   for (int i = 0; i < nPoints; i++){
-//     input->GetPoint(i, xyz);
-//     meanZ += xyz[2];
-//   }
-
-//   meanZ /= nPoints;
-//   cout << "meanZ " << meanZ << endl;
-
-//   // to contain float by default.
-//   vtkPoints *pointsUp  = vtkPoints::New();
-//   vtkPoints *pointsDown = vtkPoints::New();
-
-//   for (int i = 0; i < nPoints; i++){
-//     input->GetPoint(i, xyz);
-//     if (xyz[2] < meanZ){
-//       pointsDown->InsertNextPoint(xyz);
-//     } else {
-//       pointsUp->InsertNextPoint(xyz);
-//     }
-//   }
-
-//   cout << "Points up  : " << pointsUp->GetNumberOfPoints() << endl;
-//   cout << "Points down: " << pointsDown->GetNumberOfPoints() << endl;
-
-//   vtkPolyData *polysUp   = vtkPolyData::New();
-//   vtkPolyData *polysDown = vtkPolyData::New();
-
-//   polysUp->SetPoints(pointsUp);
-
-//   Delaunay2D , gives output of type polydata
-//   vtkDelaunay2D *delaunay = vtkDelaunay2D::New();
-//   delaunay->SetInput(polysUp);
-//    delaunay->SetTolerance(0.01);
-//    delaunay->SetAlpha(2);
-//    delaunay->BoundingTriangulationOff();
-
-//   polysUp = delaunay->GetOutput();
-//   polysUp->Update();
-
-//   MarkBoundary(polysUp);
-
-//   int nPointsUp = polysUp->GetNumberOfPoints();
-
-//   for (int i = 0; i < nPointsUp; i++){
-//     if (*polysUp->GetPointData()->GetScalars()->GetTuple (id) == 0){
-//       // A boundary point.
-//       polysUp->GetPoint(i, xyz);
-//       // Include with the lower point set.
-//       pointsDown->InsertNextPoint(xyz);
-//     }
-//   }
-//   polysDown->SetPoints(pointsDown);
-
-//   delaunay->SetInput(polysDown);
-//   polysDown = delaunay->GetOutput();
-//   polysDown->Update();
-
-//   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-//   writer->SetFileName(out_name);
-//   writer->SetInput(polysUp);
-//   writer->Update();
-
-
-
-
-
-//   vtkUnsignedCharArray *charArray = vtkUnsignedCharArray::New();
-//   charArray = ugrid->GetCellTypesArray();
-
-//   unsigned char *temp;
-//   // From vtkAbstractArray
-//   int count = charArray->GetNumberOfTuples();
-//   cout << "Count = " << count << endl;
-//   int n;
-
-//   for (int i = 0; i < count; i++){
-//     charArray->GetTupleValue(i, temp);
-//     cout << temp << endl;
-//   }
-
-//   vtkCell *cell = ugrid->GetCell(0);
-//   cout << cell->GetClassName() << endl << endl;
-
-//   cout << *charArray;
-
-//   vtkUnstructuredGridWriter *writer = vtkUnstructuredGridWriter::New();
-//   writer->SetFileName(out_name);
-//   writer->SetInput(ugrid);
-//   writer->Update();
-
-  //  vtkUnstructuredGridToPolyDataFilter *gem = vtkUnstructuredGridToPolyDataFilter::New();
-//   vtkGeometryFilter *gem = vtkGeometryFilter::New();
-//   gem->SetInput(  delaunay->GetOutput() );
-//   gem->Modified();
-//   gem->Update();
-
 
 
