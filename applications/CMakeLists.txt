@@ -143,6 +143,7 @@ ELSE(BUILD_CONDOR_EXE)
 # TODO : convert this to GSL
 #    ADD_EXECUTABLE(polydatasymmetry polydatasymmetry.cc)
     ADD_EXECUTABLE(polydatatransformscalars polydatatransformscalars.cc)
+	ADD_EXECUTABLE(polydatavolume polydatavolume.cc)
     ADD_EXECUTABLE(procrustes_align procrustes_align.cc)
     ADD_EXECUTABLE(reflect2 reflect2.cc)
     ADD_EXECUTABLE(region_real region_real.cc)
