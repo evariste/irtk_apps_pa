@@ -45,26 +45,6 @@ char *output_array_name = NULL;
 //////////////////////////////////////////////////////////////
 
 //
-// Section 0: Helper functions.
-//
-
-
-
-bool is_numeric(const char *str)
-{
-  char *pEnd;
-  double dummy;
-  dummy = strtod(str, &pEnd);
-
-  if (*pEnd != '\0')
-    return false;
-
-  return true;
-}
-
-
-
-//
 // Section 1 : Enum for all operations. Update number of operations when adding a new operation.
 //
 

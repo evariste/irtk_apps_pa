@@ -1,9 +1,21 @@
 
 #include <abcdUtils.h>
-#include <string.h>
-#include <sys/stat.h>
 
-#include <irtkImage.h>
+
+
+bool is_numeric(const char *str)
+{
+  char *pEnd;
+  double dummy;
+  dummy = strtod(str, &pEnd);
+
+  if (*pEnd != '\0')
+    return false;
+
+  return true;
+}
+
+
 
 
 bool is_vtkPolyDataFile(const char* filename) {
