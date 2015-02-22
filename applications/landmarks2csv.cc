@@ -13,45 +13,16 @@
 #include <string.h>
 #include <sys/stat.h>
 
+#include <abcdUtils.h>
+
 #include <vtkSmartPointer.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 
 char **inputFilenames  = NULL;
-char *outputFile = NULL;
+char *outputFileName = NULL;
 
 
-bool is_vtkPolyDataFile(const char* filename)
-{
-  // Rough and ready check to see if a file contains polydata.
-  char *c = NULL;
-  char buff[1000];
-  struct stat statStruct ;
-
-  // Does file name end in .vtk?
-  sprintf(buff, "%s", filename);
-  c = strstr(buff, ".vtk\0");
-
-  if (c == NULL){
-    return false;
-  }
-
-  // Does file exist?
-  int i = stat( buff , &statStruct );
-  if( i != 0 ) {
-    return false;
-  }
-
-
-  // Have a go at reading it.
-  vtkSmartPointer<vtkPolyDataReader> reader = vtkSmartPointer<vtkPolyDataReader>::New();
-  reader->SetFileName(filename);
-  if (! reader->IsFilePolyData()){
-    return false;
-  }
-
-  return true;
-}
 
 void usage(std::string name){
 
@@ -125,7 +96,7 @@ int main(int argc, char **argv){
     if ((ok == false) && (strcmp(argv[1], "-file") == 0)){
       argc--;
       argv++;
-      outputFile = argv[1];
+      outputFileName = argv[1];
       argc--;
       argv++;
       ok = true;
@@ -140,8 +111,8 @@ int main(int argc, char **argv){
     cerr << "Processing " << count << " files " << endl;
     for (i = 0; i < count; i++)
       cerr << "   " << inputFilenames[i] << endl;
-    if (outputFile != NULL)
-      cerr << "Writing output to " << outputFile << endl;
+    if (outputFileName != NULL)
+      cerr << "Writing output to " << outputFileName << endl;
   }
 
 
@@ -160,10 +131,10 @@ int main(int argc, char **argv){
 
   FILE *output;
 
-  if (outputFile == NULL){
+  if (outputFileName == NULL){
     output = stdout;
   } else {
-    output = fopen (outputFile,"w");
+    output = fopen (outputFileName,"w");
   }
 
   fprintf(output, "file");
@@ -194,7 +165,7 @@ int main(int argc, char **argv){
   }
 
 
-  if (outputFile != NULL){
+  if (outputFileName != NULL){
     fclose(output);
   }
 
