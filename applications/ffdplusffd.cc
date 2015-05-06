@@ -56,27 +56,27 @@ int main(int argc, char **argv)
 
     // Make sure that all levels have the same number of control points
     if ((ffd1->GetX() != ffd2->GetX()) ||
-	(ffd1->GetY() != ffd2->GetY()) ||
-	(ffd1->GetZ() != ffd2->GetZ())){
+        (ffd1->GetY() != ffd2->GetY()) ||
+        (ffd1->GetZ() != ffd2->GetZ())){
       cerr << "Number of control points on each level must be identical"
-	   << endl;
+          << endl;
       exit(1);
     }
 
     for (i = 0; i < ffd1->GetX(); i++){
       for (j = 0; j < ffd1->GetY(); j++){
-	for (k = 0; k < ffd1->GetZ(); k++){
+        for (k = 0; k < ffd1->GetZ(); k++){
 
-	  // Get control point value on first level
-	  ffd1->Get(i, j, k, x1, y1, z1);
+          // Get control point value on first level
+          ffd1->Get(i, j, k, x1, y1, z1);
 
-	  // Get control point value on current level
-	  ffd2->Get(i, j, k, x2, y2, z2);
+          // Get control point value on current level
+          ffd2->Get(i, j, k, x2, y2, z2);
 
-	  // Add levels and store result in first level
-	  ffd1->Put(i, j, k, x1+x2, y1+y2, z1+z2);
+          // Add levels and store result in first level
+          ffd1->Put(i, j, k, x1+x2, y1+y2, z1+z2);
 
-	}
+        }
       }
     }
   }
