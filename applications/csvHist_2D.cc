@@ -3,7 +3,6 @@
 #include <irtkImageFunction.h>
 #include <irtkTransformation.h>
 
-
 char *target_name = NULL, *source_name = NULL;
 char *output_name = NULL;
 char *dof_name = NULL;
@@ -267,6 +266,7 @@ int main(int argc, char **argv){
     }
     fileOut << hist.BinToValX(i) << endl;
 
+
     for (j = 0; j < biny - 1; ++j){
       fileOut << hist.BinToValY(j) << ",";
     }
@@ -292,10 +292,9 @@ int main(int argc, char **argv){
     for (j = 0; j < biny - 1; ++j){
       cout << hist.BinToValY(j) << ",";
     }
-
     cout << hist.BinToValY(j) << endl;
 
-    for (j = 0; j < biny - 1; ++j){
+    for (j = 0; j < biny; ++j){
       for (i = 0; i < binx - 1; ++i){
         cout << hist(i, j) << ",";
       }

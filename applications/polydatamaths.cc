@@ -9,6 +9,8 @@
 
 #include <sys/stat.h>
 
+#include <abcdUtils.h>
+
 #include <vtkIndent.h>
 #include <vtkSmartPointer.h>
 #include <vtkFloatArray.h>
@@ -41,53 +43,6 @@ char *output_array_name = NULL;
 // Adding a new operation only affects Sections 1 to 3
 //
 //////////////////////////////////////////////////////////////
-
-//
-// Section 0: Helper functions.
-//
-
-bool is_vtkPolyDataFile(const char* filename)
-{
-  // Rough and ready check to see if a file contains polydata.
-  char *c = NULL;
-  char buff[1000];
-  struct stat statStruct ;
-
-  sprintf(buff, "%s", filename);
-  c = strstr(buff, ".vtk\0");
-
-  if (c == NULL){
-    return false;
-  }
-
-  int i = stat( buff , &statStruct );
-  if( i != 0 ) {
-    return false;
-  }
-
-
-  vtkSmartPointer<vtkPolyDataReader> reader = vtkSmartPointer<vtkPolyDataReader>::New();
-  reader->SetFileName(filename);
-  if (! reader->IsFilePolyData()){
-    return false;
-  }
-
-  return true;
-}
-
-bool is_numeric(const char *str)
-{
-  char *pEnd;
-  double dummy;
-  dummy = strtod(str, &pEnd);
-
-  if (*pEnd != '\0')
-    return false;
-
-  return true;
-}
-
-
 
 //
 // Section 1 : Enum for all operations. Update number of operations when adding a new operation.

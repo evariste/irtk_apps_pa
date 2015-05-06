@@ -88,6 +88,8 @@ int main(int argc, char **argv)
     normalsFilter->AutoOrientNormalsOff();
   }
 
+  normalsFilter->SetConsistency(1);
+
   normalsFilter->Modified();
   normalsFilter->Update();
 

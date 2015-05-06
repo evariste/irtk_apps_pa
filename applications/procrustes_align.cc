@@ -1,37 +1,18 @@
 #if (defined HAS_VTK && defined HAS_CONTRIB)
 
-#include <fstream>
-#include <stdio.h>
-#include <string.h>
 #include <irtkImage.h>
-// #include <irtkEigenAnalysis.h>
 #include <irtkTransformation.h>
-#include <nr.h>
-#include <nrutil.h>
 
 // Minimum norm of an eigenvector
 #define MIN_NORM 0.01
 
-// vtk includes
-#include <vtkPoints.h>
 #include <vtkStructuredGrid.h>
-#include <vtkPointData.h>
-#include <vtkPolyData.h>
-#include <vtkPolyDataReader.h>
-#include <vtkPolyDataWriter.h>
 #include <vtkStructuredGridReader.h>
 #include <vtkStructuredGridWriter.h>
 #include <vtkUnstructuredGrid.h>
 #include <vtkUnstructuredGridReader.h>
 #include <vtkUnstructuredGridWriter.h>
-#include <vtkCell.h>
-#include "vtkCellArray.h"
-#include <vtkDataObjectWriter.h>
-#include <vtkDataArray.h>
-#include <vtkDataWriter.h>
-#include <vtkFieldData.h>
 #include <vtkFloatArray.h>
-#include <vtkIntArray.h>
 
 vtkPointSet  *data1;
 vtkPoints    *points1;
@@ -84,16 +65,16 @@ vtkPointSet *read(char *file)
       reader->Delete();
     } else {
       if (strcmp(buffer, "STRUCTURED_GRID") == 0) {
-	// Read vtkStructuredGrid object
-	vtkStructuredGridReader *reader = vtkStructuredGridReader::New();
-	reader->SetFileName(file);
-	reader->Update();
-	pset = reader->GetOutput();
-	pset->Register(pset);
-	reader->Delete();
+        // Read vtkStructuredGrid object
+        vtkStructuredGridReader *reader = vtkStructuredGridReader::New();
+        reader->SetFileName(file);
+        reader->Update();
+        pset = reader->GetOutput();
+        pset->Register(pset);
+        reader->Delete();
       } else {
-	cerr << "Unknown VTK data type" << endl;
-	exit(1);
+        cerr << "Unknown VTK data type" << endl;
+        exit(1);
       }
     }
   }
@@ -117,14 +98,14 @@ void write(char *file, vtkPointSet *pset)
       writer->Update();
     } else {
       if (pset->IsA("vtkPolyData")){
-	vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-	writer->SetInput((vtkPolyData *)pset);
-	writer->SetFileName(file);
-	writer->SetFileTypeToASCII();
-	writer->Write();
+        vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
+        writer->SetInput((vtkPolyData *)pset);
+        writer->SetFileName(file);
+        writer->SetFileTypeToASCII();
+        writer->Write();
       } else {
-	cerr << "Unknown VTK data type" << endl;
-	exit(1);
+        cerr << "Unknown VTK data type" << endl;
+        exit(1);
       }
     }
   }
@@ -132,15 +113,15 @@ void write(char *file, vtkPointSet *pset)
 
 void print_matrix(irtkMatrix M)
 {
- int i,j;
- cerr << "Matrix start" << endl;
- for (i=0;i<M.Rows();i++){
- 	for (j=0;j<M.Cols();j++){
-		if (j!=M.Cols()-1) cerr << M(i,j) << " ";
-		else cerr << M(i,j) <<endl;
-	}
- }  
- cerr << "Matrix end" << endl;
+  int i,j;
+  cerr << "Matrix start" << endl;
+  for (i=0;i<M.Rows();i++){
+    for (j=0;j<M.Cols();j++){
+      if (j!=M.Cols()-1) cerr << M(i,j) << " ";
+      else cerr << M(i,j) <<endl;
+    }
+  }
+  cerr << "Matrix end" << endl;
 }
 
 
@@ -158,13 +139,13 @@ irtkMatrix align2(irtkMatrix & M_2, irtkMatrix & M_1, int iNoOfLandmarks, irtkMa
   for (j = 0; j < iNoOfLandmarks; j++){
     centroid_1(0, 0) += M_1(3 * j, 0);
     centroid_1(1, 0) += M_1(3 * j + 1, 0);
-    centroid_1(2, 0) += M_1(3 * j + 2, 0); 
+    centroid_1(2, 0) += M_1(3 * j + 2, 0);
   }
 
   for (j = 0; j < iNoOfLandmarks; j++){
     centroid_2(0, 0) += M_2(3 * j, 0);
     centroid_2(1, 0) += M_2(3 * j + 1, 0);
-    centroid_2(2, 0) += M_2(3 * j + 2, 0); 
+    centroid_2(2, 0) += M_2(3 * j + 2, 0);
   }
 
   centroid_1 *= (1.0/iNoOfLandmarks);
@@ -297,18 +278,19 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   centroid_1.Initialize(3, 1);
   centroid_2.Initialize(3, 1);
 
-  int i, j;
+  //  int i, j;
+  int j;
 
   for (j = 0; j < iNoOfLandmarks; j++){
     centroid_1(0, 0) += M_1(3 * j, 0);
     centroid_1(1, 0) += M_1(3 * j + 1, 0);
-    centroid_1(2, 0) += M_1(3 * j + 2, 0); 
+    centroid_1(2, 0) += M_1(3 * j + 2, 0);
   }
 
   for (j = 0; j < iNoOfLandmarks; j++){
     centroid_2(0, 0) += M_2(3 * j, 0);
     centroid_2(1, 0) += M_2(3 * j + 1, 0);
-    centroid_2(2, 0) += M_2(3 * j + 2, 0); 
+    centroid_2(2, 0) += M_2(3 * j + 2, 0);
   }
 
   centroid_1 *= (1.0/iNoOfLandmarks);
@@ -351,59 +333,39 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
     szz += M_2_centred(3 * j + 2) * M_1_centred(3 * j + 2);
   }
 
-  float **N;
+  irtkMatrix N;
+  N.Initialize(4,4);
+  N(0, 0) =  sxx + syy + szz;
+  N(1, 1) =  sxx - syy - szz;
+  N(2, 2) = -sxx + syy - szz;
+  N(3, 3) = -sxx - syy + szz;
 
-  N = matrix(1, 4, 1, 4);
-  N[1][1] =  sxx + syy + szz;
-  N[2][2] =  sxx - syy - szz;
-  N[3][3] = -sxx + syy - szz;
-  N[4][4] = -sxx - syy + szz;
-
-  N[1][2] = N[2][1] = syz - szy;
-  N[1][3] = N[3][1] = szx - sxz;
-  N[2][3] = N[3][2] = sxy + syx;
-  N[1][4] = N[4][1] = sxy - syx;
-  N[2][4] = N[4][2] = szx + sxz;
-  N[3][4] = N[4][3] = syz + szy;
-
-
-  gsl_matrix *GSL_N = gsl_matrix_alloc(4, 4);
-  for (j = 1; j <= 4; j++){
-    for (i = 1; i <= 4; i++){
-      gsl_matrix_set(GSL_N, i-1, j-1, N[i][j]);
-
-    }
-  }
+  N(0, 1) = N(1, 0) = syz - szy;
+  N(0, 2) = N(2, 0) = szx - sxz;
+  N(1, 2) = N(2, 1) = sxy + syx;
+  N(0, 3) = N(3, 0) = sxy - syx;
+  N(1, 3) = N(3, 1) = szx + sxz;
+  N(2, 3) = N(3, 2) = syz + szy;
 
 
 
+  irtkVector er;
+  er.Initialize(4);
 
-  int nrot;
-  float *er;
-  float **ev;
+  irtkMatrix ev, ev2;
+  ev.Initialize(4,4);
+  ev2.Initialize(4,4);
+  N.Eigenvalues(ev, er, ev2);
 
-  ev = matrix(1, 4, 1, 4);
 
-
-  // Can no longer make a call to nrutil defined 'vector' without ambiguity
-  // with std::vector.
-  // er = vector(1, 4);
-	er = (float*) malloc((size_t) ((4 - 1 + 1 + 1/*NR_END*/)*sizeof(float)));
-	if (!er) nrerror("allocation failure in vector()");
-	// return v-nl+NR_END;
-	er = er - 1 + 1/*NR_END*/;
-
-  jacobi(N, 4, er, ev,&nrot);
-  // sort by descending eigenvalue
-  eigsrt(er, ev, 4); 
 
   //1st eigenvector is quaternion of the rotation
   irtkVector quat;
   quat.Initialize(4);
-  quat(0) = ev[1][1];
-  quat(1) = ev[2][1];
-  quat(2) = ev[3][1];
-  quat(3) = ev[4][1];
+  quat(0) = ev(0, 0);
+  quat(1) = ev(1, 0);
+  quat(2) = ev(2, 0);
+  quat(3) = ev(3, 0);
   // calculate rotation matrix
 
   irtkMatrix Rot;
@@ -424,12 +386,12 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   float scale, shape1dev, shape2dev;
   shape1dev = shape2dev = 0.0;
   for (j = 0; j < iNoOfLandmarks; j++){
-        shape1dev += M_1_centred(3 * j)     * M_1_centred(3 * j);
-        shape1dev += M_1_centred(3 * j + 1) * M_1_centred(3 * j + 1);
-        shape1dev += M_1_centred(3 * j + 2) * M_1_centred(3 * j + 2);
-        shape2dev += M_2_centred(3 * j)     * M_2_centred(3 * j);
-        shape2dev += M_2_centred(3 * j + 1) * M_2_centred(3 * j + 1);
-        shape2dev += M_2_centred(3 * j + 2) * M_2_centred(3 * j + 2);
+    shape1dev += M_1_centred(3 * j)     * M_1_centred(3 * j);
+    shape1dev += M_1_centred(3 * j + 1) * M_1_centred(3 * j + 1);
+    shape1dev += M_1_centred(3 * j + 2) * M_1_centred(3 * j + 2);
+    shape2dev += M_2_centred(3 * j)     * M_2_centred(3 * j);
+    shape2dev += M_2_centred(3 * j + 1) * M_2_centred(3 * j + 1);
+    shape2dev += M_2_centred(3 * j + 2) * M_2_centred(3 * j + 2);
   }
 
   scale = sqrt(shape1dev/shape2dev);
@@ -445,17 +407,17 @@ irtkMatrix align1(irtkMatrix & M_1, irtkMatrix & M_2, int iNoOfLandmarks, irtkMa
   transformed_M_2.Initialize(3 * iNoOfLandmarks, 1);
 
   for (j = 0; j < iNoOfLandmarks; j++){
-   transformed_M_2(3 * j, 0)     = Rot(0, 0) * M_2(3 * j, 0) + Rot(0, 1) * M_2(3 * j + 1, 0) + Rot(0, 2) * M_2(3 * j + 2, 0);
-   transformed_M_2(3 * j + 1, 0) = Rot(1, 0) * M_2(3 * j, 0) + Rot(1, 1) * M_2(3 * j + 1, 0) + Rot(1, 2) * M_2(3 * j + 2, 0);
-   transformed_M_2(3 * j + 2, 0) = Rot(2, 0) * M_2(3 * j, 0) + Rot(2, 1) * M_2(3 * j + 1, 0) + Rot(2, 2) * M_2(3 * j + 2, 0);
+    transformed_M_2(3 * j, 0)     = Rot(0, 0) * M_2(3 * j, 0) + Rot(0, 1) * M_2(3 * j + 1, 0) + Rot(0, 2) * M_2(3 * j + 2, 0);
+    transformed_M_2(3 * j + 1, 0) = Rot(1, 0) * M_2(3 * j, 0) + Rot(1, 1) * M_2(3 * j + 1, 0) + Rot(1, 2) * M_2(3 * j + 2, 0);
+    transformed_M_2(3 * j + 2, 0) = Rot(2, 0) * M_2(3 * j, 0) + Rot(2, 1) * M_2(3 * j + 1, 0) + Rot(2, 2) * M_2(3 * j + 2, 0);
   }
 
   transformed_M_2 *= scale;
 
   for (j = 0; j < iNoOfLandmarks; j++){
-   transformed_M_2(3 * j, 0)     = transformed_M_2(3 * j, 0)     + t(0, 0);
-   transformed_M_2(3 * j + 1, 0) = transformed_M_2(3 * j + 1, 0) + t(1, 0);
-   transformed_M_2(3 * j + 2, 0) = transformed_M_2(3 * j + 2, 0) + t(2, 0);
+    transformed_M_2(3 * j, 0)     = transformed_M_2(3 * j, 0)     + t(0, 0);
+    transformed_M_2(3 * j + 1, 0) = transformed_M_2(3 * j + 1, 0) + t(1, 0);
+    transformed_M_2(3 * j + 2, 0) = transformed_M_2(3 * j + 2, 0) + t(2, 0);
   }
 
   // Store the transformation matrix if it is needed.
@@ -520,7 +482,7 @@ int main(int argc, char **argv)
   if (argc < 3){
     usage();
   }
-  
+
   // Number of datasets.
   int iNoOfDatasets = atoi(argv[1]);
   argv++;
@@ -593,9 +555,9 @@ int main(int argc, char **argv)
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
-  } 
+  }
 
- // Read all landmarks_1 in matrix M_1
+  // Read all landmarks_1 in matrix M_1
   for (i = 0; i < iNoOfDatasets; i++){
 
     data1    = read(inputFilenames[i]);
@@ -607,9 +569,9 @@ int main(int argc, char **argv)
       iNoOfLandmarks_1 = points1->GetNumberOfPoints();
       M_1.Initialize(3 * iNoOfLandmarks_1, iNoOfDatasets);
       cerr << "There are " << iNoOfDatasets
-           << " datasets with "
-           << points1->GetNumberOfPoints()
-           << " landmarks." << endl;
+          << " datasets with "
+          << points1->GetNumberOfPoints()
+          << " landmarks." << endl;
     }
 
     if (verbose){
@@ -618,17 +580,17 @@ int main(int argc, char **argv)
 
     for (j = 0; j < iNoOfLandmarks_1; j++){
       double p[3];
-      
-	points1->GetPoint(j, p);
-	M_1(3 * j, i)   = p[0];
-	M_1(3 * j + 1, i) = p[1];
-	M_1(3 * j + 2, i) = p[2];
+
+      points1->GetPoint(j, p);
+      M_1(3 * j, i)   = p[0];
+      M_1(3 * j + 1, i) = p[1];
+      M_1(3 * j + 2, i) = p[2];
     }
   }
 
   // matrix of all aligned shapes
-  irtkMatrix aligned_shapes(3 * iNoOfLandmarks_1, iNoOfDatasets); 
-  
+  irtkMatrix aligned_shapes(3 * iNoOfLandmarks_1, iNoOfDatasets);
+
   // align each shape to first data set and calculate mean of aligned shapes
   irtkMatrix first_shape;
 
@@ -636,16 +598,16 @@ int main(int argc, char **argv)
 
   for (j = 0; j < 3 * iNoOfLandmarks_1; j++)
     first_shape(j, 0) = M_1(j, 0);
-  
+
   // current mean pre alignment
   irtkMatrix current_mean;
   // initialize as first shape
   current_mean = first_shape;
-  
+
   // shape we are currently aligning to aligned mean
   irtkMatrix current_shapetoalign;
   current_shapetoalign.Initialize(3 * iNoOfLandmarks_1, 1);
-  
+
   // current shape after aligning to aligned mean
   irtkMatrix current_alignedshape;
   for (i = 0; i < iNoOfDatasets; i++)
@@ -655,13 +617,12 @@ int main(int argc, char **argv)
       current_shapetoalign(j, 0) = M_1(j, i);
     }
 
-    //xxx
     current_alignedshape = align(first_shape, current_shapetoalign, iNoOfLandmarks_1, dummyMatrix);
 
     if (verbose){
       cerr << "aligned shape " << i << " to first shape" << endl;
     }
-   
+
     // add to current mean
     for (j = 0; j < 3 * iNoOfLandmarks_1; j++){
       current_mean(j, 0) += current_alignedshape(j, 0);
@@ -670,23 +631,22 @@ int main(int argc, char **argv)
 
   // now have mean of aligned shapes
   current_mean *= (1.0 / iNoOfDatasets);
-  
+
   float error2 = 0.0;
 
   for (j = 0; j < 3 * iNoOfLandmarks_1; j++){
     error2 += (first_shape(j, 0) - current_mean(j, 0)) * (first_shape(j, 0) - current_mean(j, 0));
   }
-  cerr << "error = " << error2/(3 * iNoOfLandmarks_1) << endl;; 
-  
+  cerr << "error = " << error2/(3 * iNoOfLandmarks_1) << endl;;
+
   // align mean to first data set
 
   //stores aligned mean that we use going into loop
   irtkMatrix previous_aligned_mean;
 
-  //xxx
   previous_aligned_mean = align(first_shape, current_mean, iNoOfLandmarks_1, dummyMatrix);
   cerr << "aligned mean to first shape" << endl;
-  
+
   irtkMatrix current_aligned_mean; //stores aligned mean calculated at end of loop
   int noits = 0;
   float error;
@@ -695,15 +655,14 @@ int main(int argc, char **argv)
     for (j = 0;j<3 * iNoOfLandmarks_1;j++){
       current_mean(j, 0) = 0.0;
     }
-  
-    // realign every shape with previous aligned mean 
+
+    // realign every shape with previous aligned mean
     for (i = 0; i < iNoOfDatasets; i++){
-    // align ith shape
+      // align ith shape
       for (j = 0; j < 3 * iNoOfLandmarks_1; j++){
         current_shapetoalign(j, 0) = M_1(j, i);
       }
 
-      //xxx
       current_alignedshape = align(previous_aligned_mean, current_shapetoalign, iNoOfLandmarks_1, matrices[i]);
 
       for (j = 0; j < 3 * iNoOfLandmarks_1; j++){
@@ -714,11 +673,10 @@ int main(int argc, char **argv)
         current_mean(j, 0)+=current_alignedshape(j, 0);
       }
     }
-  
-  
+
+
     current_mean *= (1.0 / iNoOfDatasets);
 
-    //xxx
     current_aligned_mean = align(first_shape, current_mean, iNoOfLandmarks_1, dummyMatrix);
 
 
@@ -740,7 +698,7 @@ int main(int argc, char **argv)
 
   } while (error>0.0000001);
 
-  
+
   // Write aligned shapes as vtk output
   // Read surface used as template.
   vtkPolyDataReader *surface_reader = vtkPolyDataReader::New();
@@ -876,7 +834,7 @@ int main(int argc, char **argv)
 
 int main( int argc, char *argv[] ){
   cerr << argv[0] << " needs to be compiled with the contrib and VTK library"
-       << endl;
+      << endl;
 }
 #endif
 
