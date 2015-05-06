@@ -55,7 +55,6 @@ void usage()
   cerr << "Assign labels to the vertices of surfaceIn.  The value assigned" << endl;
   cerr << "to a vertex is the label of the nearest voxel in labelImage." << endl;
   cerr << "" << endl;
-  cerr << "Write the result to surfaceOut." << endl;
   cerr << "Options: " << endl;
   cerr << "" << endl;
   cerr << "  name [name]                 : Name of output scalar array in surface." << endl;
@@ -68,10 +67,9 @@ int main(int argc, char **argv)
 {
   int i, noOfPoints;
   bool ok;
-  double surfaceBounds[6];
-  double xmin, xmax, ymin, ymax, zmin, zmax;
+  int xdim, ydim, zdim;
   double pt[3];
-  int val, zeroCount;
+  int val;
   int noOfVoxels, noOfLabels, currLabel;
 
   if (argc < 4){
@@ -135,33 +133,9 @@ int main(int argc, char **argv)
   labelsOut->SetNumberOfTuples(noOfPoints);
 
 
-  //Check that surface does not go outside fov of label image.
-  surface->ComputeBounds();
-  surface->GetBounds(surfaceBounds);
-  xmin = surfaceBounds[0];
-  xmax = surfaceBounds[1];
-  ymin = surfaceBounds[2];
-  ymax = surfaceBounds[3];
-  zmin = surfaceBounds[4];
-  zmax = surfaceBounds[5];
-
-  cerr << "Bounds of surface : ";
-  cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
-  cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
-
-  labelImage->WorldToImage(xmin, ymin, zmin);
-  labelImage->WorldToImage(xmax, ymax, zmax);
-
-  cerr << "In image coords : ";
-  cerr << "(" << xmin << ", " << ymin << ", " << zmin << ") and ";
-  cerr << "(" << xmax << ", " << ymax << ", " << zmax << ")" << endl;
-
-  if (xmin < -0.5 || xmax > labelImage->GetX()-0.5 ||
-      ymin < -0.5 || ymax > labelImage->GetY()-0.5 ||
-      zmin < -0.5 || zmax > labelImage->GetZ()-0.5){
-        cerr << "Surface outside bounds of image." << endl;
-        exit(1);
-  }
+  xdim = labelImage->GetX();
+  ydim = labelImage->GetY();
+  zdim = labelImage->GetZ();
 
   irtkRealImage *currLabelMask;
   irtkGreyImage *dilatedLabels;
@@ -254,10 +228,14 @@ int main(int argc, char **argv)
   interp = new irtkNearestNeighborInterpolateImageFunction;
   interp->SetInput(dilatedLabels);
   interp->Initialize();
-  zeroCount = 0;
   for (i = 0; i < noOfPoints; ++i){
     surface->GetPoint(i, pt);
     dilatedLabels->WorldToImage(pt[0], pt[1], pt[2]);
+
+    if (pt[0] < 1 || pt[0] > xdim-2 || pt[1] < 1 || pt[1] > ydim-2 || pt[2] < 1 || pt[2] > zdim-2){
+    	cerr << "Surface outside bounds of image." << endl;
+    	exit(1);
+    }
 
     val = (int) round(interp->Evaluate(pt[0], pt[1], pt[2]));
     labelsOut->SetTuple1(i,val);
