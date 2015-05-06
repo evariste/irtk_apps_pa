@@ -272,7 +272,7 @@ int main(int argc, char **argv){
     }
     fileOut << hist.BinToValY(j) << endl;
 
-    for (j = 0; j < biny - 1; ++j){
+    for (j = 0; j < biny; ++j){
       for (i = 0; i < binx - 1; ++i){
         fileOut << hist(i, j) << ",";
       }
