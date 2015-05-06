@@ -47,7 +47,7 @@ int main(int argc, char **argv){
   bool ok;
   double p[3], q[3];
   int i, j, n;
-  double d, minD = MAXFLOAT;
+  double d, minD = FLT_MAX;
 
 
   if (argc < 3)
