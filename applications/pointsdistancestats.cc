@@ -12,6 +12,7 @@
 
 ///////////////////////////////////////////////////////////////
 
+#include <float.h>
 #include <vtkPolyData.h>
 #include <vtkPolyDataReader.h>
 #include <vtkMath.h>
@@ -41,8 +42,8 @@ int main(int argc, char **argv){
   double p[3], q[3];
   int i, j, n, count;
   double d, sumD;
-  double minD = MAXFLOAT;
-  double maxD = -1.0 * MAXFLOAT;
+  double minD = FLT_MAX;
+  double maxD = -1.0 * FLT_MAX;
 
   if (argc < 2)
     usage(argv[0]);
