@@ -232,9 +232,20 @@ int main(int argc, char **argv)
     surface->GetPoint(i, pt);
     dilatedLabels->WorldToImage(pt[0], pt[1], pt[2]);
 
-    if (pt[0] < 1 || pt[0] > xdim-2 || pt[1] < 1 || pt[1] > ydim-2 || pt[2] < 1 || pt[2] > zdim-2){
-    	cerr << "Surface outside bounds of image." << endl;
-    	exit(1);
+    if ((pt[0] < 0) ||
+        (pt[0] > (xdim-1)) ||
+        (pt[1] < 0) ||
+        (pt[1] > (ydim-1)) ||
+        (pt[2] < 0) ||
+        (pt[2] > (zdim-1)) ){
+      cerr << "Warning: Surface outside bounds of image." << endl;
+      pt[0] = max(0, pt[0]);
+      pt[1] = max(0, pt[1]);
+      pt[2] = max(0, pt[2]);
+      pt[0] = min(xdim-1, pt[0]);
+      pt[1] = min(ydim-1, pt[1]);
+      pt[2] = min(zdim-1, pt[2]);
+
     }
 
     val = (int) round(interp->Evaluate(pt[0], pt[1], pt[2]));
