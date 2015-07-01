@@ -2,7 +2,7 @@
 
 char *affine_name = NULL;
 char *mffd_name = NULL;
-char *dofout_name = NULL;
+char *affine_out_name = NULL;
 
 void usage()
 {
@@ -28,7 +28,7 @@ int main(int argc, char **argv){
   mffd_name  = argv[1];
   argc--;
   argv++;
-  dofout_name  = argv[1];
+  affine_out_name  = argv[1];
   argc--;
   argv++;
 
@@ -82,7 +82,7 @@ int main(int argc, char **argv){
     }
   }
 
-  mffd->irtkTransformation::Write(dofout_name);
+  mffd->irtkTransformation::Write(affine_out_name);
 
 }
 

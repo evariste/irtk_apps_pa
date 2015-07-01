@@ -2,7 +2,7 @@
 
 char *dofin_name1 = NULL;
 char *dofin_name2 = NULL;
-char *dofout_name = NULL;
+char *affine_out_name = NULL;
       
 void usage()
 {
@@ -32,7 +32,7 @@ int main(int argc, char **argv)
   dofin_name2 = argv[1];
   argc--;
   argv++;
-  dofout_name = argv[1];
+  affine_out_name = argv[1];
   argc--;
   argv++;
 
@@ -46,6 +46,6 @@ int main(int argc, char **argv)
   matrixOut = matrix1 * matrix2;
   transformation1.PutMatrix(matrixOut);
 
-  transformation1.irtkTransformation::Write(dofout_name);
+  transformation1.irtkTransformation::Write(affine_out_name);
 
 }

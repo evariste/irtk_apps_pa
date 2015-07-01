@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////
 #include <irtkTransformation.h>
 
-char *dofin_name = NULL, *dofout_name = NULL;
+char *dofin_name = NULL, *affine_out_name = NULL;
 
 void usage()
 {
@@ -44,7 +44,7 @@ int main(int argc, char **argv)
   dofin_name = argv[1];
   argc--;
   argv++;
-  dofout_name = argv[1];
+  affine_out_name = argv[1];
   argc--;
   argv++;
 
@@ -106,6 +106,6 @@ int main(int argc, char **argv)
     myPrint(dofout);
   }
 
-  dofout->irtkTransformation::Write(dofout_name);
+  dofout->irtkTransformation::Write(affine_out_name);
 
 }
