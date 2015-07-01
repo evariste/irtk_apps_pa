@@ -1,6 +1,6 @@
 #include <irtkTransformation.h>
 
-char **dofin_names = NULL, *dofout_name = NULL;
+char **dofin_names = NULL, *affine_out_name = NULL;
 
 void usage()
 {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
   }
 
   // Parse arguments.
-  dofout_name = argv[1];
+  affine_out_name = argv[1];
   argc--;
   argv++;
   inputCount = atoi(argv[1]);
@@ -127,6 +127,6 @@ int main(int argc, char **argv)
   dofout->Print();
 
   dofout->PutMatrix(globalMatrixAv);
-  dofout->irtkTransformation::Write(dofout_name);
+  dofout->irtkTransformation::Write(affine_out_name);
 
 }
