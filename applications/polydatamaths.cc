@@ -650,8 +650,6 @@ int main(int argc, char **argv ){
       argv++;
 
       current_scalars_name = argv[1];
-      argc--;
-      argv++;
 
       vtkFloatArray *temp = static_cast<vtkFloatArray*>
       (pds[arrayIndex]->GetPointData()->GetArray(current_scalars_name, iVal));
@@ -661,6 +659,9 @@ int main(int argc, char **argv ){
         cerr << argv[1] << " in polydata object " << input_name << endl << endl;
         exit(1);
       }
+
+      argc--;
+      argv++;
 
       arrays[arrayIndex]->DeepCopy( temp );
       arrays[arrayIndex]->SetName(temp->GetName());
