@@ -239,12 +239,12 @@ int main(int argc, char **argv)
         (pt[2] < 0) ||
         (pt[2] > (zdim-1)) ){
       cerr << "Warning: Surface outside bounds of image." << endl;
-      pt[0] = max(0, pt[0]);
-      pt[1] = max(0, pt[1]);
-      pt[2] = max(0, pt[2]);
-      pt[0] = min(xdim-1, pt[0]);
-      pt[1] = min(ydim-1, pt[1]);
-      pt[2] = min(zdim-1, pt[2]);
+      pt[0] = max(0.0, pt[0]);
+      pt[1] = max(0.0, pt[1]);
+      pt[2] = max(0.0, pt[2]);
+      pt[0] = min(xdim-1.0, pt[0]);
+      pt[1] = min(ydim-1.0, pt[1]);
+      pt[2] = min(zdim-1.0, pt[2]);
 
     }
 
