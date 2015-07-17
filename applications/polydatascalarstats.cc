@@ -118,11 +118,22 @@ int main(int argc, char **argv)
   int ind;
 
   if (scalar_name == NULL){
-    scalars = (vtkFloatArray*) input->GetPointData()->GetArray(0);
+    // Find the first scalar array with one component
+
+    int nArrays = input->GetPointData()->GetNumberOfArrays();
+    i = 0;
+    int nComps = 2;
+    while ((nComps > 1)  &&  (i < nArrays))
+    {
+      scalars = (vtkFloatArray*) input->GetPointData()->GetArray(i);
+      nComps = scalars->GetNumberOfComponents();
+      i++;
+    }
     if (scalars == NULL){
       cerr << "No scalars available." << endl;
       exit(1);
     }
+    cout << "Using scalars with name " << scalars->GetName() << endl;
   } else {
     scalars = (vtkFloatArray*) input->GetPointData()->GetArray(scalar_name, ind);
 
