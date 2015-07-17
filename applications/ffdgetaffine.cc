@@ -2,7 +2,6 @@
 #include <irtkTransformation.h>
 
 
-
 // Input transformation
 char *dofin_name = NULL;
 
@@ -45,5 +44,4 @@ int main(int argc, char **argv)
 
   return 0;
 }
-
 
