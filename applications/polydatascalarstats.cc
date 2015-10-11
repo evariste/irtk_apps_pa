@@ -16,6 +16,9 @@
 #include <vtkFloatArray.h>
 #include <vtkPointData.h>
 
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_sort_vector.h>
+
 char *input_name = NULL;
 char *scalar_name = NULL;
 char *mask_name = NULL;
@@ -179,6 +182,9 @@ int main(int argc, char **argv)
   minVal = FLT_MAX;
   maxVal = -1 * minVal;
 
+  gsl_vector *data = gsl_vector_alloc(noOfPoints);
+
+
   count = 0;
 
   for (i = 0; i < noOfPoints; ++i){
@@ -197,6 +203,8 @@ int main(int argc, char **argv)
       minVal = val;
     if (maxVal < val)
       maxVal = val;
+
+    gsl_vector_set(data, i, val);
 
     input->GetPointCells(i, noOfCells, cells);
 
@@ -224,6 +232,8 @@ int main(int argc, char **argv)
     }
   }
 
+
+
   if (count < 1){
   	cerr << "Zero points remain after masking, exiting " << endl;
   	exit(0);
@@ -238,6 +248,15 @@ int main(int argc, char **argv)
 
   varAbs = meanSq - (meanAbs*meanAbs);
   sdAbs  = sqrt(varAbs);
+
+
+  gsl_sort_vector(data);
+  i = (int) round( (double) 99 * (noOfPoints - 1) / 100.0);
+  double robustMin = gsl_vector_get(data, i);
+  i = (int) round( (double) 1 * (noOfPoints - 1) / 100.0);
+  double robustMax = gsl_vector_get(data, i);;
+
+
 
   // Normalisation based on the area of a sphere. Becomes an L2 norm if input stat is a squared measurement.
   double normedIntegral = sqrt(integral / 4.0 / M_PI);
@@ -264,6 +283,7 @@ int main(int argc, char **argv)
     cout << "Mean(abs)     " << meanAbs << endl;
     cout << "S.D(abs)      " << sdAbs << endl;
     cout << "Min/Max       " << minVal << " " << maxVal << endl;
+    cout << "Rob Min/Max   " << robustMin << " " << robustMax << endl;
     cout << "Area          " << totalArea << endl;
     cout << "Area int      " << integral << endl;
     cout << "sqrt(Area int / 4 pi) " << normedIntegral << endl;
