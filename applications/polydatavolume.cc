@@ -66,11 +66,11 @@ int main(int argc, char **argv){
   reader->Update();
 
   vtkTriangleFilter *triFilt = vtkTriangleFilter::New();
-  triFilt->SetInput(reader->GetOutput());
+  triFilt->SetInputData(reader->GetOutput());
   triFilt->Update();
 
   vtkMassProperties *mProps = vtkMassProperties::New();
-  mProps->SetInput(triFilt->GetOutput());
+  mProps->SetInputData(triFilt->GetOutput());
 
   cout << mProps->GetVolume() << endl;
 

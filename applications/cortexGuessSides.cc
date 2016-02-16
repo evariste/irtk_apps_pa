@@ -78,13 +78,12 @@ int main(int argc, char **argv)
 
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
 
-  normalsFilter->SetInput(input);
+  normalsFilter->SetInputData(input);
   normalsFilter->SplittingOff();
   normalsFilter->Modified();
   normalsFilter->Update();
 
   vtkPolyData *surf = normalsFilter->GetOutput();
-  surf->Update();
 
 
   double cx, cy, cz;
@@ -138,11 +137,10 @@ int main(int argc, char **argv)
   cosines->SetName("Cosines");
   surf->GetPointData()->AddArray(cosines);
   surf->GetPointData()->SetActiveScalars("Cosines");
-  surf->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(out_name);
-  writer->SetInput(surf);
+  writer->SetInputData(surf);
   writer->Modified();
   writer->SetFileTypeToBinary();
   writer->Update();

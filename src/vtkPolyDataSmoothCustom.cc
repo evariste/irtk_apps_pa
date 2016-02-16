@@ -29,7 +29,7 @@ void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
   // Normals need to be recalculated before using.
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(polydata);
+  normalsFilter->SetInputData(polydata);
   normalsFilter->Modified();
   normalsFilter->Update();
 
@@ -48,7 +48,7 @@ void vtkPolyDataSmoothCustom::Initialize(vtkPolyData *polydata)
 
   _input = vtkPolyData::New();
   _input = normalsFilter->GetOutput();
-  _input->Update();
+//  _input->Update();
   _input->BuildCells();
   _input->BuildLinks();
 
@@ -196,7 +196,7 @@ void vtkPolyDataSmoothCustom::Run()
     }
 
     _input->SetPoints(pts_original);
-    _input->Update();
+//    _input->Update();
 
 
 
@@ -225,20 +225,20 @@ void vtkPolyDataSmoothCustom::Finalize()
   if (_TrackingOn == true){
     _distances->SetName("smoothingDists");
     _input->GetPointData()->AddArray(_distances);
-    _input->Update();
+//    _input->Update();
   }
 
   // Normals need to be recalculated before saving.
   cerr << endl << "Recalculating normals" << endl;
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(_input);
+  normalsFilter->SetInputData(_input);
   normalsFilter->Modified();
   normalsFilter->Update();
 
   _output = vtkPolyData::New();
   _output = normalsFilter->GetOutput();
-  _output->Update();
+//  _output->Update();
 
 }
 
@@ -258,7 +258,7 @@ double vtkPolyDataSmoothCustom::HSquareRobustMean()
   noOfPoints = _input->GetNumberOfPoints();
 
   vtkCurvatures *curve = vtkCurvatures::New();
-  curve->SetInput(_input);
+  curve->SetInputData(_input);
   curve->SetCurvatureTypeToMean();
   curve->Update();
 

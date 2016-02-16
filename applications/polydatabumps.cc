@@ -450,7 +450,7 @@ int main(int argc, char **argv)
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
 
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(mesh);
+  normalsFilter->SetInputData(mesh);
   normalsFilter->Modified();
   normalsFilter->Update();
 
@@ -458,7 +458,7 @@ int main(int argc, char **argv)
 
   cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(normalsFilter->GetOutput());
+  writer->SetInputData(normalsFilter->GetOutput());
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();
@@ -670,9 +670,8 @@ vtkPolyData *getSphereApproximation(){
   solidIndex = VTK_SOLID_ICOSAHEDRON;
 
   s->SetSolidType(solidIndex);
-
+  s->Update();
   input = s->GetOutput();
-  input->Update();
 
   vtkPoints *oldPoints = vtkPoints::New();
   vtkCellArray* oldFaces = vtkCellArray::New();
@@ -869,7 +868,6 @@ vtkPolyData *getSphereApproximation(){
   vtkPolyData *output = vtkPolyData::New();
   output->SetPoints(newPoints);
   output->SetPolys(newFaces);
-  output->Update();
 
   return output;
 

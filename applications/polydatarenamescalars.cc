@@ -90,12 +90,12 @@ int main(int argc, char **argv)
   }
 
   scalars->SetName(scalar_name_new);
-  surface->Update();
+
   surface->GetPointData()->SetActiveScalars(scalar_name_new);
 
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

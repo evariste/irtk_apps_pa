@@ -106,7 +106,7 @@ int main(int argc, char **argv)
   // Write output
   cout << "Writing output to " << output_name << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(mean);
+  writer->SetInputData(mean);
   writer->SetFileName(output_name);
   writer->Write();
 }

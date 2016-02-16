@@ -92,9 +92,9 @@ int main(int argc, char **argv) {
   // Read the polydata file
   vtkPolyDataReader* reader = vtkPolyDataReader::New();
   reader->SetFileName(input_name);
-
+  reader->Update();
   vtkPolyData* input = reader->GetOutput();
-  input->Update();
+
 
   // the points array
   int noOfPoints = input->GetNumberOfPoints();
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
   double minx, miny, minz;
   double maxx, maxy, maxz;
   double x, y, z;
-  double dist, maxDist;
+  double maxDist;
 
   meanx = meany = meanz = 0.0;
   minx = miny = minz = FLT_MAX;
@@ -195,11 +195,11 @@ int main(int argc, char **argv) {
   }
 
   input->SetPoints(pts);
-  input->Update();
+
 
   // save as a vtk file
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(input);
+  writer->SetInputData(input);
   writer->SetFileName(output_name);
   writer->SetFileTypeToASCII();
   writer->Update();

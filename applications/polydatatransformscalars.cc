@@ -75,7 +75,7 @@ int main(int argc, char **argv)
   
   
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(sourceRead);
+  triFilter->SetInputData(sourceRead);
   triFilter->Update();
   vtkPolyData *sourceSurf = triFilter->GetOutput();
     
@@ -143,7 +143,6 @@ int main(int argc, char **argv)
   double tgtPt[3], val;
 
   int noOfPoints;
-  int ptID;
 
   noOfPoints = targetSurf->GetNumberOfPoints();
   // Create locator
@@ -241,11 +240,10 @@ int main(int argc, char **argv)
 
   targetSurf->GetPointData()->AddArray(scalarsOut);
   targetSurf->GetPointData()->SetActiveScalars(scalar_name);
-  targetSurf->Modified();
-  targetSurf->Update();
+
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(targetSurf);
+  writer->SetInputData(targetSurf);
   writer->SetFileTypeToBinary();
   writer->SetFileName(output_name);
   writer->Write();

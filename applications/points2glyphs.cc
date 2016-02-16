@@ -121,7 +121,6 @@ int main(int argc, char **argv){
   }
 
   inputPoints->GetPointData()->AddArray(ptIDs);
-  inputPoints->Update();
 
   for (i = 0; i < n-1; i++){
     inputPoints->GetPoint(i, p);
@@ -155,13 +154,13 @@ int main(int argc, char **argv){
 
   if (useCube){
     cout << "Using cubic glyph" << endl;
-    glyphs->SetSource(cube->GetOutput());
+    glyphs->SetSourceData(cube->GetOutput());
   } else {
     cout << "Using spherical glyph" << endl;
-    glyphs->SetSource(sphere->GetOutput());
+    glyphs->SetSourceData(sphere->GetOutput());
   }
 
-  glyphs->SetInput(inputPoints);
+  glyphs->SetInputData(inputPoints);
   glyphs->SetColorModeToColorByScalar();
   glyphs->SetScaleFactor(1.0);
 
@@ -169,17 +168,16 @@ int main(int argc, char **argv){
   output = glyphs->GetOutput();
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-  cleaner->SetInput(output);
+  cleaner->SetInputData(output);
   cleaner->Update();
 
   vtkPolyData *output2 = vtkPolyData::New();
   output2 = cleaner->GetOutput();
   output2->GetPointData()->SetActiveScalars("ptID");
-  output2->Update();
 
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(output2);
+  writer->SetInputData(output2);
   writer->SetFileName(output_name);
   writer->Write();
 

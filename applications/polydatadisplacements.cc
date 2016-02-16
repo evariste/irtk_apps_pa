@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   surface->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->Write();
 }

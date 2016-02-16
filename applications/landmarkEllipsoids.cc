@@ -326,7 +326,6 @@ int main(int argc, char **argv) {
   pdWithTensors->SetPoints(outPoints);
 
   pdWithTensors->GetPointData()->SetTensors(covTensors);
-  pdWithTensors->Update();
 
   // The glyph to be used.
   vtkSphereSource *sphere = vtkSphereSource::New();
@@ -336,8 +335,8 @@ int main(int argc, char **argv) {
   // The glyph filter.
   vtkTensorGlyph *glyphs = vtkTensorGlyph::New();
 
-  glyphs->SetSource(sphere->GetOutput());
-  glyphs->SetInput(pdWithTensors);
+  glyphs->SetSourceData(sphere->GetOutput());
+  glyphs->SetInputData(pdWithTensors);
 
   // Don't do any calculation in the filter,
   // we have done all the calculations already.
@@ -348,7 +347,7 @@ int main(int argc, char **argv) {
 
   vtkPolyDataWriter *pdWriter = vtkPolyDataWriter::New();
   pdWriter->SetFileName(outputFileName);
-  pdWriter->SetInput(glyphs->GetOutput());
+  pdWriter->SetInputData(glyphs->GetOutput());
   pdWriter->SetFileTypeToBinary();
   pdWriter->Update();
   pdWriter->Write();

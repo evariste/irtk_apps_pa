@@ -87,19 +87,18 @@ int main(int argc, char **argv)
     surface->GetPoints()->SetPoint(i, coord);
   }
 
-  surface->Modified();
 
   //Update the normals to reflect the new points.
   vtkPolyDataNormals *normals = vtkPolyDataNormals::New();
   normals->SplittingOff();
-  normals->SetInput(surface);
+  normals->SetInputData(surface);
   normals->Update();
   surface = normals->GetOutput();
   surface->Modified();
 
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->Write();
 }

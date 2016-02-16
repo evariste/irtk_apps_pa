@@ -269,11 +269,10 @@ int main(int argc, char **argv)
   } else {
     surface->GetPointData()->SetActiveScalars("Labels");
   }
-  surface->Update();
 
   cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

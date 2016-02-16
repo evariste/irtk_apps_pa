@@ -129,10 +129,9 @@ int main(int argc, char **argv)
   scalars->Modified();
   scalars->SetName(scalars_name);
   surface->GetPointData()->AddArray(scalars);
-  surface->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

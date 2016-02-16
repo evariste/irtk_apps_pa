@@ -62,7 +62,7 @@ double hSquareRobustMean(vtkPolyData* surface){
   noOfPoints = surface->GetNumberOfPoints();
 
   vtkCurvatures *curve = vtkCurvatures::New();
-  curve->SetInput(surface);
+  curve->SetInputData(surface);
   curve->SetCurvatureTypeToMean();
   curve->Update();
 
@@ -279,21 +279,21 @@ int main(int argc, char **argv)
   // Read the polydata file
   vtkPolyDataReader* reader = vtkPolyDataReader::New();
   reader->SetFileName(input_name);
-
+  reader->Update();
   vtkPolyData* inputRead = reader->GetOutput();
-  inputRead->Update();
+
 
   // Normals need to be recalculated before using.
   vtkPolyDataNormals *normalsFilter2 = vtkPolyDataNormals::New();
   normalsFilter2->SplittingOff();
-  normalsFilter2->SetInput(inputRead);
+  normalsFilter2->SetInputData(inputRead);
   normalsFilter2->Modified();
   normalsFilter2->Update();
 
   vtkPolyData *input = vtkPolyData::New();
   input = normalsFilter2->GetOutput();
 
-  input->Update();
+
   input->BuildCells();
   input->BuildLinks();
 
@@ -421,7 +421,7 @@ int main(int argc, char **argv)
     }
 
     input->SetPoints(pts_original);
-    input->Update();
+
 
     // update radius and centre of gravity
     getCoG(input, cogNew);
@@ -455,14 +455,14 @@ int main(int argc, char **argv)
   cerr << endl << "Recalculating normals" << endl;
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(input);
+  normalsFilter->SetInputData(input);
   normalsFilter->Modified();
   normalsFilter->Update();
 
 
   // save as a vtk file
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(normalsFilter->GetOutput());
+  writer->SetInputData(normalsFilter->GetOutput());
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Update();

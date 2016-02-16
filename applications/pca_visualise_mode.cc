@@ -90,18 +90,16 @@ int main(int argc, char **argv)
 
   vtkPolyData *inputRead = vtkPolyData::New();
   inputRead = reader->GetOutput();
-  inputRead->Update();
 
 
 
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
-  normalsFilter->SetInput(inputRead);
+  normalsFilter->SetInputData(inputRead);
   normalsFilter->AutoOrientNormalsOn();
   normalsFilter->Modified();
   normalsFilter->Update();
 
   vtkPolyData *input = normalsFilter->GetOutput();
-  input->Update();
 
   vtkFloatArray *normals = vtkFloatArray::New();
   normals = (vtkFloatArray*) input->GetPointData()->GetNormals();
@@ -154,11 +152,10 @@ int main(int argc, char **argv)
   comps->SetName(buf);
   input->GetPointData()->AddArray(comps);
 
-  input->Update();
 
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(input);
+  writer->SetInputData(input);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

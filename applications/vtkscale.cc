@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 //   cout << "gridOut->GetPoint(0, p[0], p[1], p[2]) " << p[0] << " " << p[1] << " " << p[2] << endl;
 
   // Write structured grid
-  writer->SetInput(gridOut);
+  writer->SetInputData(gridOut);
   writer->SetFileName(output_name);
   writer->SetVectorsName("vectors");
   writer->Update();

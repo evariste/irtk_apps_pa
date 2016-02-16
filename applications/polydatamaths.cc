@@ -539,9 +539,9 @@ int main(int argc, char **argv ){
 
   vtkSmartPointer<vtkPolyDataReader> reader = vtkSmartPointer<vtkPolyDataReader>::New();
   reader->SetFileName(input_name);
+  reader->Update();
   pds[0] = vtkPolyData::New();
   pds[0] = reader->GetOutput();
-  pds[0]->Update();
 
   noOfPoints = pds[0]->GetNumberOfPoints();
 
@@ -592,9 +592,9 @@ int main(int argc, char **argv ){
       }
 
       reader->SetFileName(input_name);
+      reader->Update();
       pds[arrayIndex] = vtkPolyData::New();
       pds[arrayIndex] = reader->GetOutput();
-      pds[arrayIndex]->Update();
 
       if (pds[arrayIndex]->GetNumberOfPoints() != noOfPoints){
         cerr << "\n\tAll polydata must have the same number of points each." << endl << endl;
@@ -846,12 +846,10 @@ int main(int argc, char **argv ){
   }
 
   pds[0]->GetPointData()->AddArray(arrayOut);
-  pds[0]->Modified();
-  pds[0]->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(output_name);
-  writer->SetInput(pds[0]);
+  writer->SetInputData(pds[0]);
   writer->Write();
 
   ///////////////////////////////////////////////

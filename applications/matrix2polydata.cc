@@ -104,7 +104,7 @@ int main(int argc, char **argv)
   polys->SetPoints(points);
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(polys);
+  writer->SetInputData(polys);
   writer->SetFileName(output_name);
   writer->Write();
 

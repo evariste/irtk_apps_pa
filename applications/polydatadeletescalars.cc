@@ -102,7 +102,6 @@ int main(int argc, char **argv)
   			cout << "Deleting array : " << currArray->GetName() << endl;
   			surface->GetPointData()->RemoveArray(scalar_name);
 
-  			surface->Update();
   			success = true;
   			break;
   		}
@@ -113,7 +112,7 @@ int main(int argc, char **argv)
   if (success == true){
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     cout << "Writing surface to file: " << output_name << endl;
-    writer->SetInput(surface);
+    writer->SetInputData(surface);
     writer->SetFileName(output_name);
     writer->SetFileTypeToBinary();
     writer->Write();

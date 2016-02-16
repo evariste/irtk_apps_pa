@@ -127,18 +127,18 @@ int main(int argc, char **argv)
   surface_reader->Update();
 
   surface = surface_reader->GetOutput();
-  surface->Update();
+
   surface->BuildCells();
   surface->BuildLinks();
 
   noOfPoints = surface->GetNumberOfPoints();
 
   vtkCurvatures *curve_K = vtkCurvatures::New();
-  curve_K->SetInput(surface);
+  curve_K->SetInputData(surface);
   curve_K->SetCurvatureTypeToGaussian();
 
   vtkCurvatures *curve_H = vtkCurvatures::New();
-  curve_H->SetInput(surface);
+  curve_H->SetInputData(surface);
   curve_H->SetCurvatureTypeToMean();
 
 

@@ -66,12 +66,10 @@ int main(int argc, char **argv ){
   scalars->Modified();
 
   polys->GetPointData()->AddArray(scalars);
-  polys->Modified();
-  polys->Update();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(output_name);
-  writer->SetInput(polys);
+  writer->SetInputData(polys);
   writer->Write();
 
 }

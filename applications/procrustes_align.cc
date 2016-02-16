@@ -85,21 +85,21 @@ void write(char *file, vtkPointSet *pset)
 {
   if (pset->IsA("vtkStructuredGrid")){
     vtkStructuredGridWriter *writer = vtkStructuredGridWriter::New();
-    writer->SetInput((vtkStructuredGrid *)pset);
+    writer->SetInputData((vtkStructuredGrid *)pset);
     writer->SetFileName(file);
     writer->SetFileTypeToBinary();
     writer->Update();
   } else {
     if (pset->IsA("vtkUnstructuredGrid")){
       vtkUnstructuredGridWriter *writer = vtkUnstructuredGridWriter::New();
-      writer->SetInput((vtkUnstructuredGrid *)pset);
+      writer->SetInputData((vtkUnstructuredGrid *)pset);
       writer->SetFileName(file);
       writer->SetFileTypeToBinary();
       writer->Update();
     } else {
       if (pset->IsA("vtkPolyData")){
         vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-        writer->SetInput((vtkPolyData *)pset);
+        writer->SetInputData((vtkPolyData *)pset);
         writer->SetFileName(file);
         writer->SetFileTypeToASCII();
         writer->Write();
@@ -720,7 +720,7 @@ int main(int argc, char **argv)
 
     surface->Modified();
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-    writer->SetInput(surface);
+    writer->SetInputData(surface);
     if (verbose){
       cout << "Writing output " << j + 1 << " to " << outputFilenames[j] << endl;
     }
@@ -759,7 +759,7 @@ int main(int argc, char **argv)
 
     surface->Modified();
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-    writer->SetInput(surface);
+    writer->SetInputData(surface);
     writer->SetFileName(meanFilename);
     writer->Write();
   }
@@ -785,8 +785,8 @@ int main(int argc, char **argv)
 
   }
 
-  surface->Modified();
-  surface->Update();
+
+
 
   vtkFloatArray *scalars = vtkFloatArray::New();
   scalars->SetNumberOfComponents(1);
@@ -814,14 +814,14 @@ int main(int argc, char **argv)
 
   surface->GetPointData()->AddArray(scalars);
 
-  surface->Modified();
-  surface->Update();
+
+
 
   cout << "Writing second mean with scalars to blah.vtk" << endl;
   cout << "Maximum SD = " << maxSD << endl;
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName("blah.vtk");
   writer->Write();
 

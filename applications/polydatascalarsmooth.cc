@@ -109,15 +109,14 @@ int main(int argc, char **argv)
 
   // Read the polydata file
   vtkPolyDataReader* reader = vtkPolyDataReader::New();
-	reader->SetFileName(input_name);
+  reader->SetFileName(input_name);
   reader->Update();
 
   vtkPolyData* input = reader->GetOutput();
   input->BuildCells();
   input->BuildLinks();
-  input->Update();
 
-	noOfPoints = input->GetNumberOfPoints();
+  noOfPoints = input->GetNumberOfPoints();
   noOfCells  = input->GetNumberOfCells();
 
   // Storage for edge information.  Really this is double the amount needed
@@ -255,13 +254,13 @@ int main(int argc, char **argv)
 
   input->GetPointData()->AddArray(scalarsOut);
 
-  input->Update();
+
 
   cout << " done" << endl;
 
 	// Write the result.
 	vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-	writer->SetInput(input);
+    writer->SetInputData(input);
 	writer->SetFileName(output_name);
 	writer->SetFileTypeToBinary();
   writer->Update();

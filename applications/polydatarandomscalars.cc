@@ -41,26 +41,12 @@ int main(int argc, char **argv)
 
   int noOfPoints;
   bool ok;
-  time_t seconds;
-//  long ran2Seed;
-//  long ran2initialSeed;
 
   if (argc < 3){
     usage();
   }
 
   // Prepare for random stuff.
-//  pid_t procId = getpid();
-//
-//  seconds = time(NULL);
-//  ran2Seed = seconds * procId;
-//  if (ran2Seed < 1)
-//  	ran2Seed = -1 * ran2Seed;
-//
-//  ran2initialSeed = -1 * ran2Seed;
-//  cout << "Initial seed : " << ran2initialSeed << endl;
-//
-//  (void) ran2(&ran2initialSeed);
 
   gsl_rng * ranGen;
   const gsl_rng_type * ranGenType;
@@ -101,9 +87,8 @@ int main(int argc, char **argv)
   reader->Update();
 
   vtkPolyData* input = reader->GetOutput();
-  input->Update();
 
-	noOfPoints = input->GetNumberOfPoints();
+  noOfPoints = input->GetNumberOfPoints();
 
   vtkFloatArray *scalars = vtkFloatArray::New();
   scalars->SetNumberOfComponents(1);
@@ -124,7 +109,7 @@ int main(int argc, char **argv)
 
   // Write the result.
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(input);
+  writer->SetInputData(input);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Update();

@@ -175,7 +175,7 @@ int main(int argc, char **argv)
   reader->SetFileName(input_surface_name);
   reader->Update();
   surface = reader->GetOutput();
-  surface->Update();
+
 
   //////////////////////////////////
   //Check that surface does not go outside FOV of image.
@@ -309,11 +309,11 @@ int main(int argc, char **argv)
   vtkPolyData* output = vtkPolyData::New();
   output->SetPoints(newPoints);
   output->SetPolys(newFaces);
-  output->Update();
+
 
   cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(output);
+  writer->SetInputData(output);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();
@@ -425,7 +425,7 @@ int main(int argc, char **argv)
   //cerr << "Creating interpolator " << endl;
   irtkImageFunction *interp = NULL;
   interp = new irtkNearestNeighborInterpolateImageFunction;
-  interp->SetInput(labelImage);
+  interp->SetInputData(labelImage);
   interp->Initialize();
 
   //Check that surface does not go outside fov of label image.
@@ -512,7 +512,7 @@ int main(int argc, char **argv)
     // There is a new operator used for currLabelMask in the following function call.
     currLabelMask = getBinaryLabelImage(labelImage, currLabel);
 
-    edt->SetInput(currLabelMask);
+    edt->SetInputData(currLabelMask);
     edt->SetOutput(currDmap);
     edt->Run();
 
@@ -533,7 +533,7 @@ int main(int argc, char **argv)
   }
 
   cerr << "Assigning scalars using dilated labels ... " << endl;
-  interp->SetInput(dilatedLabels);
+  interp->SetInputData(dilatedLabels);
   interp->Initialize();
   zeroCount = 0;
   for (i = 0; i < noOfPoints; ++i){
@@ -557,7 +557,7 @@ int main(int argc, char **argv)
 
   cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

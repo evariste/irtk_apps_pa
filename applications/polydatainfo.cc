@@ -216,7 +216,7 @@ int main(int argc, char **argv)
 
   vtkPolyData *input = vtkPolyData::New();
   input = reader->GetOutput();
-  input->Update();
+
 
   noOfVerts = input->GetNumberOfPoints();
 
@@ -233,7 +233,7 @@ int main(int argc, char **argv)
 
   vtkPolyDataConnectivityFilter *connFilter = vtkPolyDataConnectivityFilter::New();
   connFilter->SetExtractionModeToAllRegions();
-  connFilter->SetInput(input);
+  connFilter->SetInputData(input);
   connFilter->Update();
 
   noOfComponents = connFilter->GetNumberOfExtractedRegions();

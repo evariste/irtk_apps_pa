@@ -107,9 +107,10 @@ int main(int argc, char **argv ){
 
     readers[i]->SetFileName(input_names[i]);
     readers[i]->Modified();
+    readers[i]->Update();
     inputPolys[i] = readers[i]->GetOutput();
 
-    checkingFilter->SetInput(inputPolys[i]);
+    checkingFilter->SetInputData(inputPolys[i]);
     checkingFilter->Modified();
     checkingFilter->Update();
 
@@ -135,10 +136,12 @@ int main(int argc, char **argv ){
         cout << regionCount << " )  of this file" << endl;
       }
 
-      connFilter[i]->SetInput(inputPolys[i]);
-      cleaners[i]->SetInput(connFilter[i]->GetOutput());
+      connFilter[i]->SetInputData(inputPolys[i]);
+      connFilter[i]->Update();
+      cleaners[i]->SetInputData(connFilter[i]->GetOutput());
+
     } else {
-      cleaners[i]->SetInput(inputPolys[i]);
+      cleaners[i]->SetInputData(inputPolys[i]);
     }
 
     cleaners[i]->Modified();
@@ -151,9 +154,9 @@ int main(int argc, char **argv ){
     cout << " Adding surface: " << i + 1 <<endl;
 
     if (i == 0){
-      appendFilter->SetInput(cleaners[i]->GetOutput());
+      appendFilter->SetInputData(cleaners[i]->GetOutput());
     } else {
-      appendFilter->AddInput(cleaners[i]->GetOutput());
+      appendFilter->AddInputData(cleaners[i]->GetOutput());
     }
   }
 
@@ -165,7 +168,7 @@ int main(int argc, char **argv ){
   // Recalculate normals
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
   normalsFilter->SplittingOff();
-  normalsFilter->SetInput(appended);
+  normalsFilter->SetInputData(appended);
   normalsFilter->Modified();
   normalsFilter->Update();
 
@@ -173,7 +176,7 @@ int main(int argc, char **argv ){
   vtkPolyDataWriter *pd_writer = vtkPolyDataWriter::New();
   cout << "Output file " << output_name << endl;
   pd_writer->SetFileName(output_name);
-  pd_writer->SetInput(normalsFilter->GetOutput());
+  pd_writer->SetInputData(normalsFilter->GetOutput());
   pd_writer->Write();
 
 }

@@ -145,7 +145,7 @@ int main(int argc, char **argv)
   polys->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(polys);
+  writer->SetInputData(polys);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

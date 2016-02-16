@@ -43,7 +43,7 @@ int main(int argc, char **argv)
   vtkPolyData *surface = surface_reader->GetOutput();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(surface);
+  writer->SetInputData(surface);
   writer->SetFileName(output_name);
 
   if (strcmp(option_name, "-a") == 0){

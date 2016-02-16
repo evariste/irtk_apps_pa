@@ -135,7 +135,7 @@ int main(int argc, char **argv)
   output->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(output);
+  writer->SetInputData(output);
   writer->SetFileName(output_name);
   writer->Write();
 }

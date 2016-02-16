@@ -55,14 +55,11 @@ void usage()
 int main(int argc, char **argv)
 {
   bool ok;
-  int i;
   bool smoothOn = true;
   bool invert = false;
   int invertFlag;
   int smoothIterations = 200;
   double smoothConvergence = 0.001;
-  int noOfPoints;
-  double val;
 
   if (argc < 3){
     usage();
@@ -140,10 +137,11 @@ int main(int argc, char **argv)
     vtkSmoothPolyDataFilter *smooth = vtkSmoothPolyDataFilter::New();
     smooth->SetNumberOfIterations(smoothIterations);
     smooth->SetConvergence(smoothConvergence);
-    smooth->SetInput(input);
-  	curve->SetInput(smooth->GetOutput());
+    smooth->SetInputData(input);
+    smooth->Update();
+    curve->SetInputData(smooth->GetOutput());
   } else {
-  	curve->SetInput(input);
+    curve->SetInputData(input);
   }
 
   switch (cType){
@@ -207,12 +205,12 @@ int main(int argc, char **argv)
 
 
 
-  output->Update();
+//  output->Update();
 
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
 
-  writer->SetInput(output);
+  writer->SetInputData(output);
 
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();

@@ -72,7 +72,7 @@ int main(int argc, char **argv)
 
   vtkPolyDataNormals *normalsFilter = vtkPolyDataNormals::New();
 
-  normalsFilter->SetInput(input);
+  normalsFilter->SetInputData(input);
 
   if (splitting == true){
     cerr << "Setting splitting to on" << endl;
@@ -95,7 +95,7 @@ int main(int argc, char **argv)
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(out_name);
-  writer->SetInput(normalsFilter->GetOutput());
+  writer->SetInputData(normalsFilter->GetOutput());
   writer->Modified();
   writer->SetFileTypeToBinary();
 

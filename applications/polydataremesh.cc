@@ -142,7 +142,7 @@ int main(int argc, char **argv)
   targetSurf->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(targetSurf);
+  writer->SetInputData(targetSurf);
   writer->SetFileName(output_name);
   writer->Write();
 }

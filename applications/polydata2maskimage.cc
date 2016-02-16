@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   surfReader->Update();
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(surfReader->GetOutput());
+  triFilter->SetInputData(surfReader->GetOutput());
   triFilter->Update();
 
   vtkPolyData *polys = triFilter->GetOutput();
@@ -143,8 +143,7 @@ int main(int argc, char **argv)
 
   whiteImage->SetOrigin(origVTK);
 
-  whiteImage->SetScalarTypeToUnsignedChar();
-  whiteImage->AllocateScalars();
+  whiteImage->AllocateScalars(VTK_UNSIGNED_CHAR, 1);
 
   // fill the image with foreground voxels:
   unsigned char fgVal = 255;
@@ -160,7 +159,7 @@ int main(int argc, char **argv)
   vtkSmartPointer<vtkPolyDataToImageStencil> pol2stenc =
     vtkSmartPointer<vtkPolyDataToImageStencil>::New();
 
-  pol2stenc->SetInput(polys);
+  pol2stenc->SetInputData(polys);
 
   pol2stenc->SetOutputOrigin(origVTK);
   pol2stenc->SetOutputSpacing(spacing);
@@ -171,8 +170,8 @@ int main(int argc, char **argv)
   vtkSmartPointer<vtkImageStencil> imgstenc =
     vtkSmartPointer<vtkImageStencil>::New();
 
-  imgstenc->SetInput(whiteImage);
-  imgstenc->SetStencil(pol2stenc->GetOutput());
+  imgstenc->SetInputData(whiteImage);
+  imgstenc->SetStencilData(pol2stenc->GetOutput());
 
   if (reverse == true){
     imgstenc->ReverseStencilOn();
@@ -188,7 +187,7 @@ int main(int argc, char **argv)
 
   imgHiResVTK = imgstenc->GetOutput();
   imgHiResVTK->Modified();
-  imgHiResVTK->Update();
+
 
   // Attributes for IRTK nifti image.
   irtkImageAttributes attr;
@@ -232,7 +231,7 @@ int main(int argc, char **argv)
   irtkTransformation *transformation = new irtkRigidTransformation;
   irtkImageFunction *interpolator = new irtkLinearInterpolateImageFunction;
 
-  imagetransformation->SetInput (imgHiRes, transformation);
+  imagetransformation->SetInput(imgHiRes, transformation);
   imagetransformation->SetOutput(&templateImg);
   imagetransformation->PutInterpolator(interpolator);
   imagetransformation->Run();

@@ -177,7 +177,7 @@ int main(int argc, char **argv)
   if (scalar_name != NULL){
     target->GetPointData()->SetActiveScalars(scalar_name);
   }
-  target->Update();
+
 
   cout << "  (" << target->GetNumberOfPoints() << " points)" << endl;
 
@@ -193,7 +193,7 @@ int main(int argc, char **argv)
   if (scalar_name != NULL){
     source->GetPointData()->SetActiveScalars(scalar_name);
   }
-  source->Update();
+
 
   cout << "  (" << source->GetNumberOfPoints() << " points)" << endl;
 
@@ -337,7 +337,6 @@ void multiplyScalars(vtkPolyData *input, double factor)
     input->GetPointData()->GetScalars()->SetTuple1(i, val * factor);
   }
 
-  input->Update();
 }
 
 double getFactor(vtkPolyData *input)

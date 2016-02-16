@@ -93,7 +93,7 @@ int main(int argc, char **argv)
 
   vtkPolyData *input = vtkPolyData::New();
   input = reader->GetOutput();
-  input->Update();
+
 
 
   noOfPoints= input->GetNumberOfPoints();
@@ -145,10 +145,10 @@ int main(int argc, char **argv)
     input->GetPoints()->SetPoint(i,p);
   }
   
-  input->Update();
+
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(input);
+  writer->SetInputData(input);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   writer->Write();

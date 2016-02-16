@@ -46,24 +46,24 @@ int main(int argc, char **argv)
   // vtkDelaunay3D returns an unstructured grid
   // (vtkUnstructuredGridAlgorithm) with tetrahedral cells.
   vtkDelaunay3D *del3d = vtkDelaunay3D::New();
-  del3d->SetInput(input);
+  del3d->SetInputData(input);
 
   // geometry filter is a vtkPolyDataAlgorithm which has polydata output,
   // use it to get the boundary polygons of the result of the delaunay 3D
   // algorithm.
   vtkGeometryFilter *gem = vtkGeometryFilter::New();
-  gem->SetInput(  del3d->GetOutput() );
+  gem->SetInputData(  del3d->GetOutput() );
   gem->Modified();
   gem->Update();
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-  cleaner->SetInput(gem->GetOutput() );
+  cleaner->SetInputData(gem->GetOutput() );
   cleaner->Update();
 
   // Write the output of the geometry filter.
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(out_name);
-  writer->SetInput( cleaner->GetOutput() );
+  writer->SetInputData( cleaner->GetOutput() );
   writer->Update();
 
   // Check that no points were lost due to being internal.

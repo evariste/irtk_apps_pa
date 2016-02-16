@@ -60,19 +60,19 @@ int main(int argc, char **argv ){
 
   inputPoly = reader->GetOutput();
 
-  cleaner->SetInput(inputPoly);
+  cleaner->SetInputData(inputPoly);
   cleaner->Modified();
   cleaner->Update();
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(cleaner->GetOutput());
+  triFilter->SetInputData(cleaner->GetOutput());
   triFilter->Update();
 
 
   // Write out.
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(output_name);
-  writer->SetInput(triFilter->GetOutput());
+  writer->SetInputData(triFilter->GetOutput());
   writer->Write();
 
 }

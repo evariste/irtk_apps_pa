@@ -68,16 +68,16 @@ int main(int argc, char **argv)
 
   vtkPolyData *inputRead = vtkPolyData::New();
   inputRead = reader->GetOutput();
-  inputRead->Update();
+
 
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(inputRead);
+  triFilter->SetInputData(inputRead);
   triFilter->Update();
 
   vtkPolyData *pd = vtkPolyData::New();
   pd = triFilter->GetOutput();
-  pd->Update();
+
 
   vtkCellArray* facets = pd->GetPolys();
   vtkTriangle* facet = vtkTriangle::New();
@@ -112,7 +112,7 @@ int main(int argc, char **argv)
     pd->GetPointData()->AddArray(scalarsOut);
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetFileName(output_name);
-    writer->SetInput(pd);
+    writer->SetInputData(pd);
     writer->Write();
   }
 

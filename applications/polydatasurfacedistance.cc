@@ -136,15 +136,15 @@ int main(int argc, char **argv)
 
   vtkPolyData *surfaceA;
   surfaceA = surface_readerA->GetOutput();
-  surfaceA->Update();
   surfaceA->BuildCells();
   surfaceA->BuildLinks();
 
   vtkPolyData *surfaceB;
   surfaceB = surface_readerB->GetOutput();
-  surfaceB->Update();
   surfaceB->BuildCells();
   surfaceB->BuildLinks();
+
+
 
   if (dofinA_name != NULL){
   	// Apply the transformation to the points of surface A.
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
   // associated with each point that are the normals of the faces.
 
   vtkTriangleFilter *triFilterA = vtkTriangleFilter::New();
-  triFilterA->SetInput(surfaceA);
+  triFilterA->SetInputData(surfaceA);
   triFilterA->Update();
   vtkPolyData *trianglesA = vtkPolyData::New();
   trianglesA = triFilterA->GetOutput();
@@ -170,7 +170,7 @@ int main(int argc, char **argv)
   trianglesA->BuildLinks();
 
   vtkTriangleFilter *triFilterB = vtkTriangleFilter::New();
-  triFilterB->SetInput(surfaceB);
+  triFilterB->SetInputData(surfaceB);
   triFilterB->Update();
   vtkPolyData *trianglesB = vtkPolyData::New();
   trianglesB = triFilterB->GetOutput();
@@ -359,13 +359,13 @@ int main(int argc, char **argv)
   currentA->SetPoints(centresA);
   currentA->GetPointData()->AddArray(normalsA);
   currentA->GetPointData()->AddArray(maskOutA);
-  currentA->Update();
+
 
   vtkPolyData *currentB = vtkPolyData::New();
   currentB->SetPoints(centresB);
   currentB->GetPointData()->AddArray(normalsB);
   currentB->GetPointData()->AddArray(maskOutB);
-  currentB->Update();
+
 
 
   vtkPointLocator *point_locatorA = vtkPointLocator::New();

@@ -57,12 +57,8 @@ int main(int argc, char *argv[])
   bool ok;
   int i;
   int numberOfPoints;
-  int id1, id2;
-  time_t seconds;
-//  long ran2Seed;
-//  long ran2initialSeed;
-  double val;
-  double range[2];
+  int id1;
+
   int reps = 100;
   double *vals;
 
@@ -110,10 +106,6 @@ int main(int argc, char *argv[])
   }
 
   // Prepare for random stuff.
-//  seconds = time(NULL);
-//  ran2Seed = seconds;
-//  ran2initialSeed = -1 * ran2Seed;
-//  (void) ran2(&ran2initialSeed);
 
   gsl_rng * ranGen;
   const gsl_rng_type * ranGenType;
@@ -127,10 +119,10 @@ int main(int argc, char *argv[])
   reader->SetFileName(in_name);
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(reader->GetOutput());
+  triFilter->SetInputData(reader->GetOutput());
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-  cleaner->SetInput(reader->GetOutput());
+  cleaner->SetInputData(reader->GetOutput());
   // Setting tolerance to 0 means that vtkMergePoints is used instead.
   cleaner->SetTolerance(0.0);//(0.005);
   cleaner->PointMergingOn();
@@ -138,11 +130,11 @@ int main(int argc, char *argv[])
 
 
   vtkTriangleFilter *triFilter2 = vtkTriangleFilter::New();
-  triFilter2->SetInput(cleaner->GetOutput());
+  triFilter2->SetInputData(cleaner->GetOutput());
   triFilter2->Update();
 
   vtkDijkstraGraphGeodesicPath *path = vtkDijkstraGraphGeodesicPath::New();
-  path->SetInput(triFilter2->GetOutput());
+  path->SetInputData(triFilter2->GetOutput());
 
   numberOfPoints = cleaner->GetOutput()->GetNumberOfPoints();
 
@@ -157,7 +149,6 @@ int main(int argc, char *argv[])
 
   for (i = 0; i < reps; ++i){
 
-//    id1 = (int) floor(numberOfPoints * ran2(&ran2Seed));
     id1 = (int) floor(numberOfPoints * gsl_rng_uniform(ranGen));
 
     // Give the chosen vertex to the shortest path filter.
@@ -181,12 +172,11 @@ int main(int argc, char *argv[])
   if (out_name != NULL){
     temp = cleaner->GetOutput();
     temp->GetPointData()->AddArray(dists);
-    temp->Update();
 
     // Write the output with the scalar.
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
     writer->SetFileName(out_name);
-    writer->SetInput(temp);
+    writer->SetInputData(temp);
     writer->Update();
     writer->Write();
   }

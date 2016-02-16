@@ -55,7 +55,6 @@ int main(int argc, char **argv)
   reader->Modified();
   reader->Update();
   vtkPolyData *surface = reader->GetOutput();
-  surface->Update();
   noOfPoints = surface->GetNumberOfPoints();
 
   // Parse remaining arguments
@@ -114,19 +113,21 @@ int main(int argc, char **argv)
   else
     decimate->PreserveTopologyOff();
   
-  decimate->SetInput(surface);
+  decimate->SetInputData(surface);
+
+  decimate->Update();
 
   if (smooth != NULL) {
     cout << "Smoothing ... \n";
-    smooth->SetInput(decimate->GetOutput());
+    smooth->SetInputData(decimate->GetOutput());
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-    writer->SetInput(smooth->GetOutput());
+    writer->SetInputData(smooth->GetOutput());
     writer->SetFileName(output_name);
     writer->SetFileType(fileType);
     writer->Write();
   } else {
     vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-    writer->SetInput(decimate->GetOutput());
+    writer->SetInputData(decimate->GetOutput());
     writer->SetFileName(output_name);
     writer->SetFileType(fileType);
     writer->Write();

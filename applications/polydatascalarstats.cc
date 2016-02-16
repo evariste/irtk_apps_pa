@@ -111,7 +111,6 @@ int main(int argc, char **argv)
   reader->Update();
   input = reader->GetOutput();
 
-  input->Update();
   input->BuildCells();
   input->BuildLinks();
 

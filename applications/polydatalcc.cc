@@ -83,12 +83,11 @@ int main(int argc, char **argv ){
   reader->Update();
 
   input = reader->GetOutput();
-  input->Update();
 
   noOfPoints = input->GetNumberOfPoints();
   cout << "Total points : " << noOfPoints << endl;
 
-  connFilter->SetInput(input);
+  connFilter->SetInputData(input);
   connFilter->SetExtractionModeToAllRegions();
   connFilter->Update();
   connFilter->SetExtractionModeToSpecifiedRegions();
@@ -106,7 +105,6 @@ int main(int argc, char **argv ){
     number = 1;
   }
 
-  vtkPolyData *surface;
 
   for (i = 0; i < noOfExtractedRegions; ++i){
     connFilter->DeleteSpecifiedRegion(i);
@@ -123,7 +121,7 @@ int main(int argc, char **argv ){
 
 
     vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-    cleaner->SetInput(connFilter->GetOutput());
+    cleaner->SetInputData(connFilter->GetOutput());
     cleaner->Update();
 
     regionPointCount = cleaner->GetOutput()->GetNumberOfPoints();
@@ -141,7 +139,7 @@ int main(int argc, char **argv ){
       }
 
       writer->SetFileName(buffer);
-      writer->SetInput(cleaner->GetOutput());
+      writer->SetInputData(cleaner->GetOutput());
       writer->Update();
       writer->Write();
     }

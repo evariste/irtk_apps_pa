@@ -165,19 +165,19 @@ int main(int argc, char **argv){
   //  sphere->SetRadius(1);
 
   vtkGlyph3D *glyphs = vtkGlyph3D::New();
-  glyphs->SetSource(polygon->GetOutput());
+  glyphs->SetSourceData(polygon->GetOutput());
   //  glyphs->SetSource(cube->GetOutput());
   //  glyphs->SetSource(sphere->GetOutput());
 
-  glyphs->SetInput(output);
+  glyphs->SetInputData(output);
   glyphs->ScalingOff();
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-  cleaner->SetInput(glyphs->GetOutput());
+  cleaner->SetInputData(glyphs->GetOutput());
   cleaner->Modified();
 
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(cleaner->GetOutput());
+  writer->SetInputData(cleaner->GetOutput());
   writer->SetFileName(output_name);
   writer->Write();
 
@@ -216,7 +216,7 @@ int main(int argc, char **argv){
 
 
 //   vtkRectilinearGridWriter *rgridWriter = vtkRectilinearGridWriter::New();
-//   rgridWriter->SetInput(rgrid);
+//   rgridWriter->SetInputData(rgrid);
 //   rgridWriter->SetFileName(output_name);
 //   rgridWriter->Write();
 

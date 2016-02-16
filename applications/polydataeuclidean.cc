@@ -51,11 +51,8 @@ int main(int argc, char *argv[])
   int i;
   int numberOfPoints;
   int id1, id2;
-  time_t seconds;
-//  long ran2Seed;
 
-//  long ran2initialSeed;
-  int reps = 100;
+    int reps = 100;
   double p1[3], p2[3];
 
   if (argc < 2){
@@ -120,17 +117,17 @@ int main(int argc, char *argv[])
   reader->SetFileName(in_name);
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInput(reader->GetOutput());
+  triFilter->SetInputData(reader->GetOutput());
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
-  cleaner->SetInput(reader->GetOutput());
+  cleaner->SetInputData(reader->GetOutput());
   // Setting tolerance to 0 means that vtkMergePoints is used instead.
   cleaner->SetTolerance(0.0);
   cleaner->PointMergingOn();
   cleaner->Update();
 
   vtkTriangleFilter *triFilter2 = vtkTriangleFilter::New();
-  triFilter2->SetInput(cleaner->GetOutput());
+  triFilter2->SetInputData(cleaner->GetOutput());
   triFilter2->Update();
 
   // Select a pair of vertices at random.

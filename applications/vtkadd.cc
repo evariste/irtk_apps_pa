@@ -117,7 +117,7 @@ int main(int argc, char **argv)
 //   cout << "grid->GetPoint(0, p[0], p[1], p[2]) " << p[0] << " " << p[1] << " " << p[2] << endl;
 
   // Write structured grid
-  writer->SetInput(grid);
+  writer->SetInputData(grid);
   writer->SetFileName(output_name);
   //  writer->SetFileTypeToBinary();
   writer->SetVectorsName("vectors");

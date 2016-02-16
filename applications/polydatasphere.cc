@@ -274,17 +274,17 @@ int main(int argc, char **argv)
 
   vtkPolyData *input = vtkPolyData::New();
   s->SetSolidType(solidIndex);
+  s->Update();
 
   if (solidIndex == VTK_SOLID_CUBE || solidIndex == VTK_SOLID_DODECAHEDRON){
     vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-    triFilter->SetInput(s->GetOutput());
+    triFilter->SetInputData(s->GetOutput());
     triFilter->Update();
     input = triFilter->GetOutput();
   } else {
     input = s->GetOutput();
   }
 
-  input->Update();
 
   vtkPoints *oldPoints = vtkPoints::New();
   vtkCellArray* oldFaces = vtkCellArray::New();
@@ -486,11 +486,10 @@ int main(int argc, char **argv)
   vtkPolyData *output = vtkPolyData::New();
   output->SetPoints(newPoints);
   output->SetPolys(newFaces);
-  output->Update();
 
   cerr << "Writing surface ... " << endl;
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
-  writer->SetInput(output);
+  writer->SetInputData(output);
   writer->SetFileName(output_name);
   writer->SetFileTypeToBinary();
   // writer->SetFileTypeToASCII();
