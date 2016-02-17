@@ -1,0 +1,748 @@
+
+# Run like this: bash TESTS.sh  &> test-output.txt
+
+tar xf outputFilesArchive.tar  
++ tar xf outputFilesArchive.tar
+
+for f in `ls outputFilesArchive`; do rm -f $f; done
+ls outputFilesArchive
+++ ls outputFilesArchive
++ for f in '`ls outputFilesArchive`'
++ rm -f bla.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bla2.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bla3.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-d.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-dec.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-maths.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-r.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-recalcN.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-remesh.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-rs.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-smooth.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps-ss.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f bumps.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f rois-lcc.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f rois.nii.gz
++ for f in '`ls outputFilesArchive`'
++ rm -f rois.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f temp-label.vtk
++ for f in '`ls outputFilesArchive`'
++ rm -f temp-recovered.nii.gz
++ for f in '`ls outputFilesArchive`'
++ rm -f temp.nii.gz
++ for f in '`ls outputFilesArchive`'
++ rm -f temp.vtk
+
+
+polydatasphere bla.vtk -solid 0
++ polydatasphere bla.vtk -solid 0
+0 : 0.57735 0.57735 0.57735
+ 0 - 2
+ 0 - 1
+ 0 - 3
+1 : -0.57735 0.57735 -0.57735
+ 1 - 2
+ 1 - 3
+2 : 0.57735 -0.57735 -0.57735
+ 2 - 3
+3 : -0.57735 -0.57735 0.57735
+Edge count: 6
+old:  v 4 e 6 f 4
+new faces : 0
+new faces : 16
+Writing surface ... 
+done
+
+polydatasphere bla2.vtk -solid 1
++ polydatasphere bla2.vtk -solid 1
+0 : -0.57735 -0.57735 -0.57735
+ 0 - 4
+ 0 - 1
+ 0 - 3
+1 : 0.57735 -0.57735 -0.57735
+ 1 - 4
+ 1 - 5
+ 1 - 2
+ 1 - 3
+2 : 0.57735 0.57735 -0.57735
+ 2 - 3
+ 2 - 7
+ 2 - 6
+ 2 - 5
+3 : -0.57735 0.57735 -0.57735
+ 3 - 4
+ 3 - 7
+4 : -0.57735 -0.57735 0.57735
+ 4 - 5
+ 4 - 7
+5 : 0.57735 -0.57735 0.57735
+ 5 - 7
+ 5 - 6
+6 : 0.57735 0.57735 0.57735
+ 6 - 7
+7 : -0.57735 0.57735 0.57735
+Edge count: 18
+old:  v 8 e 18 f 12
+new faces : 0
+new faces : 48
+Writing surface ... 
+done
+
+polydataappend  2 bla.vtk bla2.vtk  bla3.vtk
++ polydataappend 2 bla.vtk bla2.vtk bla3.vtk
+2 input datasets.
+Reading file bla.vtk
+Reading file bla2.vtk
+ Adding surface: 1
+ Adding surface: 2
+Output file bla3.vtk
+
+polydatabumps  bumps.vtk  -l 4  -randomRotation
++ polydatabumps bumps.vtk -l 4 -randomRotation
+40962
+Added phi (azimuth) array.
+Added theta (altitude) array.
+l_max  : 4
+wCount : 25
+0 0.999742 0.999742
+1 0.16291 1.16265
+2 0.282618 1.44527
+3 0.947201 2.39247
+4 0.231657 2.62413
+5 0.484974 3.1091
+6 0.957477 4.06658
+7 0.744305 4.81088
+8 0.540044 5.35093
+9 0.739953 6.09088
+10 0.759944 6.85082
+11 0.658637 7.50946
+12 0.315638 7.8251
+13 0.804403 8.6295
+14 0.519672 9.14917
+15 0.168572 9.31775
+16 0.47553 9.79327
+17 0.392314 10.1856
+18 0.221668 10.4073
+19 0.21319 10.6204
+20 0.0303352 10.6508
+21 0.333539 10.9843
+22 0.194149 11.1785
+23 0.943717 12.1222
+24 0.579932 12.7021
+
+
+randFunc : -0.0806889   0.151256
+max abs : 0.151256
+Added randFunc array.
+Writing surface ... 
+.. done. 
+
+polydatacurvatureindices  bumps.vtk 
++ polydatacurvatureindices bumps.vtk
+MLN        8.2409
+ICI        524.22
+GLN        6477.2
+ECI        1900.6
+Total Area 22.056
+Min Max K  -2883 4291.1
+Min Max H  -9.4423 74.039
+Mean K     0.56974
+Mean H     -0.59818
+
+
+polydatadecimate bumps.vtk bumps-d.vtk
++ polydatadecimate bumps.vtk bumps-d.vtk
+
+polydatalistscalars bumps.vtk 
++ polydatalistscalars bumps.vtk
+randFunc
+phi
+theta
+
+polydatadeletescalars bumps.vtk bumps.vtk -name theta
++ polydatadeletescalars bumps.vtk bumps.vtk -name theta
+Deleting array : theta
+Writing surface to file: bumps.vtk
+
+polydatalistscalars bumps.vtk 
++ polydatalistscalars bumps.vtk
+randFunc
+phi
+
+
+
+binarize tr-aal-to-neo-nr-40-crop.nii.gz  temp.nii.gz 1 1000  1000 0
++ binarize tr-aal-to-neo-nr-40-crop.nii.gz temp.nii.gz 1 1000 1000 0
+
+mcubes temp.nii.gz temp.vtk 500
++ mcubes temp.nii.gz temp.vtk 500
+
+polydata2maskimage  temp.vtk temp.nii.gz  temp-recovered.nii.gz  -value 10
++ polydata2maskimage temp.vtk temp.nii.gz temp-recovered.nii.gz -value 10
+Polydata bounds: 
+ x: (-39.1016, 40.8203)
+ y: (-75.1484, 38.2891)
+ z: (-21.9609, 58.8203)
+
+polydataassignlabels  tr-aal-to-neo-nr-40-crop.nii.gz  temp.vtk    temp-label.vtk -name aal
++ polydataassignlabels tr-aal-to-neo-nr-40-crop.nii.gz temp.vtk temp-label.vtk -name aal
+Reading image ...
+Reading surface ... 
+No. of Voxels          : 2343978
+Label Counts 
+1	4155
+2	4355
+3	2434
+4	2674
+5	920
+6	1035
+7	6781
+8	7055
+9	1020
+10	1292
+11	1030
+12	1873
+13	3604
+14	3204
+15	2361
+16	2476
+17	2014
+18	2598
+19	2363
+20	2425
+21	757
+22	893
+23	2273
+24	1581
+25	855
+26	1427
+27	1059
+28	947
+29	3633
+30	3109
+31	3825
+32	3316
+33	4261
+34	4407
+35	816
+36	572
+37	1208
+38	1092
+39	2016
+40	2113
+41	651
+42	701
+43	7122
+44	5908
+45	4344
+46	3733
+47	4909
+48	4080
+49	2498
+50	1615
+51	5163
+52	3837
+53	1264
+54	1357
+55	4261
+56	3977
+57	6485
+58	6485
+59	2234
+60	2396
+61	4873
+62	3147
+63	1457
+64	2714
+65	2186
+66	4004
+67	6674
+68	5204
+69	1358
+70	779
+79	564
+80	590
+81	5600
+82	5399
+83	1098
+84	1371
+85	7661
+86	8889
+87	646
+88	876
+89	3025
+90	4560
+No. of distinct labels : 82
+Finding distance maps ...
+Current label : 
+  1
+  2
+  3
+  4
+  5
+  6
+  7
+  8
+  9
+  10
+  11
+  12
+  13
+  14
+  15
+  16
+  17
+  18
+  19
+  20
+  21
+  22
+  23
+  24
+  25
+  26
+  27
+  28
+  29
+  30
+  31
+  32
+  33
+  34
+  35
+  36
+  37
+  38
+  39
+  40
+  41
+  42
+  43
+  44
+  45
+  46
+  47
+  48
+  49
+  50
+  51
+  52
+  53
+  54
+  55
+  56
+  57
+  58
+  59
+  60
+  61
+  62
+  63
+  64
+  65
+  66
+  67
+  68
+  69
+  70
+  79
+  80
+  81
+  82
+  83
+  84
+  85
+  86
+  87
+  88
+  89
+  90
+Assigning scalars using dilated labels ... 
+Updating surface ... 
+Writing surface ... 
+
+
+
+extract_roi tr-aal-to-neo-nr-40-crop.nii.gz  rois.nii.gz  10 20
++ extract_roi tr-aal-to-neo-nr-40-crop.nii.gz rois.nii.gz 10 20
+
+rescale rois.nii.gz  rois.nii.gz  0 1000
++ rescale rois.nii.gz rois.nii.gz 0 1000
+
+dilation  rois.nii.gz rois.nii.gz 
++ dilation rois.nii.gz rois.nii.gz
+Dilating ... Setting connectivity to 26
+done
+
+mcubes  rois.nii.gz rois.vtk 500 
++ mcubes rois.nii.gz rois.vtk 500
+
+polydatalcc  rois.vtk  rois-lcc.vtk   
++ polydatalcc rois.vtk rois-lcc.vtk
+Reading file rois.vtk
+Total points : 6086
+Extracted 3 regions.
+Region : 1 : 2632 = 43.2468%
+
+
+polydatamaths bumps.vtk -array_name phi -mul 5 -add 2 bumps-maths.vtk
++ polydatamaths bumps.vtk -array_name phi -mul 5 -add 2 bumps-maths.vtk
+Arrays  : 1
+Scalars : 2
+Ops     : 2
+
+Operands: 
+Array   : phi
+Numeric : 5
+Numeric : 2
+
+Applying operations: 
+Op.     : mul   
+Op.     : add   
+
+Output  : bumps-maths.vtk
+
+
+polydatascalarstats  bumps.vtk -name phi
++ polydatascalarstats bumps.vtk -name phi
+Scalar name   phi
+No of pts     40962
+After masking 40962
+Mean          3.1317
+Mean Sq       13.0942
+S.D.          1.8129
+Mean(abs)     3.1317
+S.D(abs)      1.8129
+Min/Max       0 6.27113
+Rob Min/Max   6.2133 0.0515924
+Area          22.0564
+Area int      69.1771
+sqrt(Area int / 4 pi) 2.34626
+
+
+# Scalar name   phi
+# No of pts     40962
+# After masking 40962
+# Mean          3.1317
+# Mean Sq       13.0942
+# S.D.          1.8129
+# Mean(abs)     3.1317
+# S.D(abs)      1.8129
+# Min/Max       0 6.27113
+# Area          22.0564
+# Area int      69.1771
+# sqrt(Area int / 4 pi) 2.34626
+
+polydatascalarstats  bumps-maths.vtk -name phi
++ polydatascalarstats bumps-maths.vtk -name phi
+Scalar name   phi
+No of pts     40962
+After masking 40962
+Mean          17.6585
+Mean Sq       393.988
+S.D.          9.06452
+Mean(abs)     17.6585
+S.D(abs)      9.06452
+Min/Max       2 33.3556
+Rob Min/Max   33.0665 2.25796
+Area          22.0564
+Area int      389.998
+sqrt(Area int / 4 pi) 5.57091
+
+
+# Scalar name   phi
+# No of pts     40962
+# After masking 40962
+# Mean          17.6585
+# Mean Sq       393.988
+# S.D.          9.06452
+# Mean(abs)     17.6585
+# S.D(abs)      9.06452
+# Min/Max       2 33.3556
+# Area          22.0564
+# Area int      389.998
+# sqrt(Area int / 4 pi) 5.57091
+
+
+polydatarecalculatenormals bumps.vtk  bumps-recalcN.vtk
++ polydatarecalculatenormals bumps.vtk bumps-recalcN.vtk
+
+
+
+polydatareflect bumps.vtk  bumps-r.vtk -x 
++ polydatareflect bumps.vtk bumps-r.vtk -x
+
+
+
+polydatadecimate bumps.vtk bumps-dec.vtk  -reduction 0.7
++ polydatadecimate bumps.vtk bumps-dec.vtk -reduction 0.7
+
+polydataremesh bumps-dec.vtk bumps.vtk bumps-remesh.vtk  
++ polydataremesh bumps-dec.vtk bumps.vtk bumps-remesh.vtk
+Using bumps.vtk as a replacement file.
+
+
+polydatarandomscalars  bumps.vtk bumps-rs.vtk
++ polydatarandomscalars bumps.vtk bumps-rs.vtk
+Input      : bumps.vtk
+Output     : bumps-rs.vtk
+
+polydatascalarsmooth bumps-rs.vtk bumps-ss.vtk 20  2   -name Random
++ polydatascalarsmooth bumps-rs.vtk bumps-ss.vtk 20 2 -name Random
+Input      : bumps-rs.vtk
+Output     : bumps-ss.vtk
+Iterations : 20
+Sigma      : 2
+Scalars  : Random
+Allocated edges 
+Points      : 40962
+Cells       : 81920
+Edges       : 122880
+Mean length : 0.0252521
+Iterating 
+.................... done
+
+
+
+polydatascalarstats  bumps-rs.vtk -name Random
++ polydatascalarstats bumps-rs.vtk -name Random
+Scalar name   Random
+No of pts     40962
+After masking 40962
+Mean          0.498624
+Mean Sq       0.33185
+S.D.          0.288486
+Mean(abs)     0.498624
+S.D(abs)      0.288486
+Min/Max       3.4892e-06 0.999979
+Rob Min/Max   0.98999 0.0103589
+Area          22.0564
+Area int      10.9822
+sqrt(Area int / 4 pi) 0.934846
+
+
+# Scalar name   Random
+# No of pts     40962
+# After masking 40962
+# Mean          0.498624
+# Mean Sq       0.33185
+# S.D.          0.288486
+# Mean(abs)     0.498624
+# S.D(abs)      0.288486
+# Min/Max       3.4892e-06 0.999979
+# Rob Min/Max   0.98999 0.0103589
+# Area          22.0564
+# Area int      10.9822
+# sqrt(Area int / 4 pi) 0.934846
+
+
+polydatascalarstats  bumps-ss.vtk -name Random
++ polydatascalarstats bumps-ss.vtk -name Random
+Scalar name   Random
+No of pts     40962
+After masking 40962
+Mean          0.498257
+Mean Sq       0.248759
+S.D.          0.022353
+Mean(abs)     0.498257
+S.D(abs)      0.022353
+Min/Max       0.40348 0.570199
+Rob Min/Max   0.546683 0.444611
+Area          22.0564
+Area int      10.9763
+sqrt(Area int / 4 pi) 0.934594
+
+# Scalar name   Random
+# No of pts     40962
+# After masking 40962
+# Mean          0.498257
+# Mean Sq       0.248759
+# S.D.          0.022353
+# Mean(abs)     0.498257
+# S.D(abs)      0.022353
+# Min/Max       0.40348 0.570199
+# Rob Min/Max   0.546683 0.444611
+# Area          22.0564
+# Area int      10.9763
+# sqrt(Area int / 4 pi) 0.934594
+
+
+
+polydatasmooth  bumps.vtk  bumps-smooth.vtk   20 0.7
++ polydatasmooth bumps.vtk bumps-smooth.vtk 20 0.7
+Input        : bumps.vtk
+Output       : bumps-smooth.vtk
+Iterations   : 20
+Relax factor : 0.7
+iteration  0 2.17368
+iteration  1 2.10099
+iteration  2 2.06071
+iteration  3 2.03049
+iteration  4 2.0176
+iteration  5 2.01895
+iteration  6 2.02716
+iteration  7 2.03735
+iteration  8 2.04704
+iteration  9 2.05469
+iteration  10 2.05955
+iteration  11 2.06158
+iteration  12 2.06108
+iteration  13 2.05833
+iteration  14 2.05343
+iteration  15 2.04683
+iteration  16 2.03882
+iteration  17 2.02983
+iteration  18 2.01996
+iteration  19 2.00953
+iteration  20 1.99866
+Final iterations : 21
+Final L_2 norm of H^2 (threshold) : 1.99866 (-1)
+
+Recalculating normals
+
+
+# File comparisons
+
+for f in `ls outputFilesArchive`
+do
+    ls -l $f outputFilesArchive/$f
+    echo
+done
+ls outputFilesArchive
+++ ls outputFilesArchive
++ for f in '`ls outputFilesArchive`'
++ ls -l bla.vtk outputFilesArchive/bla.vtk
+-rw-r--r--  1 paulaljabar  staff  471 17 Feb 08:29 bla.vtk
+-rw-r--r--  1 paulaljabar  staff  471 12 Feb 23:48 outputFilesArchive/bla.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bla2.vtk outputFilesArchive/bla2.vtk
+-rw-r--r--  1 paulaljabar  staff  1176 17 Feb 08:29 bla2.vtk
+-rw-r--r--  1 paulaljabar  staff  1176 12 Feb 23:50 outputFilesArchive/bla2.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bla3.vtk outputFilesArchive/bla3.vtk
+-rw-r--r--  1 paulaljabar  staff  2505 17 Feb 08:29 bla3.vtk
+-rw-r--r--  1 paulaljabar  staff  2505 12 Feb 23:54 outputFilesArchive/bla3.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-d.vtk outputFilesArchive/bumps-d.vtk
+-rw-r--r--  1 paulaljabar  staff  1392960 17 Feb 08:29 bumps-d.vtk
+-rw-r--r--  1 paulaljabar  staff  1392960 13 Feb 20:26 outputFilesArchive/bumps-d.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-dec.vtk outputFilesArchive/bumps-dec.vtk
+-rw-r--r--  1 paulaljabar  staff  786722 17 Feb 08:29 bumps-dec.vtk
+-rw-r--r--  1 paulaljabar  staff  786722 16 Feb 21:56 outputFilesArchive/bumps-dec.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-maths.vtk outputFilesArchive/bumps-maths.vtk
+-rw-r--r--  1 paulaljabar  staff  3128849 17 Feb 08:29 bumps-maths.vtk
+-rw-r--r--  1 paulaljabar  staff  3128849 16 Feb 21:38 outputFilesArchive/bumps-maths.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-r.vtk outputFilesArchive/bumps-r.vtk
+-rw-r--r--  1 paulaljabar  staff  4745651 17 Feb 08:29 bumps-r.vtk
+-rw-r--r--  1 paulaljabar  staff  4745651 16 Feb 21:53 outputFilesArchive/bumps-r.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-recalcN.vtk outputFilesArchive/bumps-recalcN.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 17 Feb 08:29 bumps-recalcN.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 16 Feb 21:49 outputFilesArchive/bumps-recalcN.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-remesh.vtk outputFilesArchive/bumps-remesh.vtk
+-rw-r--r--  1 paulaljabar  staff  1383625 17 Feb 08:29 bumps-remesh.vtk
+-rw-r--r--  1 paulaljabar  staff  1383625 16 Feb 22:05 outputFilesArchive/bumps-remesh.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-rs.vtk outputFilesArchive/bumps-rs.vtk
+-rw-r--r--  1 paulaljabar  staff  2785601 17 Feb 08:29 bumps-rs.vtk
+-rw-r--r--  1 paulaljabar  staff  2785601 16 Feb 22:14 outputFilesArchive/bumps-rs.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-smooth.vtk outputFilesArchive/bumps-smooth.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 17 Feb 08:29 bumps-smooth.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 16 Feb 22:29 outputFilesArchive/bumps-smooth.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps-ss.vtk outputFilesArchive/bumps-ss.vtk
+-rw-r--r--  1 paulaljabar  staff  2785601 17 Feb 08:29 bumps-ss.vtk
+-rw-r--r--  1 paulaljabar  staff  2785601 16 Feb 22:20 outputFilesArchive/bumps-ss.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l bumps.vtk outputFilesArchive/bumps.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 17 Feb 08:29 bumps.vtk
+-rw-r--r--  1 paulaljabar  staff  2621731 13 Feb 20:33 outputFilesArchive/bumps.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l rois-lcc.vtk outputFilesArchive/rois-lcc.vtk
+-rw-r--r--  1 paulaljabar  staff  212933 16 Feb 21:26 outputFilesArchive/rois-lcc.vtk
+-rw-r--r--  1 paulaljabar  staff  212933 17 Feb 08:29 rois-lcc.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l rois.nii.gz outputFilesArchive/rois.nii.gz
+-rw-r--r--  1 paulaljabar  staff  7427 16 Feb 21:23 outputFilesArchive/rois.nii.gz
+-rw-r--r--  1 paulaljabar  staff  7427 17 Feb 08:29 rois.nii.gz
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l rois.vtk outputFilesArchive/rois.vtk
+-rw-r--r--  1 paulaljabar  staff  365154 16 Feb 21:25 outputFilesArchive/rois.vtk
+-rw-r--r--  1 paulaljabar  staff  365154 17 Feb 08:29 rois.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l temp-label.vtk outputFilesArchive/temp-label.vtk
+-rw-r--r--  1 paulaljabar  staff  11680165 16 Feb 20:47 outputFilesArchive/temp-label.vtk
+-rw-r--r--  1 paulaljabar  staff  11680165 17 Feb 08:29 temp-label.vtk
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l temp-recovered.nii.gz outputFilesArchive/temp-recovered.nii.gz
+-rw-r--r--  1 paulaljabar  staff  75805 16 Feb 20:32 outputFilesArchive/temp-recovered.nii.gz
+-rw-r--r--  1 paulaljabar  staff  75805 17 Feb 08:29 temp-recovered.nii.gz
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l temp.nii.gz outputFilesArchive/temp.nii.gz
+-rw-r--r--  1 paulaljabar  staff  80026 14 Feb 20:44 outputFilesArchive/temp.nii.gz
+-rw-r--r--  1 paulaljabar  staff  80026 17 Feb 08:29 temp.nii.gz
++ echo
+
++ for f in '`ls outputFilesArchive`'
++ ls -l temp.vtk outputFilesArchive/temp.vtk
+-rw-r--r--  1 paulaljabar  staff  10949937 16 Feb 19:31 outputFilesArchive/temp.vtk
+-rw-r--r--  1 paulaljabar  staff  10949937 17 Feb 08:29 temp.vtk
++ echo
+
+
