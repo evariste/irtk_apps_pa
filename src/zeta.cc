@@ -215,7 +215,7 @@ void Zeta::Initialise()
 
   // TODO: Remove this test code.
   irtkRealPixel *tptr = _target->GetPointerToVoxels();
-  irtkRealPixel *tgtPatchCentre, *refPatchCentre, *refPatchVox;
+  irtkRealPixel *tgtPatchCentre, *refPatchCentre;
 
   (*_target) *= 0.0;
 
@@ -244,14 +244,43 @@ void Zeta::Initialise()
   irtkRealImage *refIm;
 
   gsl_matrix *X;
-  X = gsl_matrix_alloc(_refCount, _nPatchCentres);
+  unsigned long nDataPts = _refCount*_nPatchCentres;
 
+  X = gsl_matrix_alloc(nDataPts, tdim);
+
+  irtkRealPixel *refPtr;
+  irtkRealPixel val;
+
+  int tOffset = xdim * ydim * zdim;
 
   for (n = 0; n < _refCount; n++){
-    refIm = _reference[n];
-    for (int k = 0; k < _nPatchCentres; k++){
 
+    refIm = _reference[n];
+    refPtr = refIm->GetPointerToVoxels();
+
+    int i = 0;
+
+    for (int t = 0; t < tdim; t += tOffset){
+      for (int k = 0; k < _nPatchCentres; k++){
+
+        val = *(refPtr + _patchCentreIndices[k] + t);
+        gsl_matrix_set(X, i, t, val);
+
+        ++i;
+
+      }
     }
+  }
+
+  gsl_vector *m = gsl_vector_alloc(tdim);
+  gsl_vector_view col;
+
+  for (int t = 0; t < tdim; t++){
+    col = gsl_matrix_column(X, t);
+    double meanVal = gsl_stats_mean(col.vector.data, 1, nDataPts);
+    cout << "t: " << t << endl;
+    cout << "Mean: " << meanVal << endl;
+
   }
 
 

@@ -4,6 +4,9 @@
 
 #include "irtkImage.h"
 
+#include <gsl/gsl_statistics.h>
+#include <gsl/gsl_matrix.h>
+
 class Zeta
 {
 public:
