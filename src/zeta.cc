@@ -258,13 +258,15 @@ void Zeta::Initialise()
     refIm = _reference[n];
     refPtr = refIm->GetPointerToVoxels();
 
-    int i = 0;
 
     for (int t = 0; t < tdim; t += tOffset){
+
+      int i = 0;
+
       for (int k = 0; k < _nPatchCentres; k++){
 
         val = *(refPtr + _patchCentreIndices[k] + t);
-        gsl_matrix_set(X, i, t, val);
+        gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
 
         ++i;
 
@@ -272,16 +274,59 @@ void Zeta::Initialise()
     }
   }
 
-  gsl_vector *m = gsl_vector_alloc(tdim);
-  gsl_vector_view col;
 
-  for (int t = 0; t < tdim; t++){
-    col = gsl_matrix_column(X, t);
-    double meanVal = gsl_stats_mean(col.vector.data, 1, nDataPts);
-    cout << "t: " << t << endl;
-    cout << "Mean: " << meanVal << endl;
+
+  // Find the mean for each channel/modality.
+
+  gsl_vector *meanVals = gsl_vector_alloc(tdim);
+
+  gsl_vector_view col;
+  gsl_vector_view col2;
+  // Zero mean each channel/modality to get covariance
+
+  for (int j = 0; j < X->size2; j++){
+
+    col = gsl_matrix_column(X, j);
+    double meanVal = gsl_stats_mean(col.vector.data,
+                                    col.vector.stride,
+                                    nDataPts);
+
+    gsl_vector_set(meanVals, j, meanVal);
+
+    gsl_vector_add_constant(&col.vector, -1*meanVal);
 
   }
+
+
+  gsl_matrix *Cov = gsl_matrix_alloc(tdim, tdim);
+
+  for (int i = 0; i < X->size2; i++){
+    for (int j = 0; j < X->size2; j++){
+      col = gsl_matrix_column(X, i);
+      col2 = gsl_matrix_column(X, j);
+      double c = gsl_stats_covariance(col.vector.data,
+                                      col.vector.stride,
+                                      col2.vector.data,
+                                      col2.vector.stride,
+                                      col.vector.size);
+      cout << " c " << c << endl;
+      gsl_matrix_set(Cov, i, j, c);
+
+
+    }
+  }
+
+
+
+
+  // Set the precision matrix.
+  _Prec = gsl_matrix_alloc(tdim, tdim);
+
+  gsl_permutation * perm = gsl_permutation_alloc (tdim);
+  int signum;
+
+  gsl_linalg_LU_decomp(Cov, perm, &signum);
+  gsl_linalg_LU_invert(Cov, perm, _Prec);
 
 
 
@@ -294,7 +339,30 @@ void Zeta::Initialise()
 
 
 
+void Zeta::Print(){
 
+  cout << "Patch radius: " << _patchRadius << endl;
+
+  cout << "Neighbourhood radius: " << _nbhdRadius << endl;
+
+
+  cout << "Number of voxels in ROI " << _nPatchCentres << endl;
+
+  cout << "Number of reference images: " << _refCount << endl;
+
+  cout << "Number of neighbours (k): " << _kZeta << endl;
+
+
+  cout << "Precision matrix: " << endl;
+
+  for (unsigned long int i = 0; i < _Prec->size1; i++){
+    for (unsigned long int j = 0; j < _Prec->size2; j++){
+      printf("%0.12f ", gsl_matrix_get(_Prec, i, j));
+    }
+    cout << endl;
+  }
+
+}
 
 
 

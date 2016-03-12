@@ -27,6 +27,8 @@ int main(int argc, char **argv)
     int nbhdRadius = 4;
     int refCount = 0;
 
+    int k = 3;
+
     if (argc < 2){
         usage();
     }
@@ -63,6 +65,16 @@ int main(int argc, char **argv)
         argv++;
 
         cout << "Setting neighbourhood size to " << nbhdRadius << endl;
+        ok = true;
+      }
+      if ((ok == false) && (strcmp(argv[1], "-k") == 0)) {
+        argc--;
+        argv++;
+        k = atoi(argv[1]);
+        argc--;
+        argv++;
+
+        cout << "Setting number of neighbours (k) to " << k << endl;
         ok = true;
       }
       if ((ok == false) && (strcmp(argv[1], "-mask") == 0)) {
@@ -126,19 +138,18 @@ int main(int argc, char **argv)
     Zeta zetaFilt;
 
     zetaFilt.SetTarget(&image);
-
+    zetaFilt.SetReferences(refCount, refImg);
+    zetaFilt.SetPatchRadius(patchRadius);
+    zetaFilt.SetNeighbourhoodRadius(nbhdRadius);
+    zetaFilt.SetK(k);
     if (mask_name != NULL){
       irtkGreyImage *mask = new irtkGreyImage(mask_name);
       zetaFilt.SetMask(mask);
     }
 
-    zetaFilt.SetReferences(refCount, refImg);
-
-    zetaFilt.SetPatchRadius(patchRadius);
-
-    zetaFilt.SetNeighbourhoodRadius(nbhdRadius);
-
     zetaFilt.Initialise();
+
+    zetaFilt.Print();
 
 
 }

@@ -6,6 +6,8 @@
 
 #include <gsl/gsl_statistics.h>
 #include <gsl/gsl_matrix.h>
+#include <gsl/gsl_vector.h>
+#include <gsl/gsl_linalg.h>
 
 class Zeta
 {
@@ -24,8 +26,11 @@ public:
 
     void SetNeighbourhoodRadius(int);
 
+    void SetK(int k){_kZeta = k;}
 
     void Initialise();
+
+    void Print();
 
 private:
 
@@ -53,6 +58,8 @@ private:
 
     int _patchVol;
     int _nbhdVol;
+
+    gsl_matrix *_Prec;
 
     bool _initialised;
 
