@@ -11,6 +11,13 @@ Zeta::Zeta()
   _nbhdRadius = -1;
   _initialised = false;
   _refCount = 0;
+  _tOffset = 0;
+  _nPatchCentres = 0;
+  _patchOffsets = NULL;
+  _nbhdOffsets = NULL;
+  _nbhdVol = 0;
+  _patchVol = 0;
+  _Prec = NULL;
   _patchCentreIndices = NULL;
 }
 
@@ -261,7 +268,7 @@ void Zeta::Initialise()
   irtkRealPixel *refPtr;
   irtkRealPixel val;
 
-  int tOffset = xdim * ydim * zdim;
+  _tOffset = xdim * ydim * zdim;
 
   for (n = 0; n < _refCount; n++){
 
@@ -269,18 +276,26 @@ void Zeta::Initialise()
     refPtr = refIm->GetPointerToVoxels();
 
 
-    for (int t = 0; t < tdim; t += tOffset){
+    int tOff = 0;
+
+    for (int t = 0; t < tdim; t++){
+
 
       int i = 0;
 
       for (int k = 0; k < _nPatchCentres; k++){
 
-        val = *(refPtr + _patchCentreIndices[k] + t);
+        val = *(refPtr + _patchCentreIndices[k] + tOff);
+
         gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
 
         ++i;
 
       }
+
+      tOff += _tOffset;
+
+
     }
   }
 
@@ -330,14 +345,31 @@ void Zeta::Initialise()
 
 
   // Set the precision matrix.
-  _Prec = gsl_matrix_alloc(tdim, tdim);
+  gsl_matrix *prec = gsl_matrix_alloc(tdim, tdim);
 
   gsl_permutation * perm = gsl_permutation_alloc (tdim);
   int signum;
 
   gsl_linalg_LU_decomp(Cov, perm, &signum);
-  gsl_linalg_LU_invert(Cov, perm, _Prec);
+  gsl_linalg_LU_invert(Cov, perm, prec);
 
+
+
+
+
+  _Prec = gsl_matrix_alloc(_patchVol * tdim, _patchVol * tdim);
+
+  gsl_matrix_set_zero(_Prec);
+
+  for (int t = 0; t < tdim; t++){
+    gsl_matrix_view submat;
+
+    submat = gsl_matrix_submatrix(_Prec, t*tdim, t*tdim, tdim, tdim);
+
+    gsl_matrix_memcpy(&(submat.matrix), prec);
+
+
+  }
 
 
   _initialised = true;
@@ -357,30 +389,35 @@ void Zeta::Run(){
   tgtStartPtr = _target->GetPointerToVoxels();
 
 
-  // Store the target patches.
-  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol);
+  int tdim = _target->GetT();
 
-  gsl_matrix *diff = gsl_matrix_alloc(1, _patchVol);
 
   gsl_matrix_view tgt_patch_vals;
+  gsl_matrix *diff, *precDiff, *diffPrecDiff;
+  precDiff = gsl_matrix_alloc(tdim, tdim);
+  diffPrecDiff = gsl_matrix_alloc(1, 1);
 
-  gsl_matrix * diffPrec, *diffPrecDiff;
-
+  // Store the target patches.
+  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol*tdim);
 
   for (int n = 0; n < _nPatchCentres; n++){
 
     tgtPatchCentre = tgtStartPtr + _patchCentreIndices[n];
+
     for (int k = 0; k < _patchVol; k++){
 
-      double val = *(tgtPatchCentre + _patchOffsets[k]);
-      gsl_matrix_set(T, n, k, val);
+      int tOff = 0;
+      for (int t = 0; t < tdim; t++, tOff += _tOffset){
 
+        double val = *(tgtPatchCentre + _patchOffsets[k] + tOff ) ;
+
+        gsl_matrix_set(T, n, k + t*tdim, val);
+      }
     }
   }
 
 
-
-
+  diff = gsl_matrix_alloc(_patchVol*tdim, 1);
 
   // For each reference
   for (int r = 0; r < _refCount; r++){
@@ -389,26 +426,33 @@ void Zeta::Run(){
 
     for (int n = 0; n < _nPatchCentres; n++){
 
-      tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, _patchVol);
+      tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
 
       refNbhdCentre = refStartPtr + _patchCentreIndices[n];
 
       // Current voxel is centre of the neighbourhood, loop
       // over reference patches in the neighbourhood.
       for (int m = 0; m < _nbhdVol; m++){
-
         for (int k = 0; k < _patchVol; k++){
-          double val = *(refNbhdCentre + _patchOffsets[k]);
-          gsl_matrix_set(diff, 0, k, val);
+          int tOff = 0;
+          for (int t = 0; t < tdim; t++, tOff += _tOffset){
+
+            double val = *(refNbhdCentre + _patchOffsets[k] + tOff);
+
+            gsl_matrix_set(diff, 0, k+t*tdim, val);
+          }
+
+
+
         }
 
         gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
 
 
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, diffPrec);
+            _Prec, 0.0, precDiff);
 
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diffPrec,
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, precDiff,
             diff, 0.0, diffPrecDiff);
 
         cout << "diffPrecDiff size: " << diffPrecDiff->size1 << " " << diffPrecDiff->size2 << endl;

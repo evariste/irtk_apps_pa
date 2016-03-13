@@ -61,6 +61,8 @@ private:
 
     long *_nbhdOffsets;
 
+    long _tOffset
+
     int _patchVol;
     int _nbhdVol;
 
