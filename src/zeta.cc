@@ -379,6 +379,10 @@ void Zeta::Initialise()
 
 void Zeta::Run(){
 
+  if (! _initialised){
+    this->Initialise();
+  }
+
   // Loop over ROI voxels
 
 
@@ -431,11 +435,16 @@ void Zeta::Run(){
       // Current voxel is centre of the neighbourhood, loop
       // over reference patches in the neighbourhood.
       for (int m = 0; m < _nbhdVol; m++){
+
+        refPatchCentre = refNbhdCentre + _nbhdOffsets[m];
+
+
         for (int k = 0; k < _patchVol; k++){
+
           int tOff = 0;
           for (int t = 0; t < tdim; t++, tOff += _tOffset){
 
-            double val = *(refNbhdCentre + _patchOffsets[k] + tOff);
+            double val = *(refPatchCentre + _patchOffsets[k] + tOff);
 
             gsl_matrix_set(diff, 0, k+t*tdim, val);
           }
@@ -453,10 +462,13 @@ void Zeta::Run(){
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, precDiff,
             diff, 0.0, diffPrecDiff);
 
-        cout << "diffPrecDiff size: " << diffPrecDiff->size1 << " " << diffPrecDiff->size2 << endl;
-        exit(0);
+
+        cout << "m : " << m <<  gsl_matrix_get(diffPrecDiff, 0, 0) << endl;
 
       }
+
+      exit(0);
+
     }
 
 
