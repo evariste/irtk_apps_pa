@@ -4,6 +4,7 @@ Zeta::Zeta()
 {
   _kZeta = 3;
   _target = NULL;
+  _output = NULL;
   _reference = NULL;
   _mask = NULL;
   _patchRadius = -1;
@@ -85,9 +86,10 @@ void Zeta::Initialise()
   zdim = _target->GetZ();
   tdim = _target->GetT();
 
+  irtkImageAttributes attr = _target->GetImageAttributes();
+
   if (_mask == NULL){
     cout << "Zeta::Initialise: Create default mask" << endl;
-    irtkImageAttributes attr = _target->GetImageAttributes();
     _mask = new  irtkGreyImage(attr);
     (*_mask) *= 0;
     (*_mask) += 1;
@@ -100,6 +102,14 @@ void Zeta::Initialise()
     cerr << "Zeta::Initialise: Mask dimensions don't match target. Exiting." << endl;
     exit(1);
   }
+
+
+
+  // Set the output image!
+  _output = new irtkRealImage(attr);
+
+
+
 
 
   for (int n = 0; n < _refCount; n++){
@@ -212,31 +222,31 @@ void Zeta::Initialise()
 
   cout << "done. " << endl;
 
-
-  // TODO: Remove this test code.
-  irtkRealPixel *tptr = _target->GetPointerToVoxels();
-  irtkRealPixel *tgtPatchCentre, *refPatchCentre;
-
-  (*_target) *= 0.0;
-
-  cout << "Looping over all patches." << endl;
-
-
-  for (int n = 0; n < _nPatchCentres; n++){
-    tgtPatchCentre = tptr + _patchCentreIndices[n];
-
-    for (int m = 0; m < _nbhdVol; m++){
-      refPatchCentre = tgtPatchCentre + _nbhdOffsets[m];
-
-      for (int k = 0; k < _patchVol; k++){
-
-        *(refPatchCentre + _patchOffsets[k]) = 121;
-
-      }
-    }
-  }
-  _target->Write("bla.nii.gz");
-
+//
+//  // TODO: Remove this test code.
+//  irtkRealPixel *tptr = _target->GetPointerToVoxels();
+//  irtkRealPixel *tgtPatchCentre, *refPatchCentre;
+//
+//  (*_target) *= 0.0;
+//
+//  cout << "Looping over all patches." << endl;
+//
+//
+//  for (int n = 0; n < _nPatchCentres; n++){
+//    tgtPatchCentre = tptr + _patchCentreIndices[n];
+//
+//    for (int m = 0; m < _nbhdVol; m++){
+//      refPatchCentre = tgtPatchCentre + _nbhdOffsets[m];
+//
+//      for (int k = 0; k < _patchVol; k++){
+//
+//        *(refPatchCentre + _patchOffsets[k]) = 121;
+//
+//      }
+//    }
+//  }
+//  _target->Write("bla.nii.gz");
+//
 
 
   // Standardise data.
@@ -337,6 +347,90 @@ void Zeta::Initialise()
 
 
 
+void Zeta::Run(){
+
+  // Loop over ROI voxels
+
+
+  irtkRealPixel *tgtStartPtr, *tgtPatchCentre, *refNbhdCentre, *refStartPtr, *refPatchCentre;
+
+  tgtStartPtr = _target->GetPointerToVoxels();
+
+
+  // Store the target patches.
+  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol);
+
+  gsl_matrix *diff = gsl_matrix_alloc(1, _patchVol);
+
+  gsl_matrix_view tgt_patch_vals;
+
+  gsl_matrix * diffPrec, *diffPrecDiff;
+
+
+  for (int n = 0; n < _nPatchCentres; n++){
+
+    tgtPatchCentre = tgtStartPtr + _patchCentreIndices[n];
+    for (int k = 0; k < _patchVol; k++){
+
+      double val = *(tgtPatchCentre + _patchOffsets[k]);
+      gsl_matrix_set(T, n, k, val);
+
+    }
+  }
+
+
+
+
+
+  // For each reference
+  for (int r = 0; r < _refCount; r++){
+
+    refStartPtr = _reference[r]->GetPointerToVoxels();
+
+    for (int n = 0; n < _nPatchCentres; n++){
+
+      tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, _patchVol);
+
+      refNbhdCentre = refStartPtr + _patchCentreIndices[n];
+
+      // Current voxel is centre of the neighbourhood, loop
+      // over reference patches in the neighbourhood.
+      for (int m = 0; m < _nbhdVol; m++){
+
+        for (int k = 0; k < _patchVol; k++){
+          double val = *(refNbhdCentre + _patchOffsets[k]);
+          gsl_matrix_set(diff, 1, k, val);
+        }
+
+        gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
+
+
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+            _Prec, 0.0, diffPrec);
+
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diffPrec,
+            diff, 0.0, diffPrecDiff);
+
+        cout << "diffPrecDiff size: " << diffPrecDiff->size1 << " " << diffPrecDiff->size2 << endl;
+        exit(0);
+
+      }
+    }
+
+
+  }
+
+
+
+
+  // Find closest patch, store it and record distance
+  // Find k closest patches over all references
+  // Calculate gamma, mean of stored distances above
+  // Calculate mean pairwise distance over k nearest patches
+  // Calculate zeta
+
+
+}
 
 
 void Zeta::Print(){

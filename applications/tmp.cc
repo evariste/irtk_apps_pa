@@ -151,6 +151,7 @@ int main(int argc, char **argv)
 
     zetaFilt.Print();
 
+    zetaFilt.Run();
 
 }
 
