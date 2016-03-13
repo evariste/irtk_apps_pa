@@ -1,5 +1,21 @@
 #include "zeta.h"
 
+
+
+void Zeta::print_matrix(const gsl_matrix *m)
+{
+    for (size_t i = 0; i < m->size1; i++) {
+        for (size_t j = 0; j < m->size2; j++) {
+
+            cout << gsl_matrix_get(m, i, j) << " ";
+        }
+    cout << endl;
+
+    }
+}
+
+
+
 Zeta::Zeta()
 {
   _kZeta = 3;
@@ -353,6 +369,7 @@ void Zeta::Initialise()
   gsl_linalg_LU_decomp(Cov, perm, &signum);
   gsl_linalg_LU_invert(Cov, perm, prec);
 
+
   // Precision matrix is actually a replicated preci
   _Prec = gsl_matrix_alloc(_patchVol * tdim, _patchVol * tdim);
 
@@ -413,7 +430,7 @@ void Zeta::Run(){
 
         double val = *(tgtPatchCentre + _patchOffsets[k] + tOff ) ;
 
-        gsl_matrix_set(T, n, k + t*tdim, val);
+        gsl_matrix_set(T, n, k + t*_patchVol, val);
       }
     }
   }
@@ -446,7 +463,7 @@ void Zeta::Run(){
 
             double val = *(refPatchCentre + _patchOffsets[k] + tOff);
 
-            gsl_matrix_set(diff, 0, k+t*tdim, val);
+            gsl_matrix_set(diff, 0, k+t*_patchVol, val);
           }
 
 

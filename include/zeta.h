@@ -37,6 +37,9 @@ public:
 
 private:
 
+    void print_matrix(const gsl_matrix *m);
+
+
     // Number of neighbours for zeta estimation.
     int _kZeta;
 
