@@ -399,7 +399,7 @@ void Zeta::Run(){
 
         for (int k = 0; k < _patchVol; k++){
           double val = *(refNbhdCentre + _patchOffsets[k]);
-          gsl_matrix_set(diff, 1, k, val);
+          gsl_matrix_set(diff, 0, k, val);
         }
 
         gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
