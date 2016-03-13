@@ -353,18 +353,16 @@ void Zeta::Initialise()
   gsl_linalg_LU_decomp(Cov, perm, &signum);
   gsl_linalg_LU_invert(Cov, perm, prec);
 
-
-
-
-
+  // Precision matrix is actually a replicated preci
   _Prec = gsl_matrix_alloc(_patchVol * tdim, _patchVol * tdim);
 
   gsl_matrix_set_zero(_Prec);
 
-  for (int t = 0; t < tdim; t++){
+  for (int k = 0; k < _patchVol; k++){
+
     gsl_matrix_view submat;
 
-    submat = gsl_matrix_submatrix(_Prec, t*tdim, t*tdim, tdim, tdim);
+    submat = gsl_matrix_submatrix(_Prec, k*tdim, k*tdim, tdim, tdim);
 
     gsl_matrix_memcpy(&(submat.matrix), prec);
 
