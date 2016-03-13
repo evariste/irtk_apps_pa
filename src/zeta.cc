@@ -412,8 +412,10 @@ void Zeta::Run(){
 
 
   gsl_matrix_view tgt_patch_vals;
-  gsl_matrix *diff, *precDiff, *diffPrecDiff;
-  precDiff = gsl_matrix_alloc(tdim, tdim);
+  gsl_matrix *diff, *diffPrec, *diffPrecDiff;
+
+
+  diffPrec = gsl_matrix_alloc(1, _patchVol * tdim);
   diffPrecDiff = gsl_matrix_alloc(1, 1);
 
   // Store the target patches.
@@ -474,9 +476,9 @@ void Zeta::Run(){
 
 
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, precDiff);
+            _Prec, 0.0, diffPrec);
 
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, precDiff,
+        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
             diff, 0.0, diffPrecDiff);
 
 
