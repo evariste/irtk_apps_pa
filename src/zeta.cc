@@ -436,7 +436,7 @@ void Zeta::Run(){
   }
 
 
-  diff = gsl_matrix_alloc(_patchVol*tdim, 1);
+  diff = gsl_matrix_alloc(1, _patchVol*tdim);
 
   // For each reference
   for (int r = 0; r < _refCount; r++){
