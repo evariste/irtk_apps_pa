@@ -9,6 +9,7 @@
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_sort.h>
 
 class Zeta
 {
@@ -64,7 +65,7 @@ private:
 
     long *_nbhdOffsets;
 
-    long _tOffset;
+    long _chanOffset;
 
     int _patchVol;
     int _nbhdVol;

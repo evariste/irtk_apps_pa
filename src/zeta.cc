@@ -27,7 +27,7 @@ Zeta::Zeta()
   _nbhdRadius = -1;
   _initialised = false;
   _refCount = 0;
-  _tOffset = 0;
+  _chanOffset = 0;
   _nPatchCentres = 0;
   _patchOffsets = NULL;
   _nbhdOffsets = NULL;
@@ -40,6 +40,9 @@ Zeta::Zeta()
 
 Zeta::~Zeta()
 {
+
+  // TODO: call gsl_matrix_free and gsl_vector_free where necessary for members.
+
   delete [] _reference;
   delete [] _patchCentreIndices;
   delete [] _patchOffsets;
@@ -89,8 +92,8 @@ void Zeta::Initialise()
   }
 
   if (_refCount == 0){
-    cout << "Zeta::Initialise: No reference images. Nothing to do." << endl;
-    cout << "Exiting" << endl;
+    cerr << "Zeta::Initialise: No reference images. Nothing to do." << endl;
+    cerr << "Exiting" << endl;
     exit(1);
   }
 
@@ -102,6 +105,11 @@ void Zeta::Initialise()
   if (_nbhdRadius < 0){
     cout << "Zeta::Initialise: Setting neighbourhood size to 4" << endl;
     _nbhdRadius = 4;
+  }
+
+  if (_kZeta < 2){
+    cerr << "Zeta::Initialise: Number of nearest neighbours is less than 2. Exiting" << endl;
+    exit(1);
   }
 
   xdim = _target->GetX();
@@ -284,7 +292,7 @@ void Zeta::Initialise()
   irtkRealPixel *refPtr;
   irtkRealPixel val;
 
-  _tOffset = xdim * ydim * zdim;
+  _chanOffset = xdim * ydim * zdim;
 
   for (n = 0; n < _refCount; n++){
 
@@ -309,7 +317,7 @@ void Zeta::Initialise()
 
       }
 
-      tOff += _tOffset;
+      tOff += _chanOffset;
 
 
     }
@@ -403,23 +411,38 @@ void Zeta::Run(){
   // Loop over ROI voxels
 
 
-  irtkRealPixel *tgtStartPtr, *tgtPatchCentre, *refNbhdCentre, *refStartPtr, *refPatchCentre;
+  irtkRealPixel *tgtStartPtr, *tgtPatchCentre, *refNbhdCentre, *refPatchCentre, pTemp;
+
+  irtkRealPixel **refStartPtr;
+
+  refStartPtr = new irtkRealPixel*[_refCount];
+
+  for (int r = 0; r < _refCount; r++){
+    refStartPtr[r] = _reference[r]->GetPointerToVoxels();
+  }
+
+
 
   tgtStartPtr = _target->GetPointerToVoxels();
 
 
-  int tdim = _target->GetT();
+  int nChannels = _target->GetT();
 
 
   gsl_matrix_view tgt_patch_vals;
-  gsl_matrix *diff, *diffPrec, *diffPrecDiff;
+  gsl_matrix *diff, *diffPrec, *diffPrecDiffT;
 
 
-  diffPrec = gsl_matrix_alloc(1, _patchVol * tdim);
-  diffPrecDiff = gsl_matrix_alloc(1, 1);
+  diffPrec = gsl_matrix_alloc(1, _patchVol * nChannels);
+  diffPrecDiffT = gsl_matrix_alloc(1, 1);
 
   // Store the target patches.
-  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol*tdim);
+
+  // Each row is of length nChannels x patch volume. A row
+  // contains the values for a patch in the first channel
+  // followed by the patch values for the second channel and so on.
+
+  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol*nChannels);
 
   for (int n = 0; n < _nPatchCentres; n++){
 
@@ -428,28 +451,50 @@ void Zeta::Run(){
     for (int k = 0; k < _patchVol; k++){
 
       int tOff = 0;
-      for (int t = 0; t < tdim; t++, tOff += _tOffset){
 
-        double val = *(tgtPatchCentre + _patchOffsets[k] + tOff ) ;
+      pTemp = tgtPatchCentre + _patchOffsets[k];
 
-        gsl_matrix_set(T, n, k + t*_patchVol, val);
+      for (int chan = 0; chan < nChannels; chan++, tOff += _chanOffset){
+
+        double val = *(pTemp + tOff ) ;
+
+        gsl_matrix_set(T, n, k + chan*_patchVol, val);
       }
     }
   }
 
 
-  diff = gsl_matrix_alloc(1, _patchVol*tdim);
+  diff = gsl_matrix_alloc(1, _patchVol*nChannels);
+  gsl_vector *refPatch = gsl_vector_alloc(_patchVol*nChannels);
 
-  // For each reference
-  for (int r = 0; r < _refCount; r++){
+  //  gsl_vector *refPatchA = gsl_vector_alloc(_patchVol*tdim);
+  //  gsl_vector *refPatchB = gsl_vector_alloc(_patchVol*tdim);
 
-    refStartPtr = _reference[r]->GetPointerToVoxels();
+  gsl_matrix_view refPatchA;
+  gsl_matrix_view refPatchB;
 
-    for (int n = 0; n < _nPatchCentres; n++){
+  gsl_matrix *RefData = gsl_matrix_alloc(_refCount, _patchVol*nChannels);
 
-      tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
 
-      refNbhdCentre = refStartPtr + _patchCentreIndices[n];
+  double val;
+  double minVal = DBL_MAX;
+  double *minVals = new double[_refCount];
+  unsigned long int *sortInds = new unsigned long int[_refCount];
+  double meanPairwise, meanTgtToRef;
+
+
+  double normFactor = _kZeta * (_kZeta - 1) / 2.0;
+
+
+  // Loop over target patch centres.
+  for (int n = 0; n < _nPatchCentres; n++){
+
+    tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
+
+    // For each reference
+    for (int r = 0; r < _refCount; r++){
+
+      refNbhdCentre = refStartPtr[r] + _patchCentreIndices[n];
 
       // Current voxel is centre of the neighbourhood, loop
       // over reference patches in the neighbourhood.
@@ -457,41 +502,106 @@ void Zeta::Run(){
 
         refPatchCentre = refNbhdCentre + _nbhdOffsets[m];
 
-
+        // Data for current reference patch.
         for (int k = 0; k < _patchVol; k++){
 
-          int tOff = 0;
-          for (int t = 0; t < tdim; t++, tOff += _tOffset){
+          int chanOff = 0;
+          // Particular spatial location within the patch.
+          pTemp = refPatchCentre + _patchOffsets[k];
 
-            double val = *(refPatchCentre + _patchOffsets[k] + tOff);
+          for (int chan = 0; chan < nChannels; chan++, chanOff += _chanOffset){
 
-            gsl_matrix_set(diff, 0, k+t*_patchVol, val);
+            double val = *(pTemp + chanOff);
+
+            gsl_vector_set(refPatch, k+chan*_patchVol, val);
           }
-
-
-
         }
 
+        gsl_matrix_set_row(diff, 0, refPatch);
+
         gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
+
+        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+            _Prec, 0.0, diffPrec);
+
+        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
+            diff, 0.0, diffPrecDiffT);
+
+        val = gsl_matrix_get(diffPrecDiffT, 0, 0);
+
+        if (minVal > val){
+          // Pick the current patch as the best one from this reference.
+          minVal = val;
+          gsl_matrix_set_row(RefData, r, refPatch);
+          cout << "m : " << m << " r: " << r << " : " << val << endl;
+        }
+
+      } // Loop over patches in neighbourhood
+
+
+      // Set the minimum value for the current reference.
+      minVals[r] = minVal;
+
+    } // Loop over references
+
+
+
+    // Gamma
+
+    // TODO: sort and take mean of first k
+    gsl_sort_smallest_index(sortInds, _kZeta, minVals, 1, _refCount);
+
+    meanTgtToRef = gsl_stats_mean(minVals, 1, _refCount);
+
+
+    meanPairwise = 0.0;
+    for (int rA = 0; rA < _kZeta-1; rA++){
+
+      refPatchA = gsl_matrix_submatrix(RefData,
+                      sortInds[rA], 0, 1, RefData->size2);
+
+      for (int rB = rA+1; rB < _kZeta; rB++){
+
+        refPatchB = gsl_matrix_submatrix(RefData,
+                        sortInds[rB], 0, 1, RefData->size2);
+
+        gsl_matrix_memcpy(diff, &(refPatchB.matrix));
+
+        gsl_matrix_sub(diff, &(refPatchA.matrix));
 
 
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
             _Prec, 0.0, diffPrec);
 
         gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, diffPrecDiff);
+            diff, 0.0, diffPrecDiffT);
 
-
-        cout << "m : " << m <<  gsl_matrix_get(diffPrecDiff, 0, 0) << endl;
+        meanPairwise += gsl_matrix_get(diffPrecDiffT, 0, 0);
 
       }
+    }
 
-      exit(0);
+    meanPairwise /= normFactor;
 
+
+    // TODO: remove
+    cout << "mean min val: " << meanTgtToRef << endl;
+    cout << "Mean pairwise: " << meanPairwise << endl;
+    for (int r = 0; r < _refCount; r++){
+      cout << "minVals[r] " <<  minVals[r] << endl;
+      for (int ii = 0; ii < RefData->size2; ii++)
+        cout << " " << gsl_matrix_get(RefData, r, ii);
+      cout << endl;
+    }
+    for (int r = 0; r < _kZeta; r++){
+      cout << "sorted minVals[r] " <<  minVals[ sortInds[r]] << endl;
     }
 
 
-  }
+
+    exit(0);
+
+  } // Loop over patch centres.
 
 
 
@@ -502,7 +612,11 @@ void Zeta::Run(){
   // Calculate mean pairwise distance over k nearest patches
   // Calculate zeta
 
+  // TODO: call gsl_matrix_free and gsl_vector_free where necessary.
 
+  delete [] refStartPtr;
+  delete [] minVals;
+  delete [] sortInds;
 }
 
 
