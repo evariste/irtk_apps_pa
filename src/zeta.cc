@@ -411,7 +411,7 @@ void Zeta::Run(){
   // Loop over ROI voxels
 
 
-  irtkRealPixel *tgtStartPtr, *tgtPatchCentre, *refNbhdCentre, *refPatchCentre, pTemp;
+  irtkRealPixel *tgtStartPtr, *tgtPatchCentre, *refNbhdCentre, *refPatchCentre, *pTemp;
 
   irtkRealPixel **refStartPtr;
 
