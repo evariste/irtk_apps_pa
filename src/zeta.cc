@@ -83,7 +83,7 @@ void Zeta::SetNeighbourhoodRadius(int n)
 
 void Zeta::Initialise()
 {
-  int xdim, ydim, zdim, tdim;
+  int xdim, ydim, zdim, nChannels;
 
 
   if (_target == NULL){
@@ -115,7 +115,7 @@ void Zeta::Initialise()
   xdim = _target->GetX();
   ydim = _target->GetY();
   zdim = _target->GetZ();
-  tdim = _target->GetT();
+  nChannels = _target->GetT();
 
   irtkImageAttributes attr = _target->GetImageAttributes();
 
@@ -135,8 +135,8 @@ void Zeta::Initialise()
   }
 
 
-
-  // Set the output image!
+  // Set the output image! it only needs to be a 3D volume.
+  attr._t = 1;
   _output = new irtkRealImage(attr);
 
 
@@ -148,7 +148,7 @@ void Zeta::Initialise()
     if ((xdim != im->GetX()) ||
         (ydim != im->GetY()) ||
         (zdim != im->GetZ()) ||
-        (tdim != im->GetT()) ){
+        (nChannels != im->GetT()) ){
       cerr << "Zeta::Initialise: Reference image dimensions don't match target. Exiting." << endl;
       exit(1);
     }
@@ -287,7 +287,7 @@ void Zeta::Initialise()
   gsl_matrix *X;
   unsigned long nDataPts = _refCount*_nPatchCentres;
 
-  X = gsl_matrix_alloc(nDataPts, tdim);
+  X = gsl_matrix_alloc(nDataPts, nChannels);
 
   irtkRealPixel *refPtr;
   irtkRealPixel val;
@@ -302,7 +302,7 @@ void Zeta::Initialise()
 
     int tOff = 0;
 
-    for (int t = 0; t < tdim; t++){
+    for (int t = 0; t < nChannels; t++){
 
 
       int i = 0;
@@ -327,7 +327,7 @@ void Zeta::Initialise()
 
   // Find the mean for each channel/modality.
 
-  gsl_vector *meanVals = gsl_vector_alloc(tdim);
+  gsl_vector *meanVals = gsl_vector_alloc(nChannels);
 
   gsl_vector_view col;
   gsl_vector_view col2;
@@ -347,7 +347,7 @@ void Zeta::Initialise()
   }
 
 
-  gsl_matrix *Cov = gsl_matrix_alloc(tdim, tdim);
+  gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
 
   for (int i = 0; i < X->size2; i++){
     for (int j = 0; j < X->size2; j++){
@@ -369,9 +369,9 @@ void Zeta::Initialise()
 
 
   // Set the precision matrix.
-  gsl_matrix *prec = gsl_matrix_alloc(tdim, tdim);
+  gsl_matrix *prec = gsl_matrix_alloc(nChannels, nChannels);
 
-  gsl_permutation * perm = gsl_permutation_alloc (tdim);
+  gsl_permutation * perm = gsl_permutation_alloc (nChannels);
   int signum;
 
   gsl_linalg_LU_decomp(Cov, perm, &signum);
@@ -379,7 +379,7 @@ void Zeta::Initialise()
 
 
   // Precision matrix is actually a replicated preci
-  _Prec = gsl_matrix_alloc(_patchVol * tdim, _patchVol * tdim);
+  _Prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
 
   gsl_matrix_set_zero(_Prec);
 
@@ -387,7 +387,7 @@ void Zeta::Initialise()
 
     gsl_matrix_view submat;
 
-    submat = gsl_matrix_submatrix(_Prec, k*tdim, k*tdim, tdim, tdim);
+    submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
 
     gsl_matrix_memcpy(&(submat.matrix), prec);
 
