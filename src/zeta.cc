@@ -333,7 +333,7 @@ void Zeta::Initialise()
   gsl_vector_view col2;
   // Zero mean each channel/modality to get covariance
 
-  for (int j = 0; j < X->size2; j++){
+  for (unsigned int j = 0; j < X->size2; j++){
 
     col = gsl_matrix_column(X, j);
     double meanVal = gsl_stats_mean(col.vector.data,
@@ -347,10 +347,23 @@ void Zeta::Initialise()
   }
 
 
+  /////////////////////////////////////////////////////
+  // Test code
+//  irtkMatrix tempMat;
+//  tempMat.Initialize(X->size1, X->size2);
+//  for (unsigned int i = 0; i < X->size1; i++){
+//	  for (unsigned int j = 0; j < X->size2; j++){
+//		  tempMat(i,j) = gsl_matrix_get(X, i, j);
+//	  }
+//  }
+//  tempMat.Write("temp.mat");
+  //////////////////////////////////////////////////////
+
+
   gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
 
-  for (int i = 0; i < X->size2; i++){
-    for (int j = 0; j < X->size2; j++){
+  for (unsigned int i = 0; i < X->size2; i++){
+    for (unsigned int j = 0; j < X->size2; j++){
       col = gsl_matrix_column(X, i);
       col2 = gsl_matrix_column(X, j);
       double c = gsl_stats_covariance(col.vector.data,
@@ -378,7 +391,8 @@ void Zeta::Initialise()
   gsl_linalg_LU_invert(Cov, perm, prec);
 
 
-  // Precision matrix is actually a replicated preci
+  // Precision matrix is actually a replicated precision matrix on the block diagona.
+  // There is a block for each voxel in the patch
   _Prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
 
   gsl_matrix_set_zero(_Prec);
@@ -607,7 +621,7 @@ void Zeta::Run(){
     cout << "Mean pairwise: " << meanPairwise << endl;
     for (int r = 0; r < _refCount; r++){
       cout << "minVals[r] " <<  minVals[r] << endl;
-      for (int ii = 0; ii < RefData->size2; ii++)
+      for (unsigned int ii = 0; ii < RefData->size2; ii++)
         cout << " " << gsl_matrix_get(RefData, r, ii);
       cout << endl;
     }
