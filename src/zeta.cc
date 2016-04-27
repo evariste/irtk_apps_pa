@@ -384,7 +384,6 @@ void Zeta::Initialise()
                                       col2.vector.data,
                                       col2.vector.stride,
                                       col.vector.size);
-      cout << " c " << c << endl;
       gsl_matrix_set(Cov, i, j, c);
 
 
@@ -687,9 +686,15 @@ void Zeta::Print(){
 
   cout << "Precision matrix: " << endl;
 
-  for (unsigned long int i = 0; i < _Prec->size1; i++){
-    for (unsigned long int j = 0; j < _Prec->size2; j++){
-      printf("%0.12f ", gsl_matrix_get(_Prec, i, j));
+  int nChannels = _target->GetT();
+
+  cout << "Channels: " << nChannels << endl;
+
+  cout << "Precision matrix " << endl;
+
+  for (unsigned long int i = 0; i < nChannels; i++){
+    for (unsigned long int j = 0; j < nChannels; j++){
+      printf("%0.3f ", gsl_matrix_get(_Prec, i, j));
     }
     cout << endl;
   }
