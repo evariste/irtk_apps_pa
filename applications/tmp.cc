@@ -153,6 +153,9 @@ int main(int argc, char **argv)
 
     zetaFilt.Run();
 
+    irtkRealImage *out = zetaFilt.GetOutput();
+    out->Write(output_name);
+
 }
 
 

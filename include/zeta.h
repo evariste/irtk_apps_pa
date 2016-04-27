@@ -36,6 +36,8 @@ public:
 
     void Run();
 
+    irtkRealImage *GetOutput();
+
 private:
 
     void print_matrix(const gsl_matrix *m);
@@ -58,14 +60,18 @@ private:
 
     int _nbhdRadius;
 
-    long *_patchCentreIndices;
+    unsigned long *_patchCentreIndices;
+    unsigned int *_patchCentresI;
+    unsigned int *_patchCentresJ;
+    unsigned int *_patchCentresK;
+
     int _nPatchCentres;
 
-    long *_patchOffsets;
+    unsigned long *_patchOffsets;
 
-    long *_nbhdOffsets;
+    unsigned long *_nbhdOffsets;
 
-    long _chanOffset;
+    unsigned long _chanOffset;
 
     int _patchVol;
     int _nbhdVol;
