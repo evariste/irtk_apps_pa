@@ -30,6 +30,9 @@ Zeta::Zeta()
   _chanOffset = 0;
   _nPatchCentres = 0;
   _patchOffsets = NULL;
+  _patchCentresI = NULL;
+  _patchCentresJ = NULL;
+  _patchCentresK = NULL;
   _nbhdOffsets = NULL;
   _nbhdVol = 0;
   _patchVol = 0;
@@ -40,8 +43,6 @@ Zeta::Zeta()
 
 Zeta::~Zeta()
 {
-
-  // TODO: call gsl_matrix_free and gsl_vector_free where necessary for members.
 
   delete [] _reference;
   delete [] _patchCentreIndices;
@@ -255,42 +256,12 @@ void Zeta::Initialise()
         long nbhdVoxelIndex = _target->VoxelToIndex(fovI_lo + i, fovJ_lo + j, fovK_lo + k);
         _nbhdOffsets[n] = nbhdVoxelIndex - centreIndex;
 
-        // TODO: Remove this test code.
-//        cout << "(i,j,k)" << i << " " << j << " " << k << "  ";
-//        cout << n << "    " << _nbhdOffsets[n] << endl;
-
         n++;
       }
     }
   }
 
   cout << "done. " << endl;
-
-//
-  // TODO: Remove this test code.
-//  irtkRealPixel *tptr = _target->GetPointerToVoxels();
-//  irtkRealPixel *tgtPatchCentre, *refPatchCentre;
-//
-//  (*_target) *= 0.0;
-//
-//  cout << "Looping over all patches." << endl;
-//
-//
-//  for (int n = 0; n < _nPatchCentres; n++){
-//    tgtPatchCentre = tptr + _patchCentreIndices[n];
-//
-//    for (int m = 0; m < _nbhdVol; m++){
-//      refPatchCentre = tgtPatchCentre + _nbhdOffsets[m];
-//
-//      for (int k = 0; k < _patchVol; k++){
-//
-//        *(refPatchCentre + _patchOffsets[k]) = 121;
-//
-//      }
-//    }
-//  }
-//  _target->Write("bla.nii.gz");
-//
 
 
   // Standardise data.
@@ -464,6 +435,8 @@ void Zeta::Run(){
   diffPrec = gsl_matrix_alloc(1, _patchVol * nChannels);
   diffPrecDiffT = gsl_matrix_alloc(1, 1);
 
+
+
   // Store the target patches.
 
   // Each row is of length nChannels x patch volume. A row
@@ -519,6 +492,8 @@ void Zeta::Run(){
 
     tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
 
+    // Find closest patch to the target for each reference, store it and record distance
+
     // For each reference
     for (int r = 0; r < _refCount; r++){
 
@@ -571,8 +546,6 @@ void Zeta::Run(){
           // Pick the current patch as the best one from this reference.
           minVal = val;
           gsl_matrix_set_row(RefData, r, refPatch);
-          // TODO: Remove test code.
-//          cout << "m : " << m << " r: " << r << " : " << val << endl;
         }
 
       } // Loop over patches in neighbourhood for current reference image.
@@ -582,7 +555,6 @@ void Zeta::Run(){
       refDistsToTgt[r] = minVal;
 
     } // Loop over references
-
 
 
     // Gamma: Mean 'distance' to k-nearest refs.
@@ -597,7 +569,7 @@ void Zeta::Run(){
     meanTgtToRef /= _kZeta;
 
 
-    // Get pairwise distances in nearest clique of refs and find mean.
+    // Get pairwise distances in the k-nearest clique of references and find their mean.
     meanPairwise = 0.0;
     for (int rA = 0; rA < _kZeta-1; rA++){
 
@@ -626,41 +598,11 @@ void Zeta::Run(){
     meanPairwise /= normFactor;
 
     // Zeta is difference between Gamma and mean intra-clique distance.
-//    cout << _patchCentresI[n] << ", " << _patchCentresJ[n] << ", " <<  _patchCentresK[n] << ", " << meanTgtToRef << ", " << meanPairwise << endl;
     _output->PutAsDouble(_patchCentresI[n], _patchCentresJ[n], _patchCentresK[n], meanTgtToRef - meanPairwise);
-
-
-//    // TODO: remove test code
-//    cout << "mean min val: " << meanTgtToRef << endl;
-//    cout << "Mean pairwise: " << meanPairwise << endl;
-//    for (int r = 0; r < _refCount; r++){
-//      cout << "refDistsToTgt[r] " <<  refDistsToTgt[r] << endl;
-//      for (unsigned int ii = 0; ii < RefData->size2; ii++)
-//        cout << " " << gsl_matrix_get(RefData, r, ii);
-//      cout << endl;
-//    }
-//    for (int r = 0; r < _kZeta; r++){
-//      cout << "sorted minVals[r] " <<  refDistsToTgt[ sortInds[r]] << endl;
-//    }
-//    cout << "Writing output " << endl;
-//    _output->Write("bla.nii.gz");
-//    exit(0);
-//    if (n > 20)
-//    {
-//      return;
-//    }
 
 
   } // Loop over patch centres, index: n
 
-
-
-
-  // Find closest patch, store it and record distance
-  // Find k closest patches over all references
-  // Calculate gamma, mean of stored distances above
-  // Calculate mean pairwise distance over k nearest patches
-  // Calculate zeta
 
   // TODO: call gsl_matrix_free and gsl_vector_free where necessary.
 
