@@ -3,6 +3,7 @@
 //#include <nr.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_sort_vector.h>
+#include <gsl/gsl_permute_vector.h>
 
 char *input_name  = NULL;
 char *output_name = NULL;
@@ -136,7 +137,14 @@ int main(int argc, char **argv)
   // This call sorts the intensities array, and re-orders indices in the
   // same way.
 //  sort2(unpaddedCount, intensities, offsets);
-  gsl_sort_vector2(intensities, offsets);
+//  gsl_sort_vector2(intensities, offsets);
+
+  gsl_permutation *perm;
+  perm = gsl_permutation_alloc(unpaddedCount);
+  gsl_sort_vector_index (perm, intensities);
+  gsl_permute_vector(perm, intensities);
+  gsl_permute_vector(perm, offsets);
+
 
 //  // Undo the 1-indexing shift
 //  for(i = 0; i < unpaddedCount; i++){
