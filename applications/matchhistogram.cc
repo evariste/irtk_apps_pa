@@ -3,6 +3,7 @@
 //#include <nr.h>
 #include <gsl/gsl_vector.h>
 #include <gsl/gsl_sort_vector.h>
+#include <gsl/gsl_permute_vector.h>
 
 char *ref_name    = NULL;
 char *input_name  = NULL;
@@ -133,7 +134,16 @@ int main(int argc, char **argv)
   }
 
 //  sort2(unpaddedCountIn, intsIn - 1, offsetsIn - 1);
-  gsl_sort_vector2(intsIn, offsetsIn);
+
+
+//   gsl_sort_vector2(intsIn, offsetsIn);
+
+  gsl_permutation *perm;
+  perm = gsl_permutation_alloc(unpaddedCountIn);
+  gsl_sort_vector_index (perm, intsIn);
+  gsl_permute_vector(perm, intsIn);
+  gsl_permute_vector(perm, offsetsIn);
+
 
   ////////////////
 
