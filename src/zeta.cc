@@ -487,6 +487,13 @@ void Zeta::Run(){
   double normFactor = _kZeta * (_kZeta - 1) / 2.0;
 
 
+  for (int i = 0; i <= 100; i++){
+    printf("|");
+  }
+  printf("\n");
+  fflush(stdout);
+  int nChunk = _nPatchCentres / 100;
+
   // Loop over target patch centres.
   for (int n = 0; n < _nPatchCentres; n++){
 
@@ -600,6 +607,11 @@ void Zeta::Run(){
     // Zeta is difference between Gamma and mean intra-clique distance.
     _output->PutAsDouble(_patchCentresI[n], _patchCentresJ[n], _patchCentresK[n], meanTgtToRef - meanPairwise);
 
+
+    if (n % nChunk == 0){
+      printf(".");
+      fflush(stdout);
+    }
 
   } // Loop over patch centres, index: n
 
