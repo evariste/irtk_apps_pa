@@ -64,9 +64,13 @@ int main(int argc, char **argv)
   hull->SetInputData(input);
   hull->AddRecursiveSpherePlanes(levels);
 
+  hull->Update();
+
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetFileName(out_name);
   writer->SetInputData(hull->GetOutput());
+
+  writer->Update();
   writer->Write();
 
 }
