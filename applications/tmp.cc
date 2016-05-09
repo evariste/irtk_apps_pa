@@ -176,7 +176,7 @@ int main(int argc, char **argv)
 
 #ifdef HAS_MPI
     MPI_Finalize();
-#else
+#endif
 
 
 }
