@@ -4,6 +4,11 @@
 
 #include "zeta.h"
 
+#ifdef HAS_MPI
+#include <mpi.h>
+#endif
+
+
 char *input_name = NULL, *output_name = NULL;
 char *mask_name = NULL;
 char **ref_name;
@@ -29,9 +34,18 @@ int main(int argc, char **argv)
 
     int k = 3;
 
+#ifdef HAS_MPI
+    /* Initialize */
+    MPI_Init(&argc,&argv);
+#endif
+
     if (argc < 2){
+#ifdef HAS_MPI
+      MPI_Finalize();
+#endif
         usage();
     }
+
 
     input_name  = argv[1];
     argc--;
@@ -150,8 +164,11 @@ int main(int argc, char **argv)
     zetaFilt.Initialise();
 
     zetaFilt.Print();
-
+#ifdef HAS_MPI
+    zetaFilt.RunParallel();
+#else
     zetaFilt.Run();
+#endif
 
     irtkRealImage *out = zetaFilt.GetOutput();
     out->Write(output_name);
