@@ -173,6 +173,12 @@ int main(int argc, char **argv)
     irtkRealImage *out = zetaFilt.GetOutput();
     out->Write(output_name);
 
+
+#ifdef HAS_MPI
+    MPI_Finalize();
+#else
+
+
 }
 
 
