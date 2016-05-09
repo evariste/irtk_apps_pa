@@ -657,6 +657,8 @@ void Zeta::RunParallel()
   MPI_Comm_size(MPI_COMM_WORLD,&numproc);
   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 
+  if (myid == 0)
+    cout << "Zeta: Running parallel version." << endl;
 
 
   tgtStartPtr = _target->GetPointerToVoxels();
@@ -755,7 +757,7 @@ void Zeta::RunParallel()
   }
 
   if (myid == 0){
-    for (i = 0; i < numproc; i++){
+    for (int i = 0; i < numproc; i++){
       printf("  i: %02d  displ: %d   scount: %d\n",i, displs[i], scounts[i]);
     }
   }
