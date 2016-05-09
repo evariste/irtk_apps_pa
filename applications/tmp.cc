@@ -163,16 +163,28 @@ int main(int argc, char **argv)
 
     zetaFilt.Initialise();
 
+#ifdef HAS_MPI
+    int myid;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+    if (myid == 0)
+#endif
+    {
     zetaFilt.Print();
+    }
+
 #ifdef HAS_MPI
     zetaFilt.RunParallel();
 #else
     zetaFilt.Run();
 #endif
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     irtkRealImage *out = zetaFilt.GetOutput();
     out->Write(output_name);
-
+    }
 
 #ifdef HAS_MPI
     MPI_Finalize();
