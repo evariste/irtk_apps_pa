@@ -99,30 +99,59 @@ void Zeta::Initialise()
 {
   int xdim, ydim, zdim, nChannels;
 
+#ifdef HAS_MPI
+  int myid;
+  MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
 
   if (_target == NULL){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cerr << "Zeta::Initialise: Target not set. Exiting." << endl;
+    }
     exit(1);
   }
 
   if (_refCount == 0){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cerr << "Zeta::Initialise: No reference images. Nothing to do." << endl;
     cerr << "Exiting" << endl;
+    }
     exit(1);
   }
 
   if (_patchRadius < 0){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cout << "Zeta::Initialise: Setting patch size to 3" << endl;
+    }
     _patchRadius = 3;
   }
 
   if (_nbhdRadius < 0){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cout << "Zeta::Initialise: Setting neighbourhood size to 4" << endl;
+    }
     _nbhdRadius = 4;
   }
 
   if (_kZeta < 2){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cerr << "Zeta::Initialise: Number of nearest neighbours is less than 2. Exiting" << endl;
+    }
     exit(1);
   }
 
@@ -134,7 +163,12 @@ void Zeta::Initialise()
   irtkImageAttributes attr = _target->GetImageAttributes();
 
   if (_mask == NULL){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cout << "Zeta::Initialise: Create default mask" << endl;
+    }
     _mask = new  irtkGreyImage(attr);
     (*_mask) *= 0;
     (*_mask) += 1;
@@ -144,7 +178,12 @@ void Zeta::Initialise()
   if ((xdim != _mask->GetX()) ||
       (ydim != _mask->GetY()) ||
       (zdim != _mask->GetZ()) ){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cerr << "Zeta::Initialise: Mask dimensions don't match target. Exiting." << endl;
+    }
     exit(1);
   }
 
@@ -160,7 +199,12 @@ void Zeta::Initialise()
         (ydim != im->GetY()) ||
         (zdim != im->GetZ()) ||
         (nChannels != im->GetT()) ){
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+      {
       cerr << "Zeta::Initialise: Reference image dimensions don't match target. Exiting." << endl;
+      }
       exit(1);
     }
 
@@ -183,7 +227,12 @@ void Zeta::Initialise()
       (fovK_lo < 0) ||
       (fovK_hi > zdim))
   {
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cout << "Image to small for required neighbourhood and patch radii" << endl;
+    }
     exit(1);
   }
 
@@ -200,7 +249,12 @@ void Zeta::Initialise()
   }
 
   _nPatchCentres = n;
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+  {
   cout << "No of patch centres: " << _nPatchCentres << endl;
+  }
 
   _patchCentreIndices = new unsigned long[_nPatchCentres];
   _patchCentresI = new unsigned int[_nPatchCentres];
@@ -225,7 +279,12 @@ void Zeta::Initialise()
 
 
   // Offsets for a patch.
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+  {
   cout << "Zeta::Initialise: Patch radius = " << _patchRadius << endl;
+  }
 
   int patchDiam = 1 + 2 * _patchRadius;
   _patchVol =  patchDiam * patchDiam * patchDiam;
@@ -247,7 +306,12 @@ void Zeta::Initialise()
 
 
   // Offsets for a neighbourhood
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+  {
   cout << "Zeta::Initialise: Neighbourhood radius = " << _nbhdRadius << endl;
+  }
   int nbhdDiam = 1 + 2 * _nbhdRadius;
   _nbhdVol = nbhdDiam * nbhdDiam * nbhdDiam;
   _nbhdOffsets = new unsigned long[_nbhdVol];
@@ -264,7 +328,12 @@ void Zeta::Initialise()
     }
   }
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+  {
   cout << "done. " << endl;
+  }
 
 
   // Standardise data.
@@ -334,19 +403,6 @@ void Zeta::Initialise()
   }
 
 
-  /////////////////////////////////////////////////////
-  // Test code
-//  irtkMatrix tempMat;
-//  tempMat.Initialize(X->size1, X->size2);
-//  for (unsigned int i = 0; i < X->size1; i++){
-//	  for (unsigned int j = 0; j < X->size2; j++){
-//		  tempMat(i,j) = gsl_matrix_get(X, i, j);
-//	  }
-//  }
-//  tempMat.Write("temp.mat");
-  //////////////////////////////////////////////////////
-
-
   gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
 
   for (unsigned int i = 0; i < X->size2; i++){
@@ -390,14 +446,17 @@ void Zeta::Initialise()
     submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
 
     gsl_matrix_memcpy(&(submat.matrix), prec);
-
-
   }
 
 
   _initialised = true;
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+  {
   cout << "Done initialising" << endl;
+  }
 
 }
 
