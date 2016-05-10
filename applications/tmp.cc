@@ -37,6 +37,8 @@ int main(int argc, char **argv)
 #ifdef HAS_MPI
     /* Initialize */
     MPI_Init(&argc,&argv);
+    int myid;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
 #endif
 
     if (argc < 2){
@@ -170,11 +172,13 @@ int main(int argc, char **argv)
 #endif
     {
     cout << "Using the reference images: " << endl;
-
     for (int i = 0; i < refCount; i++){
       cout << "     " << ref_name[i] << endl;
-      refImg[i] = new irtkRealImage(ref_name[i]);
     }
+    }
+
+    for (int i = 0; i < refCount; i++){
+      refImg[i] = new irtkRealImage(ref_name[i]);
     }
 
     Zeta zetaFilt;
@@ -192,8 +196,6 @@ int main(int argc, char **argv)
     zetaFilt.Initialise();
 
 #ifdef HAS_MPI
-    int myid;
-    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
     if (myid == 0)
 #endif
     {
