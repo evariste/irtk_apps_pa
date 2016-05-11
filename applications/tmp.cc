@@ -4,6 +4,11 @@
 
 #include "zeta.h"
 
+#ifdef HAS_MPI
+#include <mpi.h>
+#endif
+
+
 char *input_name = NULL, *output_name = NULL;
 char *mask_name = NULL;
 char **ref_name;
@@ -29,9 +34,20 @@ int main(int argc, char **argv)
 
     int k = 3;
 
+#ifdef HAS_MPI
+    /* Initialize */
+    MPI_Init(&argc,&argv);
+    int myid;
+    MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+
     if (argc < 2){
+#ifdef HAS_MPI
+      MPI_Finalize();
+#endif
         usage();
     }
+
 
     input_name  = argv[1];
     argc--;
@@ -53,8 +69,12 @@ int main(int argc, char **argv)
         patchRadius = atoi(argv[1]);
         argc--;
         argv++;
-
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
         cout << "Setting patch size to " << patchRadius << endl;
+        }
         ok = true;
       }
       if ((ok == false) && (strcmp(argv[1], "-nbhdRadius") == 0)) {
@@ -64,7 +84,12 @@ int main(int argc, char **argv)
         argc--;
         argv++;
 
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
         cout << "Setting neighbourhood size to " << nbhdRadius << endl;
+        }
         ok = true;
       }
       if ((ok == false) && (strcmp(argv[1], "-k") == 0)) {
@@ -73,8 +98,12 @@ int main(int argc, char **argv)
         k = atoi(argv[1]);
         argc--;
         argv++;
-
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
         cout << "Setting number of neighbours (k) to " << k << endl;
+        }
         ok = true;
       }
       if ((ok == false) && (strcmp(argv[1], "-mask") == 0)) {
@@ -83,8 +112,12 @@ int main(int argc, char **argv)
         mask_name = argv[1];
         argc--;
         argv++;
-
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
         cout << "Using mask file: " << mask_name << endl;
+        }
         ok = true;
       }
 
@@ -111,29 +144,42 @@ int main(int argc, char **argv)
 
 
       if (ok == false) {
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
         cerr << "Unknown option: " << argv[1] << endl;
+        }
         usage();
       }
     }
 
 
     if (refCount == 0){
+#ifdef HAS_MPI
+      if (myid == 0)
+#endif
+      {
       cout << "No reference images. Nothing to do." << endl;
       cout << "Exiting" << endl;
+      }
       exit(0);
     }
 
     irtkRealImage **refImg = new irtkRealImage*[refCount];
-
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     cout << "Using the reference images: " << endl;
     for (int i = 0; i < refCount; i++){
       cout << "     " << ref_name[i] << endl;
-      refImg[i] = new irtkRealImage(ref_name[i]);
+    }
     }
 
-
-
-
+    for (int i = 0; i < refCount; i++){
+      refImg[i] = new irtkRealImage(ref_name[i]);
+    }
 
     Zeta zetaFilt;
 
@@ -149,12 +195,31 @@ int main(int argc, char **argv)
 
     zetaFilt.Initialise();
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     zetaFilt.Print();
+    }
 
+#ifdef HAS_MPI
+    zetaFilt.RunParallel();
+#else
     zetaFilt.Run();
+#endif
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
     irtkRealImage *out = zetaFilt.GetOutput();
     out->Write(output_name);
+    }
+
+#ifdef HAS_MPI
+    MPI_Finalize();
+#endif
+
 
 }
 

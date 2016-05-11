@@ -35,6 +35,9 @@ public:
     void Print();
 
     void Run();
+#ifdef HAS_MPI
+    void RunParallel();
+#endif
 
     irtkRealImage *GetOutput();
 
