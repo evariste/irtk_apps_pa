@@ -1,7 +1,12 @@
 #include <irtkImage.h>
-#include <irtkNoise.h>
 #include <irtkGaussianBlurring.h>
 #include <irtkTransformation.h>
+
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+
+#include <sys/time.h>
+
 
 // Input transformation
 char *dofin_name = NULL;
@@ -46,6 +51,7 @@ int main(int argc, char **argv)
   bool zero_border = true;
 
   double fractionLimit = 0.4;
+  double compLimit;
 
   irtkRealImage *xcomps, *ycomps, *zcomps;
 
@@ -108,11 +114,6 @@ int main(int argc, char **argv)
   mffd->PutShearYZ(0.0);
   mffd->PutShearXZ(0.0);
 
-  irtkNoise<irtkRealPixel> *noise = NULL;
-  irtkGaussianNoise<irtkRealPixel> *gaussian_noise = NULL;
-  noise = gaussian_noise = new irtkGaussianNoise<irtkRealPixel>;
-  gaussian_noise->SetMean(0.0);
-  gaussian_noise->SetSigma(noise_sigma);
 
   irtkGaussianBlurring<irtkRealPixel> gaussianBlurring(blur_sigma);
 
@@ -121,7 +122,7 @@ int main(int argc, char **argv)
   for (level = 0; level < mffd->NumberOfLevels(); level++){
     // Extract current transformation level
     irtkFreeFormTransformation3D *ffd =
-    	dynamic_cast<irtkFreeFormTransformation3D *> (mffd->GetLocalTransformation(level));
+      dynamic_cast<irtkFreeFormTransformation3D *> (mffd->GetLocalTransformation(level));
     ffd->GetSpacing(xspacing, yspacing, zspacing);
     xdim = ffd->GetX();
     ydim = ffd->GetY();
@@ -139,84 +140,113 @@ int main(int argc, char **argv)
     zcomps = new irtkRealImage(attr);
 
     if (zdim > 1)
-    	threeD = true;
+      threeD = true;
 
 
     if (setLimits == true){
-    	minspacing = xspacing;
+      minspacing = xspacing;
       if (minspacing > yspacing)
         minspacing = yspacing;
       if (threeD == true && minspacing > zspacing)
         minspacing = zspacing;
-      gaussian_noise->SetMinVal(fractionLimit * minspacing * -1.0);
-      gaussian_noise->SetMaxVal(fractionLimit * minspacing);
+      compLimit = fractionLimit * minspacing;
+    } else {
+      compLimit = DBL_MAX;
     }
 
-    noise->SetInput(xcomps);
-    noise->SetOutput(xcomps);
-    noise->Run();
-    noise->SetInput(ycomps);
-    noise->SetOutput(ycomps);
-    noise->Run();
-    noise->SetInput(zcomps);
-    noise->SetOutput(zcomps);
-    noise->Run();
+    // create random number generator
+    gsl_rng * r;
+    r = gsl_rng_alloc (gsl_rng_mt19937);
+    timeval tv;
+    gettimeofday(&tv, NULL);
+    unsigned long init = tv.tv_usec;
+    gsl_rng_set(r, init);
+
+
+    double val;
+    for (int k = 0; k < zdim; k++){
+      for (int j = 0; j < ydim; j++){
+        for (int i = 0; i < xdim; i++){
+          val = gsl_ran_gaussian(r, noise_sigma);
+          if (val > compLimit)
+            val = compLimit;
+          if (val < (-1.0 * compLimit))
+            val = -1.0 * compLimit;
+          xcomps->Put(i, j, k, val);
+
+          val = gsl_ran_gaussian(r, noise_sigma);
+          if (val > compLimit)
+            val = compLimit;
+          if (val < (-1.0 * compLimit))
+            val = -1.0 * compLimit;
+          ycomps->Put(i, j, k, val);
+
+          val = gsl_ran_gaussian(r, noise_sigma);
+          if (val > compLimit)
+            val = compLimit;
+          if (val < (-1.0 * compLimit))
+            val = -1.0 * compLimit;
+          zcomps->Put(i, j, k, val);
+        }
+      }
+    }
+
 
     if (zero_border){
       cout << "Applying zeros at borders." << endl;
 
-    	if (zdim > 4){
-    		for (k = 0; k < 2   ; ++k){
-    			for (j = 0; j < ydim; ++j){
-    				for (i = 0; i < xdim; ++i){
-    					xcomps->Put(i, j, k, 0);
-    					xcomps->Put(i, j, zdim - 1 - k, 0);
-    					ycomps->Put(i, j, k, 0);
-    					ycomps->Put(i, j, zdim - 1 - k, 0);
-    					zcomps->Put(i, j, k, 0);
-    					zcomps->Put(i, j, zdim - 1 - k, 0);
-    				}
-    			}
-    		}
-    	} else {
-    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
-    	}
+      if (zdim > 4){
+        for (k = 0; k < 2   ; ++k){
+          for (j = 0; j < ydim; ++j){
+            for (i = 0; i < xdim; ++i){
+              xcomps->Put(i, j, k, 0);
+              xcomps->Put(i, j, zdim - 1 - k, 0);
+              ycomps->Put(i, j, k, 0);
+              ycomps->Put(i, j, zdim - 1 - k, 0);
+              zcomps->Put(i, j, k, 0);
+              zcomps->Put(i, j, zdim - 1 - k, 0);
+            }
+          }
+        }
+      } else {
+        cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+      }
 
 
-    	if (ydim > 4){
-    		for (k = 0; k < zdim; ++k){
-    			for (j = 0; j < 2   ; ++j){
-    				for (i = 0; i < xdim; ++i){
-    					xcomps->Put(i, j, k, 0);
-    					xcomps->Put(i, ydim - 1 - j, k, 0);
-    					ycomps->Put(i, j, k, 0);
-    					ycomps->Put(i, ydim - 1 - j, k, 0);
-    					zcomps->Put(i, j, k, 0);
-    					zcomps->Put(i, ydim - 1 - j, k, 0);
-    				}
-    			}
-    		}
-    	} else {
-    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
-    	}
+      if (ydim > 4){
+        for (k = 0; k < zdim; ++k){
+          for (j = 0; j < 2   ; ++j){
+            for (i = 0; i < xdim; ++i){
+              xcomps->Put(i, j, k, 0);
+              xcomps->Put(i, ydim - 1 - j, k, 0);
+              ycomps->Put(i, j, k, 0);
+              ycomps->Put(i, ydim - 1 - j, k, 0);
+              zcomps->Put(i, j, k, 0);
+              zcomps->Put(i, ydim - 1 - j, k, 0);
+            }
+          }
+        }
+      } else {
+        cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+      }
 
 
-    	if (xdim > 4){
-    		for (k = 0; k < zdim; ++k){
-    			for (j = 0; j < ydim; ++j){
-    				for (i = 0; i < 2   ; ++i){
-    					xcomps->Put(i, j, k, 0);
-    					xcomps->Put(xdim - 1 - i, j, k, 0);
-    					ycomps->Put(i, j, k, 0);
-    					ycomps->Put(xdim - 1 - i, j, k, 0);
-    					zcomps->Put(i, j, k, 0);
-    					zcomps->Put(xdim - 1 - i, j, k, 0);
-    				}
-    			}
-    		}
-    	} else {
-    		cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
-    	}
+      if (xdim > 4){
+        for (k = 0; k < zdim; ++k){
+          for (j = 0; j < ydim; ++j){
+            for (i = 0; i < 2   ; ++i){
+              xcomps->Put(i, j, k, 0);
+              xcomps->Put(xdim - 1 - i, j, k, 0);
+              ycomps->Put(i, j, k, 0);
+              ycomps->Put(xdim - 1 - i, j, k, 0);
+              zcomps->Put(i, j, k, 0);
+              zcomps->Put(xdim - 1 - i, j, k, 0);
+            }
+          }
+        }
+      } else {
+        cerr << "Warning : zero border requested but one or more of FFD dimensions is below minimum size needed (4)." << endl;
+      }
     }
 
     if (blur_sigma > 0.0){
@@ -241,12 +271,14 @@ int main(int argc, char **argv)
           z = zcomps->Get(i, j, k);
 
           if (threeD)
-          	ffd->Put(i, j, k, x, y, z);
+            ffd->Put(i, j, k, x, y, z);
           else
-          	ffd->Put(i, j, k, x, y, 0.0);
+            ffd->Put(i, j, k, x, y, 0.0);
         }
       }
     }
+
+    gsl_rng_free(r);
 
     delete xcomps;
     delete ycomps;
