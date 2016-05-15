@@ -1,9 +1,12 @@
 #include "zeta.h"
 
 #ifdef HAS_MPI
-#include <mpi.h>
-#endif
 
+#include <mpi.h>
+
+int myid;
+
+#endif
 
 void Zeta::print_matrix(const gsl_matrix *m)
 {
@@ -12,8 +15,7 @@ void Zeta::print_matrix(const gsl_matrix *m)
 
             cout << gsl_matrix_get(m, i, j) << " ";
         }
-    cout << endl;
-
+	cout << endl;
     }
 }
 
@@ -41,6 +43,11 @@ Zeta::Zeta()
   _patchVol = 0;
   _Prec = NULL;
   _patchCentreIndices = NULL;
+
+#ifdef HAS_MPI
+  MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+#endif
+
 }
 
 
@@ -80,13 +87,23 @@ void Zeta::SetReferences(int count, irtkRealImage** refImg)
 void Zeta::SetPatchRadius(int p)
 {
   _patchRadius = p;
+#ifdef HAS_MPI
+  if (myid == 0)
+#endif
+  {
   cout << "Zeta::SetPatchRadius: Set patch radius to " << _patchRadius << endl;
+  }
 }
 
 void Zeta::SetNeighbourhoodRadius(int n)
 {
   _nbhdRadius = n;
+#ifdef HAS_MPI
+  if (myid == 0)
+#endif
+  {
   cout << "Zeta::SetNeighbourhoodRadius: Set neighbourhood radius to " << _nbhdRadius << endl;
+  }
 }
 
 
@@ -99,10 +116,10 @@ void Zeta::Initialise()
 {
   int xdim, ydim, zdim, nChannels;
 
-#ifdef HAS_MPI
-  int myid;
-  MPI_Comm_rank(MPI_COMM_WORLD,&myid);
-#endif
+// #ifdef HAS_MPI
+//   int myid;
+//   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
+// #endif
 
   if (_target == NULL){
 #ifdef HAS_MPI
