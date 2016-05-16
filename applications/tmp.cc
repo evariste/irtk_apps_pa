@@ -34,6 +34,8 @@ int main(int argc, char **argv)
 
     int k = 3;
 
+    bool MahalanobisFlag = true;
+
 #ifdef HAS_MPI
     /* Initialize */
     MPI_Init(&argc,&argv);
@@ -121,6 +123,32 @@ int main(int argc, char **argv)
         ok = true;
       }
 
+      if ((ok == false) && (strcmp(argv[1], "-euclidean") == 0)) {
+        argc--;
+        argv++;
+        MahalanobisFlag = false;
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
+        cout << "Using Euclidean distance." << endl;
+        }
+        ok = true;
+      }
+
+      if ((ok == false) && (strcmp(argv[1], "-mahalanobis") == 0)) {
+        argc--;
+        argv++;
+        MahalanobisFlag = true;
+#ifdef HAS_MPI
+        if (myid == 0)
+#endif
+        {
+        cout << "Using Mahalanobis distance." << endl;
+        }
+        ok = true;
+      }
+
       if ((ok == false) && (strcmp(argv[1], "-refs") == 0)) {
         argc--;
         argv++;
@@ -188,6 +216,8 @@ int main(int argc, char **argv)
     zetaFilt.SetPatchRadius(patchRadius);
     zetaFilt.SetNeighbourhoodRadius(nbhdRadius);
     zetaFilt.SetK(k);
+    zetaFilt.UseMahalanobis(MahalanobisFlag);
+
     if (mask_name != NULL){
       irtkGreyImage *mask = new irtkGreyImage(mask_name);
       zetaFilt.SetMask(mask);
