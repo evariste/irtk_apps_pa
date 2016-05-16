@@ -30,6 +30,8 @@ public:
 
     void SetK(int k){_kZeta = k;}
 
+    void UseMahalanobis(bool);
+
     void Initialise();
 
     void Print();
@@ -82,6 +84,8 @@ private:
     gsl_matrix *_Prec;
 
     bool _initialised;
+
+    bool _use_mahalanobis;
 
 
 };

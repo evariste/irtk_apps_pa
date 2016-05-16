@@ -43,6 +43,7 @@ Zeta::Zeta()
   _patchVol = 0;
   _Prec = NULL;
   _patchCentreIndices = NULL;
+  _use_mahalanobis = true;
 
 #ifdef HAS_MPI
   MPI_Comm_rank(MPI_COMM_WORLD,&myid);
@@ -106,6 +107,18 @@ void Zeta::SetNeighbourhoodRadius(int n)
   }
 }
 
+void Zeta::UseMahalanobis(bool val){
+  _use_mahalanobis = val;
+#ifdef HAS_MPI
+  if (myid == 0)
+#endif
+  {
+    if (_use_mahalanobis)
+      cout << "Zeta::UseMahalanobis: True" << endl;
+    else
+      cout << "Zeta::UseMahalanobis: False" << endl;
+  }
+}
 
 irtkRealImage *Zeta::GetOutput()
 {
@@ -508,11 +521,11 @@ void Zeta::Run(){
 
 
   gsl_matrix_view tgt_patch_vals;
-  gsl_matrix *diff, *diffPrec, *diffPrecDiffT;
+  gsl_matrix *diff, *diffPrec, *dist2;
 
 
   diffPrec = gsl_matrix_alloc(1, _patchVol * nChannels);
-  diffPrecDiffT = gsl_matrix_alloc(1, 1);
+  dist2 = gsl_matrix_alloc(1, 1);
 
 
 
@@ -611,20 +624,29 @@ void Zeta::Run(){
 
         gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
 
-        gsl_matrix_set_zero(diffPrec);
+        if (_use_mahalanobis)
+        {
+          gsl_matrix_set_zero(diffPrec);
 
-        // diff is a row vector, 1 x (patch vol * channels)
-        // diffPrec = diff * _Prec
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, diffPrec);
+          // diff is a row vector, 1 x (patch vol * channels)
+          // diffPrec = diff * _Prec
+          gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+              _Prec, 0.0, diffPrec);
 
-        gsl_matrix_set_zero(diffPrecDiffT);
+          gsl_matrix_set_zero(dist2);
 
-        // diffPrecDiffT = diffPrec * diff^T
-        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, diffPrecDiffT);
+          // dist2 = diffPrec * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
+              diff, 0.0, dist2);
+        }
+        else
+        {
+          // dist2 = diff * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diff,
+              diff, 0.0, dist2);
+        }
 
-        val = gsl_matrix_get(diffPrecDiffT, 0, 0);
+        val = sqrt( gsl_matrix_get(dist2, 0, 0) );
 
         if (minVal > val){
           // Pick the current patch as the best one from this reference.
@@ -670,11 +692,11 @@ void Zeta::Run(){
         gsl_matrix_set_zero(diffPrec);
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
             _Prec, 0.0, diffPrec);
-        gsl_matrix_set_zero(diffPrecDiffT);
+        gsl_matrix_set_zero(dist2);
         gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, diffPrecDiffT);
+            diff, 0.0, dist2);
 
-        meanPairwise += gsl_matrix_get(diffPrecDiffT, 0, 0);
+        meanPairwise += gsl_matrix_get(dist2, 0, 0);
 
       }
     }
@@ -694,7 +716,7 @@ void Zeta::Run(){
 
 
   gsl_matrix_free(diffPrec);
-  gsl_matrix_free(diffPrecDiffT);
+  gsl_matrix_free(dist2);
   gsl_matrix_free(T);
   gsl_matrix_free(diff);
   gsl_vector_free(refPatch);
@@ -744,11 +766,11 @@ void Zeta::RunParallel()
 
 
   gsl_matrix_view tgt_patch_vals;
-  gsl_matrix *diff, *diffPrec, *diffPrecDiffT;
+  gsl_matrix *diff, *diffPrec, *dist2;
 
 
   diffPrec = gsl_matrix_alloc(1, _patchVol * nChannels);
-  diffPrecDiffT = gsl_matrix_alloc(1, 1);
+  dist2 = gsl_matrix_alloc(1, 1);
 
 
 
@@ -892,20 +914,29 @@ void Zeta::RunParallel()
 
         gsl_matrix_sub(diff, &(tgt_patch_vals.matrix));
 
-        gsl_matrix_set_zero(diffPrec);
+        if (_use_mahalanobis)
+        {
+          gsl_matrix_set_zero(diffPrec);
 
-        // diff is a row vector, 1 x (patch vol * channels)
-        // diffPrec = diff * _Prec
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, diffPrec);
+          // diff is a row vector, 1 x (patch vol * channels)
+          // diffPrec = diff * _Prec
+          gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+              _Prec, 0.0, diffPrec);
 
-        gsl_matrix_set_zero(diffPrecDiffT);
+          gsl_matrix_set_zero(dist2);
 
-        // diffPrecDiffT = diffPrec * diff^T
-        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, diffPrecDiffT);
+          // dist2 = diffPrec * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
+              diff, 0.0, dist2);
+        }
+        else
+        {
+          // dist2 = diff * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diff,
+              diff, 0.0, dist2);
+        }
 
-        val = gsl_matrix_get(diffPrecDiffT, 0, 0);
+        val = sqrt( gsl_matrix_get(dist2, 0, 0) );
 
         if (minVal > val){
           // Pick the current patch as the best one from this reference.
@@ -951,11 +982,11 @@ void Zeta::RunParallel()
         gsl_matrix_set_zero(diffPrec);
         gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
             _Prec, 0.0, diffPrec);
-        gsl_matrix_set_zero(diffPrecDiffT);
+        gsl_matrix_set_zero(dist2);
         gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, diffPrecDiffT);
+            diff, 0.0, dist2);
 
-        meanPairwise += gsl_matrix_get(diffPrecDiffT, 0, 0);
+        meanPairwise += gsl_matrix_get(dist2, 0, 0);
 
       }
     }
@@ -982,7 +1013,7 @@ void Zeta::RunParallel()
 
 
   gsl_matrix_free(diffPrec);
-  gsl_matrix_free(diffPrecDiffT);
+  gsl_matrix_free(dist2);
   gsl_matrix_free(T);
   gsl_matrix_free(diff);
   gsl_vector_free(refPatch);
