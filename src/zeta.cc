@@ -689,14 +689,25 @@ void Zeta::Run(){
 
         gsl_matrix_memcpy(diff, &(refPatchB.matrix));
         gsl_matrix_sub(diff, &(refPatchA.matrix));
-        gsl_matrix_set_zero(diffPrec);
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, diffPrec);
-        gsl_matrix_set_zero(dist2);
-        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, dist2);
 
-        meanPairwise += gsl_matrix_get(dist2, 0, 0);
+        if (_use_mahalanobis)
+        {
+          // dist2 = diff * diffPrec * diff^T
+          gsl_matrix_set_zero(diffPrec);
+          gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+              _Prec, 0.0, diffPrec);
+          gsl_matrix_set_zero(dist2);
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
+              diff, 0.0, dist2);
+        }
+        else
+        {
+          // dist2 = diff * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diff,
+              diff, 0.0, dist2);
+        }
+
+        meanPairwise += sqrt( gsl_matrix_get(dist2, 0, 0) );
 
       }
     }
@@ -979,14 +990,25 @@ void Zeta::RunParallel()
 
         gsl_matrix_memcpy(diff, &(refPatchB.matrix));
         gsl_matrix_sub(diff, &(refPatchA.matrix));
-        gsl_matrix_set_zero(diffPrec);
-        gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-            _Prec, 0.0, diffPrec);
-        gsl_matrix_set_zero(dist2);
-        gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
-            diff, 0.0, dist2);
 
-        meanPairwise += gsl_matrix_get(dist2, 0, 0);
+        if (_use_mahalanobis)
+        {
+          // dist2 = diff * diffPrec * diff^T
+          gsl_matrix_set_zero(diffPrec);
+          gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
+              _Prec, 0.0, diffPrec);
+          gsl_matrix_set_zero(dist2);
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
+              diff, 0.0, dist2);
+        }
+        else
+        {
+          // dist2 = diff * diff^T
+          gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diff,
+              diff, 0.0, dist2);
+        }
+
+        meanPairwise += sqrt( gsl_matrix_get(dist2, 0, 0) );
 
       }
     }
