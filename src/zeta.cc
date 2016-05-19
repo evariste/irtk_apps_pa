@@ -428,67 +428,71 @@ void Zeta::Initialise()
   }
 
 
-  // Standardise data.
+    // TODO: REMOVE
 
-  irtkRealImage *refIm;
-
-  gsl_matrix *X;
-  unsigned long nDataPts = _refCount*_nPatchCentres;
-
-  X = gsl_matrix_alloc(nDataPts, nChannels);
-
-  irtkRealPixel *refPtr;
-  irtkRealPixel val;
+//  // Standardise data.
+//
+//  irtkRealImage *refIm;
+//
+//  gsl_matrix *X;
+//  unsigned long nDataPts = _refCount*_nPatchCentres;
+//
+//  X = gsl_matrix_alloc(nDataPts, nChannels);
+//
+//  irtkRealPixel *refPtr;
+//  irtkRealPixel val;
 
   _chanOffset = xdim * ydim * zdim;
 
-  for (n = 0; n < _refCount; n++){
 
-    refIm = _reference[n];
-    refPtr = refIm->GetPointerToVoxels();
+  // TODO: REMOVE
 
+  //  for (n = 0; n < _refCount; n++){
+//
+//    refIm = _reference[n];
+//    refPtr = refIm->GetPointerToVoxels();
+//
+//
+//    int offset = 0;
+//
+//    for (int t = 0; t < nChannels; t++, offset += _chanOffset){
+//
+//
+//      int i = 0;
+//
+//      for (int k = 0; k < _nPatchCentres; k++){
+//
+//        val = *(refPtr + _patchCentreIndices[k] + offset);
+//
+//        gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
+//
+//        ++i;
+//
+//      }
+//    }
+//  }
 
-    int offset = 0;
-
-    for (int t = 0; t < nChannels; t++, offset += _chanOffset){
-
-
-      int i = 0;
-
-      for (int k = 0; k < _nPatchCentres; k++){
-
-        val = *(refPtr + _patchCentreIndices[k] + offset);
-
-        gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
-
-        ++i;
-
-      }
-    }
-  }
-
-  // Covariance
-  gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
-  GetCovariance(Cov, X);
-
-  // Set the precision matrix.
-  gsl_matrix *prec = gsl_matrix_alloc(nChannels, nChannels);
-  GetPrecision(Cov, prec);
+  // TODO: remove
+//  // Covariance
+//  gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
+//  GetCovariance(Cov, X);
+//
+//  // Set the precision matrix.
+//  gsl_matrix *prec = gsl_matrix_alloc(nChannels, nChannels);
+//  GetPrecision(Cov, prec);
 
   // Precision matrix is actually a replicated precision matrix on the block diagona.
   // There is a block for each voxel in the patch
   _Prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
 
-  gsl_matrix_set_zero(_Prec);
+  // TODO: Remove
+//  gsl_matrix_set_zero(_Prec);
 
-  for (int k = 0; k < _patchVol; k++){
-    gsl_matrix_view submat;
-    submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
-    gsl_matrix_memcpy(&(submat.matrix), prec);
-  }
-
-
-
+//  for (int k = 0; k < _patchVol; k++){
+//    gsl_matrix_view submat;
+//    submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
+//    gsl_matrix_memcpy(&(submat.matrix), prec);
+//  }
 
 
   _initialised = true;
@@ -1187,14 +1191,15 @@ void Zeta::Print(){
 
   cout << "Channels: " << nChannels << endl;
 
-  cout << "Precision matrix " << endl;
-
-  for (unsigned long int i = 0; i < nChannels; i++){
-    for (unsigned long int j = 0; j < nChannels; j++){
-      printf("%0.3f ", gsl_matrix_get(_Prec, i, j));
-    }
-    cout << endl;
-  }
+  // TODO: Remove
+//  cout << "Precision matrix " << endl;
+//
+//  for (unsigned long int i = 0; i < nChannels; i++){
+//    for (unsigned long int j = 0; j < nChannels; j++){
+//      printf("%0.3f ", gsl_matrix_get(_Prec, i, j));
+//    }
+//    cout << endl;
+//  }
 
 }
 
