@@ -125,6 +125,60 @@ irtkRealImage *Zeta::GetOutput()
   return _output;
 }
 
+void Zeta::GetCovariance(gsl_matrix *C,   gsl_matrix *X)
+{
+  // X: nObservations x nDims data matrix
+  // C: Covariance matrix for X, nDims x nDims
+  // BOTH MUST BE PRE-ALLOCATED.
+  int dim = X->size2;
+  int nDataPts = X->size1;
+
+  gsl_vector_view colI;
+  gsl_vector_view colJ;
+
+  double val;
+
+  for (unsigned int j = 0; j < dim; j++){
+
+    colJ = gsl_matrix_column(X, j);
+    val = gsl_stats_mean(colJ.vector.data,
+                         colJ.vector.stride,
+                         nDataPts);
+
+    gsl_vector_add_constant(&colJ.vector, -1*val);
+  }
+
+
+  for (int i = 0; i < dim; i++){
+    for (int j = i; j < dim; j++){
+      colI = gsl_matrix_column(X, i);
+      colJ = gsl_matrix_column(X, j);
+      val = gsl_stats_covariance(colI.vector.data,
+                                 colI.vector.stride,
+                                 colJ.vector.data,
+                                 colJ.vector.stride,
+                                 colI.vector.size);
+      gsl_matrix_set(C, i, j, val);
+      gsl_matrix_set(C, j, i, val);
+    }
+  }
+
+}
+
+void Zeta::GetPrecision(gsl_matrix *C, gsl_matrix *P)
+{
+  // C: Input covariance matrix nDims x nDims
+  // P: Precision matrix, inverse of C, nDims x nDims
+  // BOTH MUST BE SQUARE, EQUAL SIZE AND PRE-ALLOCATED.
+
+  int dim = C->size1;
+  gsl_permutation * perm = gsl_permutation_alloc (dim);
+  int signum;
+  gsl_linalg_LU_decomp(C, perm, &signum);
+  gsl_linalg_LU_invert(C, perm, P);
+
+}
+
 void Zeta::Initialise()
 {
   int xdim, ydim, zdim, nChannels;
@@ -386,82 +440,32 @@ void Zeta::Initialise()
     refPtr = refIm->GetPointerToVoxels();
 
 
-    int tOff = 0;
+    int offset = 0;
 
-    for (int t = 0; t < nChannels; t++){
+    for (int t = 0; t < nChannels; t++, offset += _chanOffset){
 
 
       int i = 0;
 
       for (int k = 0; k < _nPatchCentres; k++){
 
-        val = *(refPtr + _patchCentreIndices[k] + tOff);
+        val = *(refPtr + _patchCentreIndices[k] + offset);
 
         gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
 
         ++i;
 
       }
-
-      tOff += _chanOffset;
-
-
     }
   }
 
-
-
-  // Find the mean for each channel/modality.
-
-  gsl_vector *meanVals = gsl_vector_alloc(nChannels);
-
-  gsl_vector_view col;
-  gsl_vector_view col2;
-  // Zero mean each channel/modality to get covariance
-
-  for (unsigned int j = 0; j < X->size2; j++){
-
-    col = gsl_matrix_column(X, j);
-    double meanVal = gsl_stats_mean(col.vector.data,
-                                    col.vector.stride,
-                                    nDataPts);
-
-    gsl_vector_set(meanVals, j, meanVal);
-
-    gsl_vector_add_constant(&col.vector, -1*meanVal);
-
-  }
-
-
+  // Covariance
   gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
-
-  for (unsigned int i = 0; i < X->size2; i++){
-    for (unsigned int j = 0; j < X->size2; j++){
-      col = gsl_matrix_column(X, i);
-      col2 = gsl_matrix_column(X, j);
-      double c = gsl_stats_covariance(col.vector.data,
-                                      col.vector.stride,
-                                      col2.vector.data,
-                                      col2.vector.stride,
-                                      col.vector.size);
-      gsl_matrix_set(Cov, i, j, c);
-
-
-    }
-  }
-
-
-
+  GetCovariance(Cov, X);
 
   // Set the precision matrix.
   gsl_matrix *prec = gsl_matrix_alloc(nChannels, nChannels);
-
-  gsl_permutation * perm = gsl_permutation_alloc (nChannels);
-  int signum;
-
-  gsl_linalg_LU_decomp(Cov, perm, &signum);
-  gsl_linalg_LU_invert(Cov, perm, prec);
-
+  GetPrecision(Cov, prec);
 
   // Precision matrix is actually a replicated precision matrix on the block diagona.
   // There is a block for each voxel in the patch
@@ -472,11 +476,12 @@ void Zeta::Initialise()
   for (int k = 0; k < _patchVol; k++){
 
     gsl_matrix_view submat;
-
     submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
-
     gsl_matrix_memcpy(&(submat.matrix), prec);
   }
+
+
+
 
 
   _initialised = true;
@@ -568,7 +573,7 @@ void Zeta::Run(){
   gsl_matrix *RefData = gsl_matrix_alloc(_refCount, _patchVol*nChannels);
 
   double val;
-  double minVal = DBL_MAX;
+  double minVal = 100000000.0;
   double *refDistsToTgt = new double[_refCount];
   unsigned long int *sortInds = new unsigned long int[_refCount];
   double meanPairwise, meanTgtToRef;
@@ -595,7 +600,7 @@ void Zeta::Run(){
     for (int r = 0; r < _refCount; r++){
 
 
-      minVal = DBL_MAX;
+      minVal = 100000000.0;
 
       refNbhdCentre = refStartPtr[r] + _patchCentreIndices[n];
 
@@ -826,7 +831,7 @@ void Zeta::RunParallel()
 
 
   double val;
-  double minVal = DBL_MAX;
+  double minVal = 100000000.0;
   double *refDistsToTgt = new double[_refCount];
   unsigned long int *sortInds = new unsigned long int[_refCount];
   double meanPairwise, meanTgtToRef;
@@ -896,7 +901,7 @@ void Zeta::RunParallel()
     for (int r = 0; r < _refCount; r++){
 
 
-      minVal = DBL_MAX;
+      minVal = 100000000.0;
 
       refNbhdCentre = refStartPtr[r] + _patchCentreIndices[n];
 
@@ -1085,6 +1090,7 @@ void Zeta::Print(){
   }
 
 }
+
 
 
 

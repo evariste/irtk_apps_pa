@@ -47,6 +47,9 @@ private:
 
     void print_matrix(const gsl_matrix *m);
 
+    void GetCovariance(gsl_matrix *C,   gsl_matrix *X);
+    void GetPrecision(gsl_matrix *C, gsl_matrix *P);
+
 
     // Number of neighbours for zeta estimation.
     int _kZeta;
