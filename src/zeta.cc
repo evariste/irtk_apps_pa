@@ -588,6 +588,8 @@ void Zeta::Run(){
   unsigned long nPrecMatEntries = nChannels * (nChannels + 1) / 2;
   gsl_matrix* precMatData = gsl_matrix_alloc(_nPatchCentres, nPrecMatEntries);
 
+  // TODO: Make conditional if using mahalanobis
+
   // Voxel data from all reference images at a patch location.
   gsl_matrix* voxData = gsl_matrix_alloc(_refCount*_patchVol, nChannels);
 
@@ -681,6 +683,8 @@ void Zeta::Run(){
     tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
 
     // Get precision matrix for current patch.
+    // TODO: Make conditional if using mahalanobis
+
     int k = 0;
     for (int i=0; i < nChannels; i++){
       for (int j = i; j < nChannels; j++){
@@ -1184,8 +1188,6 @@ void Zeta::Print(){
 
   cout << "Number of neighbours (k): " << _kZeta << endl;
 
-
-  cout << "Precision matrix: " << endl;
 
   int nChannels = _target->GetT();
 

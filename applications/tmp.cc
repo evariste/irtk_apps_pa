@@ -58,6 +58,13 @@ int main(int argc, char **argv)
     argc--;
     argv++;
 
+#ifdef HAS_MPI
+    if (myid == 0)
+#endif
+    {
+    cout << "Target image: " << input_name << endl;
+    cout << "Saving output to: " << output_name << endl;
+    }
     irtkRealImage image;
     image.Read(input_name);
 
