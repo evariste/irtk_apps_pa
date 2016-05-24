@@ -84,8 +84,6 @@ private:
     int _patchVol;
     int _nbhdVol;
 
-    gsl_matrix *_Prec;
-
     bool _initialised;
 
     bool _use_mahalanobis;

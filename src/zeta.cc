@@ -41,7 +41,6 @@ Zeta::Zeta()
   _nbhdOffsets = NULL;
   _nbhdVol = 0;
   _patchVol = 0;
-  _Prec = NULL;
   _patchCentreIndices = NULL;
   _use_mahalanobis = true;
 
@@ -312,12 +311,15 @@ void Zeta::Initialise()
   int fovJ_hi = ydim - _patchRadius - _nbhdRadius;
   int fovK_hi = zdim - _patchRadius - _nbhdRadius;
 
-  if ((fovI_lo < 0) ||
-      (fovI_hi > xdim) ||
-      (fovJ_lo < 0) ||
-      (fovJ_hi > ydim) ||
-      (fovK_lo < 0) ||
-      (fovK_hi > zdim))
+  if ((fovI_lo < 0)        ||
+      (fovI_hi > xdim)     ||
+      (fovJ_lo < 0)        ||
+      (fovJ_hi > ydim)     ||
+      (fovK_lo < 0)        ||
+      (fovK_hi > zdim)     ||
+      (fovI_lo >= fovI_hi) ||
+      (fovJ_lo >= fovJ_hi) ||
+      (fovK_lo >= fovK_hi) )
   {
 #ifdef HAS_MPI
     if (myid == 0)
@@ -427,72 +429,9 @@ void Zeta::Initialise()
   cout << "done. " << endl;
   }
 
-
-    // TODO: REMOVE
-
-//  // Standardise data.
-//
-//  irtkRealImage *refIm;
-//
-//  gsl_matrix *X;
-//  unsigned long nDataPts = _refCount*_nPatchCentres;
-//
-//  X = gsl_matrix_alloc(nDataPts, nChannels);
-//
-//  irtkRealPixel *refPtr;
-//  irtkRealPixel val;
-
+  // Offset for moving from a voxel in one 3D volume to
+  // the corresponding voxel in the next volume (assuming a 4D image)
   _chanOffset = xdim * ydim * zdim;
-
-
-  // TODO: REMOVE
-
-  //  for (n = 0; n < _refCount; n++){
-//
-//    refIm = _reference[n];
-//    refPtr = refIm->GetPointerToVoxels();
-//
-//
-//    int offset = 0;
-//
-//    for (int t = 0; t < nChannels; t++, offset += _chanOffset){
-//
-//
-//      int i = 0;
-//
-//      for (int k = 0; k < _nPatchCentres; k++){
-//
-//        val = *(refPtr + _patchCentreIndices[k] + offset);
-//
-//        gsl_matrix_set(X, (n * _nPatchCentres) + i, t, val);
-//
-//        ++i;
-//
-//      }
-//    }
-//  }
-
-  // TODO: remove
-//  // Covariance
-//  gsl_matrix *Cov = gsl_matrix_alloc(nChannels, nChannels);
-//  GetCovariance(Cov, X);
-//
-//  // Set the precision matrix.
-//  gsl_matrix *prec = gsl_matrix_alloc(nChannels, nChannels);
-//  GetPrecision(Cov, prec);
-
-  // Precision matrix is actually a replicated precision matrix on the block diagona.
-  // There is a block for each voxel in the patch
-  _Prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
-
-  // TODO: Remove
-//  gsl_matrix_set_zero(_Prec);
-
-//  for (int k = 0; k < _patchVol; k++){
-//    gsl_matrix_view submat;
-//    submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
-//    gsl_matrix_memcpy(&(submat.matrix), prec);
-//  }
 
 
   _initialised = true;
@@ -601,7 +540,7 @@ void Zeta::Run(){
   gsl_matrix *P = gsl_matrix_alloc(nChannels, nChannels);
 
   // Loop over patch centres.
-  // TODO: IN MPI THIS COULD BE A RESTRICTED RANGE?
+  // TODO: IN MPI THIS COULD BE A RESTRICTED RANGE
   for (int n = 0; n < _nPatchCentres; n++){
 
     // Get all reference patches for current patch centre.
@@ -676,6 +615,8 @@ void Zeta::Run(){
   fflush(stdout);
   int nChunk = _nPatchCentres / 100;
 
+  gsl_matrix *prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
+
 
   // Loop over target patch centres.
   for (int n = 0; n < _nPatchCentres; n++){
@@ -696,10 +637,10 @@ void Zeta::Run(){
     }
 
     // Replicate the precision matrix along the diagonal of block matrix for the entire patch.
-    gsl_matrix_set_zero(_Prec);
+    gsl_matrix_set_zero(prec);
     for (int k = 0; k < _patchVol; k++){
       gsl_matrix_view submat;
-      submat = gsl_matrix_submatrix(_Prec, k*nChannels, k*nChannels, nChannels, nChannels);
+      submat = gsl_matrix_submatrix(prec, k*nChannels, k*nChannels, nChannels, nChannels);
       gsl_matrix_memcpy(&(submat.matrix), P);
     }
 
@@ -746,7 +687,7 @@ void Zeta::Run(){
           // diff is a row vector, 1 x (patch vol * channels)
           // diffPrec = diff * _Prec
           gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-              _Prec, 0.0, diffPrec);
+              prec, 0.0, diffPrec);
 
           gsl_matrix_set_zero(dist2);
 
@@ -810,7 +751,7 @@ void Zeta::Run(){
           // dist2 = diff * diffPrec * diff^T
           gsl_matrix_set_zero(diffPrec);
           gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-              _Prec, 0.0, diffPrec);
+              prec, 0.0, diffPrec);
           gsl_matrix_set_zero(dist2);
           gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
               diff, 0.0, dist2);
@@ -840,6 +781,7 @@ void Zeta::Run(){
 
   } // Loop over patch centres, index: n
 
+  cout << endl << endl;
 
   gsl_matrix_free(diffPrec);
   gsl_matrix_free(dist2);
