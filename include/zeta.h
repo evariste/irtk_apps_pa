@@ -1,6 +1,7 @@
 #ifndef ZETA_H
 #define ZETA_H
 
+// #define HAS_MPI
 
 #include "irtkImage.h"
 

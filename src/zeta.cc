@@ -510,7 +510,7 @@ void Zeta::Run(){
     }
   }
 
-
+  // TODO: Transport to MPI section
   // Find per-voxel precision matrix from Reference images.
   // Only need to store upper triangle of precision matrix.
 
@@ -540,7 +540,6 @@ void Zeta::Run(){
   gsl_matrix *P = gsl_matrix_alloc(nChannels, nChannels);
 
   // Loop over patch centres.
-  // TODO: IN MPI THIS COULD BE A RESTRICTED RANGE
   for (int n = 0; n < _nPatchCentres; n++){
 
     // Get all reference patches for current patch centre.
@@ -848,32 +847,6 @@ void Zeta::RunParallel()
 
 
 
-  // Store the target patches.
-
-  // Each row is of length nChannels x patch volume. A row
-  // contains the values for a patch in the first channel
-  // followed by the patch values for the second channel and so on.
-
-  gsl_matrix *T = gsl_matrix_alloc(_nPatchCentres, _patchVol*nChannels);
-
-  for (int n = 0; n < _nPatchCentres; n++){
-
-    tgtPatchCentre = tgtStartPtr + _patchCentreIndices[n];
-
-    for (int k = 0; k < _patchVol; k++){
-
-      int offset = 0;
-
-      pTemp = tgtPatchCentre + _patchOffsets[k];
-
-      for (int chan = 0; chan < nChannels; chan++, offset += _chanOffset){
-
-        double val = *(pTemp + offset ) ;
-
-        gsl_matrix_set(T, n, k + chan*_patchVol, val);
-      }
-    }
-  }
 
 
   diff = gsl_matrix_alloc(1, _patchVol*nChannels);
@@ -940,17 +913,125 @@ void Zeta::RunParallel()
 
   /* Compute for the following index limits */
   int mystart = displs[myid];
-  int myend = displs[myid] + scounts[myid];
+  int mycount = scounts[myid];
+  int myend = displs[myid] + mycount;
 
 
 
+  // Store the target patches.
 
+  // Each row is of length nChannels x patch volume. A row
+  // contains the values for a patch in the first channel
+  // followed by the patch values for the second channel and so on.
 
-  // Loop over target patch centres.
-//  for (int n = 0; n < _nPatchCentres; n++){
+  gsl_matrix *T = gsl_matrix_alloc(mycount, _patchVol*nChannels);
+
+  // TODO: Make the range of index values restricted to those for the current process.
   for (int n = mystart; n < myend; n++){
 
-    tgt_patch_vals = gsl_matrix_submatrix(T, n, 0, 1, T->size2);
+    tgtPatchCentre = tgtStartPtr + _patchCentreIndices[n];
+
+    for (int k = 0; k < _patchVol; k++){
+
+      int offset = 0;
+
+      pTemp = tgtPatchCentre + _patchOffsets[k];
+
+      for (int chan = 0; chan < nChannels; chan++, offset += _chanOffset){
+
+        double val = *(pTemp + offset ) ;
+
+        gsl_matrix_set(T, n - mystart, k + chan*_patchVol, val);
+      }
+    }
+  }
+
+
+
+
+  // Find per-voxel precision matrix from Reference images.
+  // Only need to store upper triangle of precision matrix.
+
+  // There will be _refCount*_patchVol samples used to estimate a
+  // square covariance and precision matrix of size nChannels. Need to
+  // Check we have enough samples otherwise the covariance will be singular.
+
+  if ((myid == 0) && (_refCount * _patchVol < nChannels)){
+    cerr << "Insufficient samples to estimate covariance. " << endl;
+    cerr << "Consider increasing patch radius or number of reference images." << endl;
+    exit(1);
+  }
+
+  unsigned long nPrecMatEntries = nChannels * (nChannels + 1) / 2;
+  gsl_matrix* precMatData = gsl_matrix_alloc(mycount, nPrecMatEntries);
+
+  // TODO: Make conditional if using mahalanobis
+
+  // Voxel data from all reference images at a patch location.
+  gsl_matrix* voxData = gsl_matrix_alloc(_refCount*_patchVol, nChannels);
+
+  gsl_vector *refVoxel = gsl_vector_alloc(nChannels);
+
+  // Covariance:
+  gsl_matrix *C = gsl_matrix_alloc(nChannels, nChannels);
+  // Precision:
+  gsl_matrix *P = gsl_matrix_alloc(nChannels, nChannels);
+
+  // Loop over patch centres.
+  for (int n = mystart; n < myend; n++){
+
+    // Get all reference patches for current patch centre.
+    for (int r = 0; r < _refCount; r++){
+
+      refPatchCentre = refStartPtr[r] + _patchCentreIndices[n];
+
+      // Data for current reference.
+      for (int k = 0; k < _patchVol; k++){
+
+        // Particular voxel within the patch.
+        pTemp = refPatchCentre + _patchOffsets[k];
+
+        // Loop over channels
+        int offset = 0;
+        for (int chan = 0; chan < nChannels; chan++, offset += _chanOffset){
+
+          gsl_vector_set(refVoxel,
+                         chan,
+                         *(pTemp + offset));
+        }
+
+        // Store voxel info.
+        gsl_matrix_set_row(voxData,
+                           r * _patchVol + k,
+                           refVoxel);
+
+      }
+    } // References
+
+    // Get precision for current voxel.
+    GetCovariance(C, voxData);
+    GetPrecision(C, P);
+
+    int k = 0;
+    for (int i=0; i < nChannels; i++){
+      for (int j = i; j < nChannels; j++){
+        double val = gsl_matrix_get(P, i, j);
+        gsl_matrix_set(precMatData, n - mystart, k, val);
+        k++;
+      }
+    }
+
+  } // Patch centres
+
+
+
+  gsl_matrix *prec = gsl_matrix_alloc(_patchVol * nChannels, _patchVol * nChannels);
+
+
+  // Now do the actual work. Loop over target patch centres.
+  for (int n = mystart; n < myend; n++){
+
+    tgt_patch_vals = gsl_matrix_submatrix(T, n - mystart, 0, 1, T->size2);
 
     // Find closest patch to the target for each reference, store it and record distance
 
@@ -989,12 +1070,33 @@ void Zeta::RunParallel()
 
         if (_use_mahalanobis)
         {
+
+          // Get precision matrix for current patch.
+          int k = 0;
+          for (int i=0; i < nChannels; i++){
+            for (int j = i; j < nChannels; j++){
+              double val = gsl_matrix_get(precMatData, n - mystart, k);
+              gsl_matrix_set(P, i, j, val);
+              gsl_matrix_set(P, j, i, val);
+              k++;
+            }
+          }
+
+          // Replicate the precision matrix along the diagonal of block matrix for the entire patch.
+          gsl_matrix_set_zero(prec);
+          for (int k = 0; k < _patchVol; k++){
+            gsl_matrix_view submat;
+            submat = gsl_matrix_submatrix(prec, k*nChannels, k*nChannels, nChannels, nChannels);
+            gsl_matrix_memcpy(&(submat.matrix), P);
+          }
+
+
           gsl_matrix_set_zero(diffPrec);
 
           // diff is a row vector, 1 x (patch vol * channels)
           // diffPrec = diff * _Prec
           gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-              _Prec, 0.0, diffPrec);
+              prec, 0.0, diffPrec);
 
           gsl_matrix_set_zero(dist2);
 
@@ -1058,7 +1160,7 @@ void Zeta::RunParallel()
           // dist2 = diff * diffPrec * diff^T
           gsl_matrix_set_zero(diffPrec);
           gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, diff,
-              _Prec, 0.0, diffPrec);
+              prec, 0.0, diffPrec);
           gsl_matrix_set_zero(dist2);
           gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1.0, diffPrec,
               diff, 0.0, dist2);
@@ -1135,15 +1237,6 @@ void Zeta::Print(){
 
   cout << "Channels: " << nChannels << endl;
 
-  // TODO: Remove
-//  cout << "Precision matrix " << endl;
-//
-//  for (unsigned long int i = 0; i < nChannels; i++){
-//    for (unsigned long int j = 0; j < nChannels; j++){
-//      printf("%0.3f ", gsl_matrix_get(_Prec, i, j));
-//    }
-//    cout << endl;
-//  }
 
 }
 
