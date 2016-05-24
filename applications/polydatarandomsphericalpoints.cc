@@ -13,7 +13,8 @@
 //#include <nr.h>
 #include <gsl/gsl_rng.h>
 
-#include <time.h>
+//#include <time.h>
+#include <sys/time.h>
 
 //#ifdef _WIN32
 //#include <process.h>
@@ -45,28 +46,19 @@ int main(int argc, char **argv)
   long ran2Seed;
   long ran2initialSeed;
 
-  // Prepare for random stuff.
-//#ifdef _WIN32
-//  int procId;
-//#else
-//  pid_t procId;
-//#endif
-//  procId = getpid();
 
-  //seconds = time(NULL);
-  //ran2Seed = seconds * procId;
-  //if (ran2Seed < 1)
-  //	ran2Seed = -1 * ran2Seed;
-
-  //ran2initialSeed = -1 * ran2Seed;
-  //(void) ran2(&ran2initialSeed);
 
   gsl_rng * r; 
-  const gsl_rng_type * T;
+//  const gsl_rng_type * T;
   gsl_rng_env_setup();
 
-  T = gsl_rng_default;
-  r = gsl_rng_alloc (T);
+//  T = gsl_rng_default;
+  r = gsl_rng_alloc (gsl_rng_mt19937);
+
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+  gsl_rng_set(r, init);
 
   // Check command line
   if (argc < 2) {

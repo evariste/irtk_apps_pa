@@ -6,6 +6,7 @@
 //#include <time.h>
 //#include <unistd.h>
 #include <gsl/gsl_rng.h>
+#include <sys/time.h>
 
 #include <vtkMath.h>
 #include <vtkPointData.h>
@@ -49,10 +50,15 @@ int main(int argc, char **argv)
   // Prepare for random stuff.
 
   gsl_rng * ranGen;
-  const gsl_rng_type * ranGenType;
+//  const gsl_rng_type * ranGenType;
   gsl_rng_env_setup();
-  ranGenType = gsl_rng_default;
-  ranGen = gsl_rng_alloc (ranGenType);
+//  ranGenType = gsl_rng_default;
+  ranGen = gsl_rng_alloc (gsl_rng_mt19937);
+
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+  gsl_rng_set(ranGen, init);
 
   // Parse arguments.
   input_name = argv[1];
