@@ -14,7 +14,8 @@
 //#include <nr.h>
 #include <gsl/gsl_rng.h>
 
-//#include <time.h>
+#include <sys/time.h>
+
 
 #include <vtkMath.h>
 #include <vtkCellArray.h>
@@ -142,7 +143,12 @@ int main(int argc, char **argv)
   const gsl_rng_type * ranGenType;
   gsl_rng_env_setup();
   ranGenType = gsl_rng_default;
-  ranGen = gsl_rng_alloc (ranGenType);
+
+  ranGen = gsl_rng_alloc (gsl_rng_mt19937);
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+  gsl_rng_set(ranGen, init);
 
   useRand = true;
 
