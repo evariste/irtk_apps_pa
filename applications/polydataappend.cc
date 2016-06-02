@@ -177,6 +177,7 @@ int main(int argc, char **argv ){
   cout << "Output file " << output_name << endl;
   pd_writer->SetFileName(output_name);
   pd_writer->SetInputData(normalsFilter->GetOutput());
+  pd_writer->Update();
   pd_writer->Write();
 
 }

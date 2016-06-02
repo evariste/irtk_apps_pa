@@ -152,6 +152,9 @@ int main(int argc, char **argv){
   vtkSphereSource *sphere = vtkSphereSource::New();
   sphere->SetRadius(r);
 
+  sphere->Update();
+  cube->Update();
+
   if (useCube){
     cout << "Using cubic glyph" << endl;
     glyphs->SetSourceData(cube->GetOutput());
@@ -163,6 +166,7 @@ int main(int argc, char **argv){
   glyphs->SetInputData(inputPoints);
   glyphs->SetColorModeToColorByScalar();
   glyphs->SetScaleFactor(1.0);
+  glyphs->Update();
 
   vtkPolyData   *output = vtkPolyData::New();
   output = glyphs->GetOutput();
@@ -179,6 +183,7 @@ int main(int argc, char **argv){
   vtkPolyDataWriter *writer = vtkPolyDataWriter::New();
   writer->SetInputData(output2);
   writer->SetFileName(output_name);
+  writer->Update();
   writer->Write();
 
 
