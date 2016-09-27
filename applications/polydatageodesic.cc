@@ -4,9 +4,8 @@
 
 #include <irtkImage.h>
 
-//#include <nr.h>
-//#include <time.h>
 #include <gsl/gsl_rng.h>
+#include <sys/time.h>
 
 
 #include <vtkIdList.h>
@@ -29,10 +28,10 @@ char *in_name  = NULL, *out_name = NULL;
 void usage()
 {
   cerr << "Usage: polydatageodesic [input] <options>\n" << endl;
-  cerr << "" << endl;
+  cerr << "Expected geodesic distance over surface. Estimated over a number of random points sampled on surface (see polydataeuclidean)." << endl;
   cerr << "Options:" << endl;
   cerr << "-output [filename]" << endl;
-  cerr << "-reps [N]" << endl;
+  cerr << "-reps [N] (default 100)" << endl;
   exit(1);
 }
 
@@ -108,10 +107,15 @@ int main(int argc, char *argv[])
   // Prepare for random stuff.
 
   gsl_rng * ranGen;
-  const gsl_rng_type * ranGenType;
   gsl_rng_env_setup();
-  ranGenType = gsl_rng_default;
-  ranGen = gsl_rng_alloc (ranGenType);
+
+  ranGen = gsl_rng_alloc (gsl_rng_mt19937);
+
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+  gsl_rng_set(ranGen, init);
+
 
 
   // Read the input surface.
@@ -158,10 +162,6 @@ int main(int argc, char *argv[])
     path->StopWhenEndReachedOff();
     path->Update();
 
-    // Assign the scalars (distances) obtained from the shortest path filter.
-//    dists = (vtkFloatArray*)path->GetGeodesicLength();
-
-//    path->GetAllLengths(dists);
     path->GetCumulativeWeights(dists);
 
     runningTotal += mean(dists);
