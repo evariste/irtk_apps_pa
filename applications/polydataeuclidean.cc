@@ -3,9 +3,8 @@
 // Needs to have at least VTK 5.2
 
 #include <irtkImage.h>
-//#include <nr.h>
-//#include <time.h>
 #include <gsl/gsl_rng.h>
+#include <sys/time.h>
 
 #include <vtkMath.h>
 #include <vtkIdList.h>
@@ -25,9 +24,9 @@ char *in_name  = NULL, *out_name = NULL;
 void usage()
 {
   cerr << "Usage: polydataeuclidean [input] [output] <options>\n" << endl;
-  cerr << "" << endl;
+  cerr << "Expected value of Euclidean distance between points on surface. Randomly sampled a certain number of times. " << endl;
   cerr << "Options:" << endl;
-  cerr << "-reps [N]" << endl;
+  cerr << "-reps [N]  default=100." << endl;
   exit(1);
 }
 
@@ -99,17 +98,17 @@ int main(int argc, char *argv[])
   }
 
   // Prepare for random stuff.
-//  seconds = time(NULL);
-//  ran2Seed = seconds;
-//  ran2initialSeed = -1 * ran2Seed;
-//  (void) ran2(&ran2initialSeed);
-
   gsl_rng * ranGen;
   const gsl_rng_type * ranGenType;
   gsl_rng_env_setup();
   ranGenType = gsl_rng_default;
-  ranGen = gsl_rng_alloc (ranGenType);
 
+  ranGen = gsl_rng_alloc (gsl_rng_mt19937);
+
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+  gsl_rng_set(ranGen, init);
 
 
   // Read the input surface.
@@ -139,7 +138,6 @@ int main(int argc, char *argv[])
   double runningTotal = 0.0;
 
   for (i = 0; i < reps; ++i){
-//    id1 = (int) floor(numberOfPoints * ran2(&ran2Seed));
     id1 = (int) floor(numberOfPoints * gsl_rng_uniform(ranGen));
 
 	  temp->GetPoint(id1, p1);
