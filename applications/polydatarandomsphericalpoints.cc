@@ -85,18 +85,15 @@ int main(int argc, char **argv)
   double phi;
   double pt[3];
 
-
   for (i = 0; i < nPts; i++) {
+    theta = 2 * M_PI * gsl_rng_uniform(r);
+    phi   = acos((2 * gsl_rng_uniform(r)) -  1.0);
 
+    pt[0] = cos(theta) * sin(phi);
+    pt[1] = sin(theta) * sin(phi);
+    pt[2] = cos(phi);
 
-	theta = 2 * M_PI * gsl_rng_uniform(r);
-  	phi   = acos((2 * gsl_rng_uniform(r)) -  1.0);
-
-	pt[0] = cos(theta) * sin(phi);
-  	pt[1] = sin(theta) * sin(phi);
-  	pt[2] = cos(phi);
-
-  	randPoints->SetPoint(i, pt);
+    randPoints->SetPoint(i, pt);
   }
 
   output->SetPoints(randPoints);
