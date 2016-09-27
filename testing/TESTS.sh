@@ -165,7 +165,8 @@ polydatacentreofgravity ranSph-2.vtk
 
 for f in `ls outputFilesArchive`
 do
-    ls -l $f outputFilesArchive/$f
+    ls -l $f | awk '{print $5}'
+    ls -l outputFilesArchive/$f | awk '{print $5}'
     echo
 done
 
