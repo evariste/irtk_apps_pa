@@ -114,9 +114,8 @@ int main(int argc, char *argv[])
   // Read the input surface.
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
   reader->SetFileName(in_name);
+  reader->Update();
 
-  vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
-  triFilter->SetInputData(reader->GetOutput());
 
   vtkCleanPolyData *cleaner = vtkCleanPolyData::New();
   cleaner->SetInputData(reader->GetOutput());
@@ -130,10 +129,11 @@ int main(int argc, char *argv[])
   triFilter2->Update();
 
   // Select a pair of vertices at random.
-  numberOfPoints = cleaner->GetOutput()->GetNumberOfPoints();
+  numberOfPoints = triFilter2->GetOutput()->GetNumberOfPoints();
+  cout << "Points in triangulated, cleaned input mesh: " << numberOfPoints << endl;
 
   vtkPolyData *temp = vtkPolyData::New();
-  temp = cleaner->GetOutput();
+  temp = triFilter2->GetOutput();
 
   double runningTotal = 0.0;
 

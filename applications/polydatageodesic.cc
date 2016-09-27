@@ -121,6 +121,7 @@ int main(int argc, char *argv[])
   // Read the input surface.
   vtkPolyDataReader *reader = vtkPolyDataReader::New();
   reader->SetFileName(in_name);
+  reader->Update();
 
   vtkTriangleFilter *triFilter = vtkTriangleFilter::New();
   triFilter->SetInputData(reader->GetOutput());
@@ -140,7 +141,9 @@ int main(int argc, char *argv[])
   vtkDijkstraGraphGeodesicPath *path = vtkDijkstraGraphGeodesicPath::New();
   path->SetInputData(triFilter2->GetOutput());
 
-  numberOfPoints = cleaner->GetOutput()->GetNumberOfPoints();
+  numberOfPoints = triFilter2->GetOutput()->GetNumberOfPoints();
+
+  cout << "Points in triangulated, cleaned input mesh: " << numberOfPoints << endl;
 
   vtkPolyData *temp = vtkPolyData::New();
   vtkDoubleArray *dists = vtkDoubleArray::New();
