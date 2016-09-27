@@ -99,8 +99,16 @@ polydatadecimate bumps.vtk bumps-dec.vtk  -reduction 0.7
 
 polydataremesh bumps-dec.vtk bumps.vtk bumps-remesh.vtk  
 
-
+# Two runs of random scalars starting with the same polydata.
 polydatarandomscalars  bumps.vtk bumps-rs.vtk
+
+polydatarandomscalars  bumps.vtk bumps-rs-2.vtk
+
+# The stats should be different for each run of the above.
+polydatascalarstats  bumps-rs.vtk -name Random
+
+polydatascalarstats  bumps-rs-2.vtk -name Random
+
 
 polydatascalarsmooth bumps-rs.vtk bumps-ss.vtk 20  2   -name Random
 
@@ -141,6 +149,16 @@ polydatascalarstats  bumps-ss.vtk -name Random
 
 
 polydatasmooth  bumps.vtk  bumps-smooth.vtk   20 0.7
+
+
+polydatarandomsphericalpoints ranSph-1.vtk
+polydatarandomsphericalpoints ranSph-2.vtk
+
+# Following should contain 1000 points at random on a unit sphere
+# each. They should be different slightly, check by looking at centre
+# of gravity.
+polydatacentreofgravity ranSph-1.vtk 
+polydatacentreofgravity ranSph-2.vtk 
 
 
 # File comparisons
