@@ -1,29 +1,17 @@
 #include <irtkImage.h>
-//#include <nr.h>
 #include <gsl/gsl_rng.h>
-
-//#include <sys/types.h>
-
-
-//#ifdef WIN32
-//#include <time.h>
-//#else
-//#include <sys/time.h>
-//#endif
+#include <sys/time.h>
 
 
 #include <map>
 
-
+using namespace std;
 
 char *output_name = NULL, **input_names = NULL;
 char **weight_names = NULL;
 char *mask_name = NULL;
 
-//long ran2Seed;
-//long ran2initialSeed;
 gsl_rng * ranGen; 
-const gsl_rng_type * ranGenType;
 
 // first short is the label, second float is the combined weight from images votes
 // for that label.
@@ -112,13 +100,12 @@ short decideOnTie(countMap cMap){
     }
   }
 
-  //val =  ran2(&ran2Seed);
   val =  gsl_rng_uniform(ranGen);
   index = (int) round(val * (count - 1));
 
   temp = tiedLabels[index];
 
-  delete tiedLabels;
+  delete [] tiedLabels;
 
   return temp;
 }
@@ -145,7 +132,7 @@ int main(int argc, char **argv)
   irtkGreyImage *input_0;
   irtkByteImage mask;
   irtkBytePixel *pMask;
-  bool writeMask = false;
+
   int pad = -1;
   irtkRealImage weightImg;
   irtkRealPixel *ptr2weight;
@@ -191,6 +178,8 @@ int main(int argc, char **argv)
       usage();
     }
   }
+
+
 
   // Mask has a value of 1 for all uncontended voxels.
   mask.Read(input_names[0]);
@@ -288,16 +277,15 @@ int main(int argc, char **argv)
   }
 
   // Get ready for random stuff.
-  //time_t tv;
-  //tv = time(NULL);
-
-  //ran2Seed = tv; // .tv_usec;
-  //ran2initialSeed = -1 * ran2Seed;
-  //(void) ran2(&ran2initialSeed);
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
 
   gsl_rng_env_setup();
-  ranGenType = gsl_rng_default;
-  ranGen = gsl_rng_alloc (ranGenType);
+
+  gsl_rng_env_setup();
+  ranGen = gsl_rng_alloc (gsl_rng_mt19937);
+  gsl_rng_set(ranGen, init);
 
 
   contendedVoxelIndex = 0;
