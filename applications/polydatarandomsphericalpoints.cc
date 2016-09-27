@@ -10,17 +10,9 @@
 #include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 
-//#include <nr.h>
 #include <gsl/gsl_rng.h>
-
-//#include <time.h>
 #include <sys/time.h>
 
-//#ifdef _WIN32
-//#include <process.h>
-//#else
-//#include <unistd.h>
-//#endif
 
 
 
@@ -47,12 +39,9 @@ int main(int argc, char **argv)
   long ran2initialSeed;
 
 
-
   gsl_rng * r; 
-//  const gsl_rng_type * T;
   gsl_rng_env_setup();
 
-//  T = gsl_rng_default;
   r = gsl_rng_alloc (gsl_rng_mt19937);
 
   timeval tv;
@@ -88,7 +77,6 @@ int main(int argc, char **argv)
     }
   }
 
-
   vtkPoints *randPoints = vtkPoints::New();
 
   randPoints->SetNumberOfPoints(nPts);
@@ -101,9 +89,6 @@ int main(int argc, char **argv)
   for (i = 0; i < nPts; i++) {
 
 
-  	//theta = 2 * M_PI * ran2(&ran2Seed);
-  	//phi   = acos((2 * ran2(&ran2Seed)) -  1.0);
-  	
 	theta = 2 * M_PI * gsl_rng_uniform(r);
   	phi   = acos((2 * gsl_rng_uniform(r)) -  1.0);
 
@@ -113,15 +98,6 @@ int main(int argc, char **argv)
 
   	randPoints->SetPoint(i, pt);
   }
-
-  //u = rand(1,n);
-  //v = rand(1,n);
-  //
-  //theta = 2 * pi * u;
-  //phi   = acos((2 * v) - 1);
-  //
-  //pts = [ (cos(theta) .* sin(phi)) ; (sin(theta) .* sin(phi)) ; cos(phi) ];
-
 
   output->SetPoints(randPoints);
   output->Modified();
