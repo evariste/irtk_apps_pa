@@ -161,6 +161,16 @@ polydatacentreofgravity ranSph-1.vtk
 polydatacentreofgravity ranSph-2.vtk 
 
 
+# Following should give different outputs:
+polydatageodesic bumps.vtk -reps 10
+polydatageodesic bumps.vtk -reps 10
+
+
+# Following should give different outputs:
+polydataeuclidean bumps.vtk -reps 10
+polydataeuclidean bumps.vtk -reps 10
+
+
 # File comparisons
 
 for f in `ls outputFilesArchive`
