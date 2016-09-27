@@ -24,7 +24,7 @@ char *in_name  = NULL, *out_name = NULL;
 void usage()
 {
   cerr << "Usage: polydataeuclidean [input] [output] <options>\n" << endl;
-  cerr << "Expected value of Euclidean distance between points on surface. Randomly sampled a certain number of times. " << endl;
+  cerr << "Expected value of Euclidean distance between points on surface. Randomly sampled a certain number of times. (see polydatageodesic). " << endl;
   cerr << "Options:" << endl;
   cerr << "-reps [N]  default=100." << endl;
   exit(1);
