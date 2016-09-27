@@ -39,15 +39,15 @@ int main(int argc, char **argv)
   long ran2initialSeed;
 
 
-  gsl_rng * r; 
+  gsl_rng * rng;
   gsl_rng_env_setup();
 
-  r = gsl_rng_alloc (gsl_rng_mt19937);
+  rng = gsl_rng_alloc (gsl_rng_mt19937);
 
   timeval tv;
   gettimeofday(&tv, NULL);
   unsigned long init = tv.tv_usec;
-  gsl_rng_set(r, init);
+  gsl_rng_set(rng, init);
 
   // Check command line
   if (argc < 2) {
@@ -86,8 +86,8 @@ int main(int argc, char **argv)
   double pt[3];
 
   for (i = 0; i < nPts; i++) {
-    theta = 2 * M_PI * gsl_rng_uniform(r);
-    phi   = acos((2 * gsl_rng_uniform(r)) -  1.0);
+    theta = 2 * M_PI * gsl_rng_uniform(rng);
+    phi   = acos((2 * gsl_rng_uniform(rng)) -  1.0);
 
     pt[0] = cos(theta) * sin(phi);
     pt[1] = sin(theta) * sin(phi);
