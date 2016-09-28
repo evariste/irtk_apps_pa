@@ -7,7 +7,6 @@
 
 #include <vtkPoints.h>
 #include <vtkPolyData.h>
-#include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 
 #include <gsl/gsl_rng.h>
@@ -31,13 +30,6 @@ int main(int argc, char **argv)
   bool ok;
   // default
   int nPts = 1000;
-
-
-
-  time_t seconds;
-  long ran2Seed;
-  long ran2initialSeed;
-
 
   gsl_rng * rng;
   gsl_rng_env_setup();

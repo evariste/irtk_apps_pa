@@ -15,7 +15,6 @@
 #include <vtkRectilinearGrid.h>
 #include <vtkRectilinearGridWriter.h>
 
-#include <vtkPolyDataReader.h>
 #include <vtkPolyDataWriter.h>
 #include <vtkCleanPolyData.h>
 #include <vtkGlyph3D.h>
