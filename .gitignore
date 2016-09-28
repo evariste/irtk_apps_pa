@@ -7,3 +7,4 @@ IRTKInclude.cmake.bak
 build.bak/
 build-debug/
 /Debug/
+testing/test*txt
