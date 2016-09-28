@@ -175,8 +175,8 @@ polydataeuclidean bumps.vtk -reps 10
 
 for f in `ls outputFilesArchive`
 do
-    ls -l $f | awk '{print $5}'
-    ls -l outputFilesArchive/$f | awk '{print $5}'
+    ls -l $f | awk '{print $5, $9}'
+    ls -l outputFilesArchive/$f | awk '{print $5, $9}'
     echo
 done
 
