@@ -17,7 +17,7 @@ polydatasphere bla2.vtk -solid 1
 
 polydataappend  2 bla.vtk bla2.vtk  bla3.vtk
 
-polydatabumps  bumps.vtk  -l 4  -randomRotation
+polydatabumps  bumps.vtk  -l 4  -randomRotation  -seed 23455
 
 polydatacurvatureindices  bumps.vtk 
 
@@ -58,33 +58,9 @@ polydatamaths bumps.vtk -array_name phi -mul 5 -add 2 bumps-maths.vtk
 
 polydatascalarstats  bumps.vtk -name phi
 
-# Scalar name   phi
-# No of pts     40962
-# After masking 40962
-# Mean          3.1317
-# Mean Sq       13.0942
-# S.D.          1.8129
-# Mean(abs)     3.1317
-# S.D(abs)      1.8129
-# Min/Max       0 6.27113
-# Area          22.0564
-# Area int      69.1771
-# sqrt(Area int / 4 pi) 2.34626
 
 polydatascalarstats  bumps-maths.vtk -name phi
 
-# Scalar name   phi
-# No of pts     40962
-# After masking 40962
-# Mean          17.6585
-# Mean Sq       393.988
-# S.D.          9.06452
-# Mean(abs)     17.6585
-# S.D(abs)      9.06452
-# Min/Max       2 33.3556
-# Area          22.0564
-# Area int      389.998
-# sqrt(Area int / 4 pi) 5.57091
 
 
 polydatarecalculatenormals bumps.vtk  bumps-recalcN.vtk
@@ -100,9 +76,9 @@ polydatadecimate bumps.vtk bumps-dec.vtk  -reduction 0.7
 polydataremesh bumps-dec.vtk bumps.vtk bumps-remesh.vtk  
 
 # Two runs of random scalars starting with the same polydata.
-polydatarandomscalars  bumps.vtk bumps-rs.vtk
+polydatarandomscalars  bumps.vtk bumps-rs.vtk -seed 234
 
-polydatarandomscalars  bumps.vtk bumps-rs-2.vtk
+polydatarandomscalars  bumps.vtk bumps-rs-2.vtk -seed 456
 
 # The stats should be different for each run of the above.
 polydatascalarstats  bumps-rs.vtk -name Random
@@ -116,43 +92,16 @@ polydatascalarsmooth bumps-rs.vtk bumps-ss.vtk 20  2   -name Random
 
 polydatascalarstats  bumps-rs.vtk -name Random
 
-# Scalar name   Random
-# No of pts     40962
-# After masking 40962
-# Mean          0.498624
-# Mean Sq       0.33185
-# S.D.          0.288486
-# Mean(abs)     0.498624
-# S.D(abs)      0.288486
-# Min/Max       3.4892e-06 0.999979
-# Rob Min/Max   0.98999 0.0103589
-# Area          22.0564
-# Area int      10.9822
-# sqrt(Area int / 4 pi) 0.934846
-
 
 polydatascalarstats  bumps-ss.vtk -name Random
-# Scalar name   Random
-# No of pts     40962
-# After masking 40962
-# Mean          0.498257
-# Mean Sq       0.248759
-# S.D.          0.022353
-# Mean(abs)     0.498257
-# S.D(abs)      0.022353
-# Min/Max       0.40348 0.570199
-# Rob Min/Max   0.546683 0.444611
-# Area          22.0564
-# Area int      10.9763
-# sqrt(Area int / 4 pi) 0.934594
 
 
 
 polydatasmooth  bumps.vtk  bumps-smooth.vtk   20 0.7
 
 
-polydatarandomsphericalpoints ranSph-1.vtk
-polydatarandomsphericalpoints ranSph-2.vtk
+polydatarandomsphericalpoints ranSph-1.vtk -seed 234
+polydatarandomsphericalpoints ranSph-2.vtk -seed 567
 
 # Following should contain 1000 points at random on a unit sphere
 # each. They should be different slightly, check by looking at centre
@@ -162,13 +111,13 @@ polydatacentreofgravity ranSph-2.vtk
 
 
 # Following should give different outputs:
-polydatageodesic bumps.vtk -reps 10
-polydatageodesic bumps.vtk -reps 10
+polydatageodesic bumps.vtk -reps 10 -seed 234
+polydatageodesic bumps.vtk -reps 10 -seed 456
 
 
 # Following should give different outputs:
-polydataeuclidean bumps.vtk -reps 10
-polydataeuclidean bumps.vtk -reps 10
+polydataeuclidean bumps.vtk -reps 10 -seed 234
+polydataeuclidean bumps.vtk -reps 10 -seed 456
 
 
 # File comparisons
