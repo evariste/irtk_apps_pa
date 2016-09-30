@@ -30,8 +30,9 @@ void usage()
   cerr << "Usage: polydatageodesic [input] <options>\n" << endl;
   cerr << "Expected geodesic distance over surface. Estimated over a number of random points sampled on surface (see polydataeuclidean)." << endl;
   cerr << "Options:" << endl;
-  cerr << "-output [filename]" << endl;
-  cerr << "-reps [N] (default 100)" << endl;
+  cerr << "   -output [filename]" << endl;
+  cerr << "   -reps [N] (default 100)" << endl;
+  cerr << "   -seed M   Seed for random number generator." << endl;
   exit(1);
 }
 
@@ -65,6 +66,10 @@ int main(int argc, char *argv[])
     usage();
   }
 
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  unsigned long init = tv.tv_usec;
+
   // Parse source and target point lists
   in_name  = argv[1];
   argc--;
@@ -97,7 +102,14 @@ int main(int argc, char *argv[])
       argv++;
       ok = true;
     }
-
+    if ((ok == false) && (strcmp(argv[1], "-seed") == 0)) {
+      argc--;
+      argv++;
+      init = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
     if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       usage();
@@ -110,10 +122,6 @@ int main(int argc, char *argv[])
   gsl_rng_env_setup();
 
   ranGen = gsl_rng_alloc (gsl_rng_mt19937);
-
-  timeval tv;
-  gettimeofday(&tv, NULL);
-  unsigned long init = tv.tv_usec;
   gsl_rng_set(ranGen, init);
 
 

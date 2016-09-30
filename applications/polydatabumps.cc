@@ -107,6 +107,7 @@ void usage()
   cerr << " -mesh file.vtk   A VTK polydata file to apply values to." << endl;
   cerr << " -randomRotation  Apply a random rotation to each harmonic basis function" << endl;
   cerr << " -exponent [val]  Exponent to use for bump factors " << endl;
+  cerr << " -seed M          Seed for random number generator." << endl;
 
 
 
@@ -128,16 +129,10 @@ int main(int argc, char **argv)
   double val;
   double min, max, maxabs;
 
-//  time_t seconds;
-//  long ran2initialSeed;
 
   float *weight;
   double weightSum;
 
-//  seconds = time(NULL);
-//  ran2Seed = seconds;
-//  ran2initialSeed = -1 * ran2Seed;
-//  (void) ran2(&ran2initialSeed);
 
   gsl_rng * ranGen;
   const gsl_rng_type * ranGenType;
@@ -148,7 +143,6 @@ int main(int argc, char **argv)
   timeval tv;
   gettimeofday(&tv, NULL);
   unsigned long init = tv.tv_usec;
-  gsl_rng_set(ranGen, init);
 
   useRand = true;
 
@@ -226,15 +220,22 @@ int main(int argc, char **argv)
       randRotation = true;
       ok = true;
     }
-
-
-
-
+    if ((ok == false) && (strcmp(argv[1], "-seed") == 0)) {
+      argc--;
+      argv++;
+      init = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
     if (ok == false){
       cerr << "Can not parse argument " << argv[1] << endl;
       exit(1);
     }
   }
+
+  // Seed the random number generator.
+  gsl_rng_set(ranGen, init);
 
   ////////////////////
 

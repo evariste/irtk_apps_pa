@@ -31,6 +31,7 @@ void usage()
   cerr << " " << endl;
   cerr << " Options:" << endl;
   cerr << " -name name   : Give the output scalars the name 'name'" << endl;
+  cerr << " -seed M      : Seed for random number generator." << endl;
   cerr << " " << endl;
   cerr << " " << endl;
   exit(1);
@@ -58,7 +59,6 @@ int main(int argc, char **argv)
   timeval tv;
   gettimeofday(&tv, NULL);
   unsigned long init = tv.tv_usec;
-  gsl_rng_set(ranGen, init);
 
   // Parse arguments.
   input_name = argv[1];
@@ -78,11 +78,21 @@ int main(int argc, char **argv)
        argv++;
        ok = true;
      }
+    if ((ok == false) && (strcmp(argv[1], "-seed") == 0)) {
+      argc--;
+      argv++;
+      init = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
     if (!ok){
       cerr << "Cannot parse argument " << argv[1] << endl;
       usage();
     }
   }
+
+  gsl_rng_set(ranGen, init);
 
   cerr << "Input      : " << input_name << endl;
   cerr << "Output     : " << output_name << endl;

@@ -12,15 +12,17 @@
 #include <gsl/gsl_rng.h>
 #include <sys/time.h>
 
-
-
-
 // Default filenames
 char *output_name = NULL;
 
-void usage()
+void usage(std::string name)
 {
+  cerr << endl;
   cerr << "Usage: " << endl;
+  cerr << "  " << name << "  [output] <options>" << endl;
+  cerr << "   -n N    : Number of points (default = 1000)." << endl;
+  cerr << "   -seed M : Seed for random number generator." << endl;
+  cerr << endl;
   exit(1);
 }
 
@@ -31,6 +33,10 @@ int main(int argc, char **argv)
   // default
   int nPts = 1000;
 
+  std::string exeName;
+
+  exeName = argv[0];
+
   gsl_rng * rng;
   gsl_rng_env_setup();
 
@@ -39,11 +45,10 @@ int main(int argc, char **argv)
   timeval tv;
   gettimeofday(&tv, NULL);
   unsigned long init = tv.tv_usec;
-  gsl_rng_set(rng, init);
 
   // Check command line
   if (argc < 2) {
-    usage();
+    usage(exeName);
   }
 
   output_name = argv[1];
@@ -63,11 +68,22 @@ int main(int argc, char **argv)
       argv++;
       ok = true;
     }
+    if ((ok == false) && (strcmp(argv[1], "-seed") == 0)) {
+      argc--;
+      argv++;
+      init = atoi(argv[1]);
+      argc--;
+      argv++;
+      ok = true;
+    }
     if (ok == false) {
       cerr << "Can not parse argument " << argv[1] << endl;
-      usage();
+      usage(exeName);
     }
   }
+
+  // Seed the random number generator.
+  gsl_rng_set(rng, init);
 
   vtkPoints *randPoints = vtkPoints::New();
 
