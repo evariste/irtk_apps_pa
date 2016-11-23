@@ -18,7 +18,32 @@ char **ref_name;
 
 void usage()
 {
+    cout << " " << endl;
+    cout << " Obtain a zeta map for a target image based on a given set of reference images." << endl;
     cout << "Usage" << endl;
+    cout << " " << endl;
+    cout << " zeta [Target] [Output] [-refs Ref1 Ref2 ... RefN] <options>" << endl;
+    cout << " " << endl;
+    cout << " [Target]        : Target or query image." << endl;
+    cout << " [Output]        : Where to save the zeta map." << endl;
+    cout << " Ref1, ..., RefN : N reference images (if 4D volumes then channels must " << endl;
+    cout << "                   match channels in target)." << endl;
+    cout << " Options:" << endl;
+    cout << " " << endl;
+    cout << " -patchRadius Rp : Radius of patch (integer). p=1 gives a 3x3x3 patch size, " << endl;
+    cout << "                   p=2 gives 5x5x5 etc." << endl;
+    cout << " -nbhdRadius Rn  : Radius of neighbourhood (integer) over which to search " << endl;
+    cout << "                   patches in the reference set." << endl;
+    cout << " -k K            : Number of nearest neighbours to use for zeta calculation " << endl;
+    cout << "                   (integer)  K <= N (see above)." << endl;
+    cout << " -mask image     : Mask image to define region of interest x,y,z dimensions " << endl;
+    cout << "                   match those in target." << endl;
+    cout << " -mahalanobis    : Use Mahalanobis distance between target and reference " << endl;
+    cout << "                   patches (this is the default so flag does not really " << endl;
+    cout << "                   need to be set)." << endl;
+    cout << " -euclidean      : Use Euclidean distance between target and reference " << endl;
+    cout << "                   patches. Overrides default Mahalanobis distance." << endl;
+
     exit(0);
 }
 
