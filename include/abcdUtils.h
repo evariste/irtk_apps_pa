@@ -11,7 +11,9 @@
 
 bool is_numeric(const char *str);
 
+#ifdef HAS_VTK
 bool is_vtkPolyDataFile(const char* filename);
+#endif
 
 
 

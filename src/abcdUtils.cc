@@ -17,6 +17,7 @@ bool is_numeric(const char *str)
 
 
 
+#ifdef HAS_VTK
 
 bool is_vtkPolyDataFile(const char* filename) {
   // Rough and ready check to see if a file contains polydata.
@@ -48,3 +49,5 @@ bool is_vtkPolyDataFile(const char* filename) {
 
   return true;
 }
+
+#endif
